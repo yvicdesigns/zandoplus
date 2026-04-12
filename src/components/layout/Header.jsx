@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import NotificationsPopover from '@/components/notifications/NotificationsPopover';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import useUnreadMessages from '@/hooks/useUnreadMessages';
 
 // Isolated SearchForm component to prevent parent re-renders on keystroke
 const SearchForm = memo(({ className, onSearchSubmit, initialValue = '' }) => {
@@ -49,6 +50,7 @@ const SearchForm = memo(({ className, onSearchSubmit, initialValue = '' }) => {
 const Header = memo(({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
+  const unreadCount = useUnreadMessages();
   const { siteSettings, loading: siteSettingsLoading } = useSiteSettings();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -162,6 +164,11 @@ const Header = memo(({ onLoginClick }) => {
                 <Link to="/messages" className="relative group">
                   <div className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <MessageCircle className="w-6 h-6 text-gray-600 group-hover:text-custom-green-600 transition-colors" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </div>
                 </Link>
                 <NotificationsPopover />
@@ -291,9 +298,16 @@ const Header = memo(({ onLoginClick }) => {
                     <User className="w-4 h-4 mr-2" />
                     Mon Profil
                   </Link>
-                  <Link to="/messages" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Mes Messages
+                  <Link to="/messages" className="flex items-center justify-between py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
+                    <span className="flex items-center">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Mes Messages
+                    </span>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                   <Link to="/settings" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
                     <Settings className="w-4 h-4 mr-2" />

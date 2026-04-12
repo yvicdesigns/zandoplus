@@ -14,6 +14,7 @@ import ReportListingDialog from '@/components/listing/ReportListingDialog';
 import DeliveryInfo from '@/components/listing/DeliveryInfo';
 import ListingHeader from '@/components/listing/ListingHeader';
 import ActionButtons from '@/components/listing/ActionButtons';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { Helmet } from 'react-helmet-async';
 import { useListings } from '@/contexts/ListingsContext';
 import { sanitizeHtml, sanitizeInput } from '@/lib/validationUtils';
@@ -30,6 +31,8 @@ const ListingDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [loadingRelated, setLoadingRelated] = useState(true);
   const [isReportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
 
   const isFavorite = listing ? favorites.has(listing.id) : false;
 
@@ -94,6 +97,35 @@ const ListingDetailPage = () => {
     fetchListingDetails();
   }, [fetchListingDetails]);
 
+  const fetchReviews = useCallback(async (listingId) => {
+    if (!listingId) return;
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, avatar_url)')
+      .eq('listing_id', listingId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setReviews(data);
+      const avg = data.length > 0 ? data.reduce((sum, r) => sum + r.rating, 0) / data.length : 0;
+      setAverageRating(avg);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (listing?.id) fetchReviews(listing.id);
+  }, [listing?.id, fetchReviews]);
+
+  const handleReviewSubmit = async (reviewData) => {
+    const { error } = await supabase.from('reviews').insert([reviewData]);
+    if (error) {
+      toast({ title: 'Erreur', description: 'Impossible de soumettre votre avis.', variant: 'destructive' });
+      throw error;
+    }
+    toast({ title: 'Avis envoyé !', description: 'Merci pour votre commentaire.' });
+    fetchReviews(listing.id);
+  };
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -127,11 +159,38 @@ const ListingDetailPage = () => {
     );
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": listing.title,
+    "description": listing.description.replace(/<[^>]*>/g, '').substring(0, 500),
+    "image": listing.images?.[0] || '',
+    "url": `https://www.zandopluscg.com/listings/${listing.id}`,
+    "offers": {
+      "@type": "Offer",
+      "price": listing.price,
+      "priceCurrency": listing.currency || "XAF",
+      "availability": listing.status === 'active'
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Person",
+        "name": listing.seller?.full_name || "Vendeur"
+      }
+    }
+  };
+
   return (
     <>
       <Helmet>
         <title>{`${listing.title} - Zando+`}</title>
-        <meta name="description" content={listing.description.substring(0, 160)} />
+        <meta name="description" content={listing.description.replace(/<[^>]*>/g, '').substring(0, 160)} />
+        <meta property="og:title" content={`${listing.title} - Zando+`} />
+        <meta property="og:description" content={listing.description.replace(/<[^>]*>/g, '').substring(0, 160)} />
+        <meta property="og:image" content={listing.images?.[0] || 'https://www.zandopluscg.com/og-image.jpg'} />
+        <meta property="og:url" content={`https://www.zandopluscg.com/listings/${listing.id}`} />
+        <meta property="og:type" content="product" />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
       <div className="container mx-auto py-8 px-4">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 hidden md:inline-flex">
@@ -143,11 +202,18 @@ const ListingDetailPage = () => {
             <ListingHeader listing={listing} seller={listing.seller} />
             <ListingDescription listing={listing} />
             <DeliveryInfo listing={listing} />
+            <ReviewsSection
+              listingId={listing.id}
+              sellerId={listing.user_id}
+              reviews={reviews}
+              averageRating={averageRating}
+              onReviewSubmitted={handleReviewSubmit}
+            />
             <RelatedListings listings={relatedListings} loading={loadingRelated} />
           </div>
           <div className="space-y-6 lg:sticky lg:top-24 h-fit">
             
-            <SellerInfo seller={listing.seller} />
+            <SellerInfo seller={listing.seller} averageRating={averageRating} reviewCount={reviews.length} />
 
             <ActionButtons listing={listing} />
 

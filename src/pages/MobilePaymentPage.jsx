@@ -4,11 +4,12 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Copy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Copy, CheckCircle, MessageCircle, Phone } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from '@/components/ui/badge';
 
 const MobilePaymentPage = () => {
   const navigate = useNavigate();
@@ -47,6 +48,15 @@ const MobilePaymentPage = () => {
       description: 'Le numéro de paiement a été copié dans le presse-papiers.',
       className: 'bg-green-100 text-green-800'
     });
+  };
+
+  const handleWhatsApp = () => {
+    if (!siteSettings?.whatsapp_number || !paymentInfo) return;
+    const number = siteSettings.whatsapp_number.replace(/\D/g, '');
+    const msg = encodeURIComponent(
+      `Bonjour, je viens d'effectuer un paiement sur Zando+.\n\nMontant : ${paymentInfo.amount?.toLocaleString()} ${paymentInfo.currency || 'FCFA'}\nObjet : ${paymentInfo.description}\n\nJe vous envoie ma preuve de paiement.`
+    );
+    window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
   };
 
   const handleConfirmPayment = () => {
@@ -111,35 +121,53 @@ const MobilePaymentPage = () => {
                 <p className="text-sm text-gray-500 mt-1">{paymentInfo.description}</p>
               </div>
 
+              {/* Opérateurs acceptés */}
+              <div>
+                <p className="text-sm font-semibold text-gray-600 mb-2">Opérateurs acceptés :</p>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge className="bg-yellow-400 text-yellow-900 text-sm px-3 py-1">MTN Money</Badge>
+                  <Badge className="bg-red-500 text-white text-sm px-3 py-1">Airtel Money</Badge>
+                </div>
+              </div>
+
               <Alert>
                 <AlertTitle className="font-bold text-lg">1. Envoyez le paiement</AlertTitle>
-                <AlertDescription className="space-y-2 mt-2">
-                  <p>Veuillez envoyer le montant exact au numéro ci-dessous via votre service Mobile Money préféré (MTN, Airtel, etc.).</p>
+                <AlertDescription className="space-y-3 mt-2">
+                  <p>Envoyez le montant exact au numéro ci-dessous via <strong>MTN Money</strong> ou <strong>Airtel Money</strong>.</p>
                   {siteSettings?.whatsapp_number ? (
-                    <div className="flex items-center justify-between p-3 bg-gray-100 rounded-md">
-                      <span className="font-mono text-lg text-gray-800">{siteSettings.whatsapp_number}</span>
-                      <Button variant="ghost" size="sm" onClick={() => handleCopyNumber(siteSettings.whatsapp_number)}>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copier
+                    <>
+                      <div className="flex items-center justify-between p-3 bg-gray-100 rounded-md">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Numéro de réception</p>
+                          <span className="font-mono text-xl font-bold text-gray-800">{siteSettings.whatsapp_number}</span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => handleCopyNumber(siteSettings.whatsapp_number)}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copier
+                        </Button>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full border-green-500 text-green-600 hover:bg-green-50" onClick={handleWhatsApp}>
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Contacter via WhatsApp après paiement
                       </Button>
-                    </div>
+                    </>
                   ) : (
-                    <p className="text-red-500">Numéro de paiement non configuré.</p>
+                    <p className="text-red-500">Numéro de paiement non configuré. Contactez l'administrateur.</p>
                   )}
                 </AlertDescription>
               </Alert>
 
               <Alert>
-                <AlertTitle className="font-bold text-lg">2. Faites une capture d'écran</AlertTitle>
+                <AlertTitle className="font-bold text-lg">2. Notez l'ID de transaction</AlertTitle>
                 <AlertDescription className="mt-2">
-                  Une fois le paiement effectué, prenez une capture d'écran du message de confirmation de votre opérateur.
+                  Après le paiement, votre opérateur vous envoie un SMS de confirmation avec un ID de transaction (ex: <code className="bg-gray-100 px-1 rounded">MP240815.1234.C56789</code>). Notez-le.
                 </AlertDescription>
               </Alert>
 
               <Alert>
                 <AlertTitle className="font-bold text-lg">3. Confirmez votre paiement</AlertTitle>
                 <AlertDescription className="mt-2">
-                  Cliquez sur le bouton ci-dessous pour téléverser votre capture d'écran comme preuve de paiement.
+                  Cliquez sur le bouton ci-dessous pour téléverser votre capture d'écran et saisir l'ID de transaction.
                 </AlertDescription>
               </Alert>
 

@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
+import StarRating from '@/components/reviews/StarRating';
 
-const SellerInfo = ({ seller }) => {
+const SellerInfo = ({ seller, averageRating = 0, reviewCount = 0 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -36,6 +37,12 @@ const SellerInfo = ({ seller }) => {
             {seller.verified && <Badge className="bg-green-100 text-green-800">Vendeur Vérifié</Badge>}
             {lastSeen && <p className="text-xs text-gray-500">{lastSeen}</p>}
           </div>
+          {reviewCount > 0 && (
+            <div className="flex items-center gap-1 mt-1">
+              <StarRating rating={averageRating} size={14} />
+              <span className="text-xs text-gray-500">({reviewCount} avis)</span>
+            </div>
+          )}
         </div>
       </div>
       
