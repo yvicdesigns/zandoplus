@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { isMobile, isIOS } from 'react-device-detect';
 
+const APK_URL = 'https://axlpfskrrlwibcnxkfvb.supabase.co/storage/v1/object/public/downloads/zandoplus.apk';
+
 const PwaInstallModal = () => {
   const { canInstall, triggerInstall } = usePwaInstall();
   const [isVisible, setIsVisible] = useState(false);
@@ -97,31 +99,47 @@ const PwaInstallModal = () => {
               </p>
 
               {isIOS ? (
-                <div className="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 text-left space-y-2">
-                  <p className="font-semibold text-gray-700">Comment installer :</p>
-                  <p>1. Appuyez sur <span className="font-mono bg-gray-200 px-1 rounded">⬆ Partager</span></p>
-                  <p>2. Puis <span className="font-semibold">"Sur l'écran d'accueil"</span></p>
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 text-left space-y-2">
+                    <p className="font-semibold text-gray-700">Comment installer :</p>
+                    <p>1. Appuyez sur <span className="font-mono bg-gray-200 px-1 rounded">⬆ Partager</span></p>
+                    <p>2. Puis <span className="font-semibold">"Sur l'écran d'accueil"</span></p>
+                  </div>
                 </div>
               ) : canInstall ? (
-                <Button
-                  onClick={handleInstall}
-                  className="w-full gradient-bg hover:opacity-90 rounded-full h-12 text-base font-semibold"
-                >
-                  <Download className="w-5 h-5 mr-2" />
-                  Installer maintenant
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleInstall}
+                    className="w-full gradient-bg hover:opacity-90 rounded-full h-12 text-base font-semibold"
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    Installer maintenant
+                  </Button>
+                  <a
+                    href={APK_URL}
+                    download="zandoplus.apk"
+                    className="flex items-center justify-center gap-2 w-full border-2 border-custom-green-500 text-custom-green-600 rounded-full h-11 text-sm font-semibold"
+                  >
+                    <Download className="w-4 h-4" />
+                    Télécharger l'APK directement
+                  </a>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <a
-                    href="intent://zandopluscg.com#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.chrome;end"
+                    href={APK_URL}
+                    download="zandoplus.apk"
                     className="flex items-center justify-center gap-2 w-full gradient-bg text-white rounded-full h-12 text-base font-semibold"
                   >
                     <Download className="w-5 h-5" />
+                    Télécharger l'APK
+                  </a>
+                  <a
+                    href="intent://zandopluscg.com#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.chrome;end"
+                    className="flex items-center justify-center gap-2 w-full border border-gray-300 text-gray-600 rounded-full h-11 text-sm font-semibold"
+                  >
                     Ouvrir dans Chrome pour installer
                   </a>
-                  <p className="text-xs text-gray-400 text-center">
-                    Chrome est requis pour installer l'application
-                  </p>
                 </div>
               )}
 
