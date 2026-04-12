@@ -7,8 +7,8 @@ const ConversationList = ({ conversations, loading, selectedConversation, onSele
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredConversations = conversations.filter(chat =>
-    chat.participant?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chat.listing?.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (chat.participant?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (chat.listing?.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

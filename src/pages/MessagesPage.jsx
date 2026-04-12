@@ -25,7 +25,11 @@ const MessagesPage = () => {
     try {
       const { data, error } = await supabase.rpc('get_user_conversations');
       if (error) throw error;
-      const sortedConversations = data.sort((a, b) => new Date(b.last_message.created_at) - new Date(a.last_message.created_at));
+      const sortedConversations = data.sort((a, b) => {
+        const dateA = a.last_message?.created_at ? new Date(a.last_message.created_at) : new Date(0);
+        const dateB = b.last_message?.created_at ? new Date(b.last_message.created_at) : new Date(0);
+        return dateB - dateA;
+      });
       setConversations(sortedConversations || []);
       
       if (conversationId && sortedConversations) {

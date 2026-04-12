@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,15 +45,56 @@ const PostAdPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isCheckingLimit, setIsCheckingLimit] = useState(true);
   const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: '', description: '', price: '', currency: 'FCFA', 
-    category: '', subcategory: '', categoryName: '', categoryType: '',
-    condition: '', location: '', negotiable: false, images: [],
-    delivery_method: 'pickup', delivery_fee: '', is_urgent: false,
-    phone: '', quantity: ''
+  const DRAFT_KEY = 'postAdDraft';
+
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Strip image previews from draft (can't restore blob URLs)
+        return { ...parsed, images: [] };
+      }
+    } catch {}
+    return {
+      title: '', description: '', price: '', currency: 'FCFA',
+      category: '', subcategory: '', categoryName: '', categoryType: '',
+      condition: '', location: '', negotiable: false, images: [],
+      delivery_method: 'pickup', delivery_fee: '', is_urgent: false,
+      phone: '', quantity: ''
+    };
   });
   const [imageFiles, setImageFiles] = useState([]);
+
+  // Show "draft restored" notice if non-empty draft was found
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.title || parsed.description || parsed.category) {
+            setDraftRestored(true);
+          }
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Autosave draft on formData change (debounced 1s)
+  const saveTimer = useRef(null);
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const { images, ...dataToSave } = formData;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(dataToSave));
+    }, 1000);
+    return () => clearTimeout(saveTimer.current);
+  }, [formData]);
 
   useEffect(() => {
     if (user && !listingsLoading) {
@@ -239,6 +280,7 @@ const PostAdPage = () => {
       };
 
       await addListing(listingData);
+      localStorage.removeItem(DRAFT_KEY);
       toast({ title: "Annonce publiée avec succès !", description: "Votre annonce est maintenant en ligne.", className: "bg-custom-green-500 text-white" });
       navigate('/profile');
     } catch (error) {
@@ -292,6 +334,22 @@ const PostAdPage = () => {
           <h1 className="text-4xl font-bold mb-4">Publiez Votre <span className="gradient-text">Annonce</span></h1>
           <p className="text-gray-600 text-lg">Atteignez des millions d'acheteurs potentiels à travers le Congo Brazzaville</p>
         </div>
+        {draftRestored && (
+          <div className="mb-4 flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-lg">
+            <span>Brouillon restauré automatiquement.</span>
+            <button
+              type="button"
+              className="underline font-medium hover:text-amber-900"
+              onClick={() => {
+                localStorage.removeItem(DRAFT_KEY);
+                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'pickup', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '' });
+                setDraftRestored(false);
+              }}
+            >
+              Effacer le brouillon
+            </button>
+          </div>
+        )}
         <PostAdStepper steps={steps} currentStep={currentStep} />
         <form onSubmit={handleSubmit}>
           <Card className="border-0 shadow-lg">

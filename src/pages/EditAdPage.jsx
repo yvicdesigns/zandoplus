@@ -41,14 +41,12 @@ const EditAdPage = () => {
   const [imagesToRemove, setImagesToRemove] = useState([]); // URLs of images to remove from storage
 
   useEffect(() => {
-    const fetchListing = async () => {
-      const listing = listings.find(l => l.id === id);
+    const applyListing = (listing) => {
       if (!listing || listing.user_id !== user?.id) {
         toast({ title: "Accès non autorisé", description: "Vous ne pouvez pas modifier cette annonce.", variant: "destructive" });
         navigate('/profile');
         return;
       }
-      
       setFormData({
         title: listing.title || '',
         description: listing.description || '',
@@ -69,8 +67,21 @@ const EditAdPage = () => {
       setPageLoading(false);
     };
 
-    if (user && listings.length > 0) {
-      fetchListing();
+    if (!user) return;
+
+    // Try context first (fast), fallback to direct Supabase fetch
+    const fromContext = listings.find(l => l.id === id);
+    if (fromContext) {
+      applyListing(fromContext);
+    } else {
+      supabase.from('listings').select('*').eq('id', id).single().then(({ data, error }) => {
+        if (error || !data) {
+          toast({ title: "Annonce introuvable", variant: "destructive" });
+          navigate('/profile');
+        } else {
+          applyListing(data);
+        }
+      });
     }
   }, [id, user, listings, navigate, toast]);
 
