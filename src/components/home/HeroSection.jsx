@@ -140,7 +140,7 @@ const HeroSection = () => {
                   style={{ backgroundColor: hexToRgba(slide.overlay_color, slide.overlay_opacity) }}
                 ></div>
               )}
-              <div className={cn("relative z-10 h-full flex flex-col justify-center p-4 container mx-auto", textAlignClasses[slide.text_align] || 'items-center text-center')}>
+              <div className={cn("relative z-10 h-full flex flex-col justify-center p-4 pb-14 sm:pb-4 container mx-auto", textAlignClasses[slide.text_align] || 'items-center text-center')}>
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -193,7 +193,7 @@ const HeroSection = () => {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="max-w-2xl w-full mt-8"
+                    className="max-w-2xl w-full mt-8 relative z-20"
                   >
                     <form onSubmit={handleSearchSubmit}>
                       {/* Mobile: input + button stacked — Desktop: button inside input */}
