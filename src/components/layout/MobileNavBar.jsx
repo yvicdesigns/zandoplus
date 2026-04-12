@@ -50,7 +50,7 @@ const MobileNavBar = () => {
               <div key="plus-button" className="relative w-1/5 flex justify-center">
                 <Link
                   to="/post-ad"
-                  className="absolute bottom-4 flex items-center justify-center w-16 h-16 rounded-full gradient-bg text-white shadow-lg transform transition-transform hover:scale-110"
+                  className="absolute bottom-1 flex items-center justify-center w-14 h-14 rounded-full gradient-bg text-white shadow-lg transform transition-transform hover:scale-110"
                 >
                   <Plus className="h-8 w-8" />
                 </Link>
