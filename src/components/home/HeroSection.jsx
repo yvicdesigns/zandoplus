@@ -176,10 +176,10 @@ const HeroSection = () => {
                     </Link>
                   )}
                   {slide.secondary_cta_text && slide.secondary_cta_link && (
-                    <Link to={slide.secondary_cta_link}>
-                      <Button 
-                        size="lg" 
-                        variant="outline" 
+                    <Link to={slide.secondary_cta_link} className="hidden sm:block">
+                      <Button
+                        size="lg"
+                        variant="outline"
                         className="rounded-full px-8 py-3 text-base bg-white text-custom-green-500 border-custom-green-500 hover:bg-custom-green-50"
                       >
                         {slide.secondary_cta_text}
