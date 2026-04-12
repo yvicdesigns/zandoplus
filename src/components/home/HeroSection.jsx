@@ -196,12 +196,32 @@ const HeroSection = () => {
                     className="max-w-2xl w-full mt-8"
                   >
                     <form onSubmit={handleSearchSubmit}>
-                      <div className="relative">
+                      {/* Mobile: input + button stacked — Desktop: button inside input */}
+                      <div className="flex flex-col sm:hidden gap-2">
+                        <div className="relative">
+                          <Input
+                            type="text"
+                            name="search"
+                            placeholder="Que recherchez-vous ?"
+                            className="w-full pl-12 pr-4 py-4 h-14 text-base rounded-full border-2 border-white/30 focus:border-white bg-white/90 text-gray-800 placeholder-gray-500"
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
+                          />
+                          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                        </div>
+                        <Button type="submit" className="w-full h-12 rounded-full text-base gradient-bg hover:opacity-90">
+                          <Search className="w-4 h-4 mr-2" />
+                          Rechercher
+                        </Button>
+                      </div>
+
+                      {/* Desktop: button inside input */}
+                      <div className="relative hidden sm:block">
                         <Input
                           type="text"
                           name="search"
                           placeholder="Que recherchez-vous aujourd'hui ?"
-                          className="w-full pl-12 pr-32 py-4 h-14 text-base rounded-full border-2 border-white/30 focus:border-white bg-white/20 text-black placeholder-gray-600"
+                          className="w-full pl-12 pr-36 py-4 h-14 text-base rounded-full border-2 border-white/30 focus:border-white bg-white/20 text-black placeholder-gray-600"
                           onFocus={handleFocus}
                           onBlur={handleBlur}
                         />
