@@ -23,12 +23,9 @@ const AdminAuditLogTab = () => {
       } else if (data) {
         const transformedLogs = data.map(log => {
           const profileInfo = Array.isArray(log.profiles) ? log.profiles[0] : log.profiles;
-          const authInfo = Array.isArray(log.auth_users) ? log.auth_users[0] : log.auth_users;
-          
           return {
             ...log,
             user_full_name: profileInfo?.full_name || 'Système',
-            user_email: authInfo?.email || 'N/A'
           };
         });
         setLogs(transformedLogs);
@@ -79,7 +76,6 @@ const AdminAuditLogTab = () => {
                     </TableCell>
                     <TableCell className="text-sm">
                       <div className="font-medium text-gray-900">{log.user_full_name}</div>
-                      <div className="text-xs text-gray-500">{log.user_email}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

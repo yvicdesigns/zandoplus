@@ -24,7 +24,7 @@ const AdminPaymentsTab = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('verification_requests')
-      .select('*, user:profiles(full_name, avatar_url, email)')
+      .select('*, user:profiles(full_name, avatar_url)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -158,7 +158,6 @@ const PaymentCard = ({ payment, onApprove, onReject, isLoading, readonly }) => {
                 <p className="font-semibold text-sm">{payment.user?.full_name || 'Utilisateur'}</p>
                 <Badge className={`${status.color} text-xs`}>{status.label}</Badge>
               </div>
-              <p className="text-xs text-gray-500">{payment.user?.email}</p>
               {payment.payment_transaction_id && (
                 <p className="text-xs text-gray-600 mt-1">
                   ID transaction : <span className="font-mono">{payment.payment_transaction_id}</span>

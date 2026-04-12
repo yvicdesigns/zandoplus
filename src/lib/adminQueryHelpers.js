@@ -19,7 +19,7 @@ export const fetchAuditLogsWithUserInfo = async () => {
   try {
     const { data, error } = await supabase
       .from('audit_logs')
-      .select('id, action, resource_type, resource_id, details, ip_address, created_at, user_id, profiles!audit_logs_user_id_fkey(full_name), auth_users!inner(email)')
+      .select('id, action, resource_type, resource_id, details, ip_address, created_at, user_id, profiles!audit_logs_user_id_fkey(full_name)')
       .order('created_at', { ascending: false })
       .limit(50);
 
