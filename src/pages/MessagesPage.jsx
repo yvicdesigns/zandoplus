@@ -60,13 +60,26 @@ const MessagesPage = () => {
 
     const channel = supabase
       .channel('messages-page-realtime')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
         table: 'messages',
         filter: `receiver_id=eq.${user.id}`
       }, (payload) => {
         fetchConversations();
+        // Browser push notification for new message
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const senderName = payload.new?.sender_name || 'Nouveau message';
+          const preview = payload.new?.content?.substring(0, 60) || '';
+          const notif = new Notification(`Zando+ — ${senderName}`, {
+            body: preview,
+            icon: '/android-chrome-192x192.png',
+          });
+          notif.onclick = () => {
+            window.focus();
+            window.location.href = `/messages/${payload.new.conversation_id}`;
+          };
+        }
       })
       .on('postgres_changes', { 
         event: '*', 

@@ -17,9 +17,10 @@ import AdminChangelogTab from '@/components/admin/AdminChangelogTab';
 import AdminQATab from '@/components/admin/AdminQATab';
 import AdminAuditLogTab from '@/components/admin/AdminAuditLogTab';
 import AdminChangeRequestsTab from '@/components/admin/AdminChangeRequestsTab';
-import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab'; // Imported new tab
+import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab';
+import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
 import { Helmet } from 'react-helmet-async';
-import { Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck, Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity, FileText, ClipboardCheck } from 'lucide-react';
+import { Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck, Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity, FileText, ClipboardCheck, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -114,6 +115,10 @@ const AdminDashboard = () => {
             
             {isAdmin && (
               <>
+                <TabsTrigger value="payments" className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-primary/20 border border-transparent bg-muted/50 h-14 justify-start px-4 text-green-700">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Paiements
+                </TabsTrigger>
                 <TabsTrigger value="approvals" className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-primary/20 border border-transparent bg-muted/50 h-14 justify-start px-4 text-blue-700">
                   <ClipboardCheck className="w-4 h-4 mr-2" />
                   Approbations
@@ -174,6 +179,9 @@ const AdminDashboard = () => {
 
         {isAdmin && (
           <>
+            <TabsContent value="payments">
+              <AdminPaymentsTab />
+            </TabsContent>
             <TabsContent value="approvals">
               <AdminChangeRequestsTab />
             </TabsContent>

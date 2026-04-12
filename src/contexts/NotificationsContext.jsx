@@ -51,6 +51,30 @@ export const NotificationsProvider = ({ children }) => {
     fetchNotifications();
   }, [fetchNotifications]);
 
+  // Request browser notification permission once user is logged in
+  useEffect(() => {
+    if (!user) return;
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [user]);
+
+  const showBrowserNotification = (title, body, url) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notif = new Notification(title, {
+        body,
+        icon: '/android-chrome-192x192.png',
+        badge: '/android-chrome-192x192.png',
+      });
+      if (url) {
+        notif.onclick = () => {
+          window.focus();
+          window.location.href = url;
+        };
+      }
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
@@ -66,6 +90,9 @@ export const NotificationsProvider = ({ children }) => {
         setNotifications(prev => [newNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
 
+        const message = newNotification.content?.message || 'Vous avez une nouvelle alerte.';
+
+        // In-app toast
         toast({
           title: (
             <div className="flex items-center">
@@ -73,21 +100,20 @@ export const NotificationsProvider = ({ children }) => {
               <span className="font-bold">Nouvelle notification</span>
             </div>
           ),
-          description: newNotification.content?.message || 'Vous avez une nouvelle alerte.',
+          description: message,
           action: newNotification.link ? (
             <Link to={newNotification.link}>
                 <button className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium">Voir</button>
             </Link>
           ) : null,
         });
+
+        // Browser push notification (works when tab is in background)
+        showBrowserNotification('Zando+', message, newNotification.link);
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          // Connected
-        }
         if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           console.warn("Notification channel closed/error, reconnecting...");
-          // Supabase client should handle auto-reconnect, but monitoring here helps debugging
         }
       });
 

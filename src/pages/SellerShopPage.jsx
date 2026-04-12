@@ -42,10 +42,9 @@ const SellerShopPage = () => {
         .order('created_at', { ascending: false });
 
       const ratingPromise = supabase
-        .from('seller_ratings')
-        .select('average_rating, review_count')
-        .eq('seller_id', sellerId)
-        .maybeSingle();
+        .from('reviews')
+        .select('rating')
+        .eq('seller_id', sellerId);
       
       const [{ data: sellerData, error: sellerError }, { data: listingsData, error: listingsError }, { data: ratingData, error: ratingError }] = await Promise.all([sellerPromise, listingsPromise, ratingPromise]);
 
@@ -69,8 +68,9 @@ const SellerShopPage = () => {
         setListings(listingsData);
       }
 
-      if (ratingData) {
-        setRatingInfo({ average_rating: ratingData.average_rating || 0, review_count: ratingData.review_count || 0 });
+      if (ratingData && ratingData.length > 0) {
+        const avg = ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length;
+        setRatingInfo({ average_rating: avg, review_count: ratingData.length });
       }
 
       setLoading(false);
