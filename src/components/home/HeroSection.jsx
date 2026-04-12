@@ -73,11 +73,12 @@ const HeroSection = () => {
     }
   }, [api]);
   
+  const [searchQuery, setSearchQuery] = useState('');
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    const query = e.target.elements.search.value;
-    if (query) {
-      navigate(`/listings?search=${encodeURIComponent(query)}`);
+    if (searchQuery.trim()) {
+      navigate(`/listings?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -201,8 +202,9 @@ const HeroSection = () => {
                         <div className="relative">
                           <Input
                             type="text"
-                            name="search"
                             placeholder="Que recherchez-vous ?"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 h-10 text-sm rounded-full border-2 border-white/30 focus:border-white bg-white/90 text-gray-800 placeholder-gray-500"
                             onFocus={handleFocus}
                             onBlur={handleBlur}
@@ -219,8 +221,9 @@ const HeroSection = () => {
                       <div className="relative hidden sm:block">
                         <Input
                           type="text"
-                          name="search"
                           placeholder="Que recherchez-vous aujourd'hui ?"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
                           className="w-full pl-12 pr-36 py-4 h-14 text-base rounded-full border-2 border-white/30 focus:border-white bg-white/20 text-black placeholder-gray-600"
                           onFocus={handleFocus}
                           onBlur={handleBlur}
