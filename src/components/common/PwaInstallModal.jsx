@@ -111,8 +111,17 @@ const PwaInstallModal = () => {
                   Installer maintenant
                 </Button>
               ) : (
-                <div className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4">
-                  Ouvrez ce site dans <span className="font-semibold">Chrome</span> pour pouvoir l'installer sur votre écran d'accueil.
+                <div className="space-y-3">
+                  <a
+                    href="intent://zandopluscg.com#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.chrome;end"
+                    className="flex items-center justify-center gap-2 w-full gradient-bg text-white rounded-full h-12 text-base font-semibold"
+                  >
+                    <Download className="w-5 h-5" />
+                    Ouvrir dans Chrome pour installer
+                  </a>
+                  <p className="text-xs text-gray-400 text-center">
+                    Chrome est requis pour installer l'application
+                  </p>
                 </div>
               )}
 
