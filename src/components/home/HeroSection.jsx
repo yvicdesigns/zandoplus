@@ -203,14 +203,14 @@ const HeroSection = () => {
                             type="text"
                             name="search"
                             placeholder="Que recherchez-vous ?"
-                            className="w-full pl-12 pr-4 py-4 h-14 text-base rounded-full border-2 border-white/30 focus:border-white bg-white/90 text-gray-800 placeholder-gray-500"
+                            className="w-full pl-10 pr-4 h-10 text-sm rounded-full border-2 border-white/30 focus:border-white bg-white/90 text-gray-800 placeholder-gray-500"
                             onFocus={handleFocus}
                             onBlur={handleBlur}
                           />
-                          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
                         </div>
-                        <Button type="submit" className="w-full h-12 rounded-full text-base gradient-bg hover:opacity-90">
-                          <Search className="w-4 h-4 mr-2" />
+                        <Button type="submit" className="w-full h-9 rounded-full text-sm gradient-bg hover:opacity-90">
+                          <Search className="w-3.5 h-3.5 mr-1.5" />
                           Rechercher
                         </Button>
                       </div>
