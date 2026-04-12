@@ -21,7 +21,7 @@ const ConversationHeader = ({ conversation }) => {
         openAuthModal();
         return;
     }
-    if (participant.phone) {
+    if (participant?.phone) {
         window.location.href = `tel:${participant.phone}`;
     } else {
         toast({
@@ -68,10 +68,10 @@ const ConversationHeader = ({ conversation }) => {
     <div className="p-4 border-b bg-white rounded-t-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Link to={`/seller/${participant.id}`} className="relative">
+          <Link to={`/seller/${participant?.id}`} className="relative">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={participant.avatar_url} alt={participant.full_name} />
-              <AvatarFallback>{participant.full_name?.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={participant?.avatar_url} alt={participant?.full_name} />
+              <AvatarFallback>{participant?.full_name?.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             {isOnline && (
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
@@ -79,8 +79,8 @@ const ConversationHeader = ({ conversation }) => {
           </Link>
           <div>
             <div className="flex items-center space-x-2">
-              <Link to={`/seller/${participant.id}`} className="font-semibold hover:underline">{participant.full_name}</Link>
-              {participant.verified && (
+              <Link to={`/seller/${participant?.id}`} className="font-semibold hover:underline">{participant?.full_name}</Link>
+              {participant?.verified && (
                 <Shield className="w-4 h-4 text-green-500" title="Utilisateur vérifié" />
               )}
             </div>

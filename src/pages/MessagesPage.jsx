@@ -85,7 +85,7 @@ const MessagesPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchConversations]);
+  }, [user]);
   
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
@@ -111,8 +111,9 @@ const MessagesPage = () => {
           ) : conversations.length > 0 ? (
             <ConversationList
               conversations={conversations}
-              onSelectConversation={handleSelectConversation}
-              selectedConversationId={selectedConversation?.id}
+              loading={loadingConversations}
+              selectedConversation={selectedConversation}
+              onSelect={handleSelectConversation}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-4">
