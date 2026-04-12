@@ -14,7 +14,7 @@ import DynamicFavicon from '@/components/common/DynamicFavicon';
 import { isMobile } from 'react-device-detect';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import { useVisitor } from '@/hooks/useVisitor';
-import PwaInstallFlowManager from '@/components/common/PwaInstallFlowManager';
+import PwaInstallModal from '@/components/common/PwaInstallModal';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { PaymentProvider } from '@/contexts/PaymentContext';
 import { CartProvider } from '@/hooks/useCart';
@@ -203,7 +203,7 @@ const AppLayout = memo(() => {
 const AppContent = () => {
     return (
         <>
-            <PwaInstallFlowManager />
+            <PwaInstallModal />
             <DynamicFavicon />
             <GoogleAnalytics />
             <Routes>

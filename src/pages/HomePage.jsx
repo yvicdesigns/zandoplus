@@ -9,7 +9,6 @@ const ListingsSection = lazy(() => import('@/components/home/ListingsSection'));
 const CategoriesSection = lazy(() => import('@/components/home/CategoriesSection'));
 const StatsSection = lazy(() => import('@/components/home/StatsSection'));
 const CtaSection = lazy(() => import('@/components/home/CtaSection'));
-const PwaInstallBanner = lazy(() => import('@/components/common/PwaInstallBanner'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -73,7 +72,6 @@ const HomePage = () => {
           <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
           <StatsSection />
           <CtaSection />
-          <PwaInstallBanner />
         </Suspense>
       </div>
     </>
