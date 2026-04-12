@@ -15,7 +15,6 @@ const PwaInstallModal = () => {
 
     if (!isMobile || isStandalone || alreadyShown) return;
 
-    // Afficher après 4 secondes
     const timer = setTimeout(() => {
       setIsVisible(true);
       localStorage.setItem('pwaModalShown', 'true');
@@ -36,22 +35,35 @@ const PwaInstallModal = () => {
   return (
     <AnimatePresence>
       {isVisible && (
-        <>
-          {/* Fond sombre + centrage flex */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-6"
-            onClick={handleClose}
-          >
-          {/* Modal centré — stopPropagation pour ne pas fermer en cliquant dedans */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+          }}
+          onClick={handleClose}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{
+              width: '100%',
+              maxWidth: '384px',
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+              overflow: 'hidden',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header vert */}
@@ -112,7 +124,7 @@ const PwaInstallModal = () => {
               </button>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
