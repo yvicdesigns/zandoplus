@@ -5,18 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-
-const categories = [
-    { value: 'all', label: 'Toutes Catégories' },
-    { value: 'electronics', label: 'Électronique' },
-    { value: 'vehicles', label: 'Véhicules' },
-    { value: 'real-estate', label: 'Immobilier' },
-    { value: 'fashion', label: 'Mode' },
-    { value: 'jobs', label: 'Emplois' },
-    { value: 'services', label: 'Services' },
-    { value: 'agro-alimentaire', label: 'Agroalimentaire' },
-    { value: 'traditional-medicine', label: 'Médecine traditionnelle' }
-];
+import { useCategories } from '@/hooks/useCategories';
 
 const conditions = [
     { value: 'all', label: 'Tout État' },
@@ -45,7 +34,12 @@ const ListingsFilters = ({
   showFilters,
   setShowFilters,
 }) => {
-  // Helper to safely handle "all" value which maps to empty string in logic
+  const { categories: dbCategories } = useCategories();
+  const categories = [
+    { value: 'all', label: 'Toutes Catégories' },
+    ...dbCategories.map(c => ({ value: c.slug, label: c.name })),
+  ];
+
   const handleCategoryChange = (val) => {
     setFilters(prev => ({ ...prev, category: val === 'all' ? '' : val }));
   };

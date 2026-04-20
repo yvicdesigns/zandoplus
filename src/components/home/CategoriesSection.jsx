@@ -3,21 +3,28 @@ import React from 'react';
     import { motion } from 'framer-motion';
     import { Card, CardContent } from '@/components/ui/card';
     import { Badge } from '@/components/ui/badge';
-    import { Car, Building, Shirt, Briefcase as BriefcaseBusiness, HeartHandshake, PlugZap, Wheat, Leaf } from 'lucide-react';
+    import { Car, Building, Shirt, Briefcase as BriefcaseBusiness, HeartHandshake, PlugZap, Wheat, Leaf, Tag } from 'lucide-react';
+    import { useCategories } from '@/hooks/useCategories';
+
+    const ICON_MAP = {
+      'electronics': { icon: PlugZap, color: 'from-custom-green-500 to-teal-600' },
+      'vehicles': { icon: Car, color: 'from-blue-500 to-indigo-600' },
+      'real-estate': { icon: Building, color: 'from-orange-500 to-red-600' },
+      'fashion': { icon: Shirt, color: 'from-pink-500 to-rose-600' },
+      'jobs': { icon: BriefcaseBusiness, color: 'from-purple-500 to-violet-600' },
+      'services': { icon: HeartHandshake, color: 'from-yellow-500 to-amber-600' },
+      'agro-alimentaire': { icon: Wheat, color: 'from-green-700 to-lime-600' },
+      'traditional-medicine': { icon: Leaf, color: 'from-emerald-500 to-green-600' },
+    };
 
     const CategoriesSection = ({ categoryCounts, loading }) => {
-      const categories = [
-        { name: 'Électronique', icon: PlugZap, color: 'from-custom-green-500 to-teal-600', slug: 'electronics' },
-        { name: 'Véhicules', icon: Car, color: 'from-blue-500 to-indigo-600', slug: 'vehicles' },
-        { name: 'Immobilier', icon: Building, color: 'from-orange-500 to-red-600', slug: 'real-estate' },
-        { name: 'Mode', icon: Shirt, color: 'from-pink-500 to-rose-600', slug: 'fashion' },
-        { name: 'Emplois', icon: BriefcaseBusiness, color: 'from-purple-500 to-violet-600', slug: 'jobs' },
-        { name: 'Services', icon: HeartHandshake, color: 'from-yellow-500 to-amber-600', slug: 'services' },
-        { name: 'Agroalimentaire', icon: Wheat, color: 'from-green-700 to-lime-600', slug: 'agro-alimentaire' },
-        { name: 'Médecine traditionnelle', icon: Leaf, color: 'from-emerald-500 to-green-600', slug: 'traditional-medicine' }
-      ].map(cat => ({
-        ...cat,
-        count: categoryCounts[cat.slug] || 0
+      const { categories: dbCategories } = useCategories();
+      const categories = dbCategories.map(cat => ({
+        slug: cat.slug,
+        name: cat.name,
+        icon: ICON_MAP[cat.slug]?.icon || Tag,
+        color: ICON_MAP[cat.slug]?.color || 'from-gray-500 to-gray-600',
+        count: categoryCounts?.[cat.slug] || 0,
       }));
 
       return (

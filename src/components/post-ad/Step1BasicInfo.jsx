@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { categories } from './postAdConstants';
+import { useCategories } from '@/hooks/useCategories';
 import FormError from './FormError';
 import { Label } from '@/components/ui/label';
 
 const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors }) => {
-  const selectedCategoryType = formData.category ? categories[formData.category]?.type : null;
+  const { categories, categoriesMap } = useCategories();
+  const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
   
   return (
@@ -34,15 +35,15 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
               <SelectValue placeholder="Sélectionnez une catégorie" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(categories).map(([key, category]) => (
-                <SelectItem key={key} value={key}>{category.name}</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.slug} value={cat.slug}>{cat.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <FormError message={formErrors.category} />
         </div>
 
-        {formData.category && categories[formData.category]?.subcategories.length > 0 && (
+        {formData.category && categoriesMap[formData.category]?.subcategories.length > 0 && (
           <div>
             <Label className="block text-sm font-medium mb-2">
               {isJobCategory ? 'Type de contrat' : 'Sous-catégorie'}
@@ -56,7 +57,7 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
                 <SelectValue placeholder={isJobCategory ? "Sélectionnez un type de contrat" : "Sélectionnez une sous-catégorie"} />
               </SelectTrigger>
               <SelectContent>
-                {categories[formData.category]?.subcategories.map((sub) => (
+                {categoriesMap[formData.category]?.subcategories.map((sub) => (
                   <SelectItem key={sub} value={sub}>{sub}</SelectItem>
                 ))}
               </SelectContent>

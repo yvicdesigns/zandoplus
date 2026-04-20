@@ -19,8 +19,9 @@ import AdminAuditLogTab from '@/components/admin/AdminAuditLogTab';
 import AdminChangeRequestsTab from '@/components/admin/AdminChangeRequestsTab';
 import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab';
 import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
+import AdminCategoriesTab from '@/components/admin/AdminCategoriesTab';
 import { Helmet } from 'react-helmet-async';
-import { Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck, Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity, FileText, ClipboardCheck, CreditCard } from 'lucide-react';
+import { Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck, Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity, FileText, ClipboardCheck, CreditCard, LayoutGrid } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -134,6 +135,11 @@ const AdminDashboard = () => {
               </>
             )}
 
+            <TabsTrigger value="categories" className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-primary/20 border border-transparent bg-muted/50 h-14 justify-start px-4">
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Catégories
+            </TabsTrigger>
+
             <TabsTrigger value="settings" className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border-primary/20 border border-transparent bg-muted/50 h-14 justify-start px-4">
               <Settings className="w-4 h-4 mr-2" />
               Paramètres
@@ -206,6 +212,10 @@ const AdminDashboard = () => {
           <AdminVerificationsTab />
         </TabsContent>
         
+        <TabsContent value="categories">
+          <AdminCategoriesTab />
+        </TabsContent>
+
         <TabsContent value="settings">
           <AdminSettingsTab />
         </TabsContent>

@@ -5,13 +5,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import FormError from './FormError';
-import { conditions, currencies, categories, deliveryMethods } from './postAdConstants';
+import { conditions, currencies, deliveryMethods } from './postAdConstants';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Info } from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
 
 const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectChange, handleRadioChange }) => {
-  const isJobCategory = formData.category && categories[formData.category]?.type === 'job';
-  const isServiceCategory = formData.category && categories[formData.category]?.type === 'service';
+  const { categoriesMap } = useCategories();
+  const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
+  const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
 
   return (
     <motion.div
