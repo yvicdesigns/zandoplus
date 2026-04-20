@@ -25,7 +25,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const RESEND_COOLDOWN = 30; // 30 seconds cooldown
 
 const ResetPasswordPage = () => {
-  const { updatePassword, logout } = useAuth();
+  const { updatePassword, logout, resetPassword } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,21 +96,7 @@ const ResetPasswordPage = () => {
     setRequestError(null);
 
     try {
-        // Call the new dedicated Edge Function which connects to Resend directly
-        const { data, error } = await supabase.functions.invoke('send-password-recovery-email', {
-          body: { 
-            email, 
-            redirectTo: `${window.location.origin}/reset-password`
-          }
-        });
-
-        if (error) {
-           throw new Error(error.message || "Erreur de connexion au serveur");
-        }
-
-        if (!data?.success) {
-           throw new Error(data?.error || "Une erreur est survenue lors de l'envoi de l'e-mail.");
-        }
+        await resetPassword(email);
 
         setViewState('sent');
         setCountdown(RESEND_COOLDOWN);
