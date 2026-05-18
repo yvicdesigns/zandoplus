@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
-import { Loader2, ArrowLeft, Heart, Flag, Share2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Heart, Flag } from 'lucide-react';
+import ShareMenu from '@/components/listing/ShareMenu';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ImageGallery from '@/components/listing/ImageGallery';
@@ -222,10 +223,7 @@ const ListingDetailPage = () => {
                 <Heart className={`mb-1 ${isFavorite ? 'fill-current' : ''}`} />
                 <span className="text-xs">{isFavorite ? 'Favori' : 'Ajouter'}</span>
               </Button>
-              <Button variant="ghost" onClick={handleShare} className="flex-col h-auto">
-                <Share2 className="mb-1" />
-                <span className="text-xs">Partager</span>
-              </Button>
+              <ShareMenu listing={listing} />
               <Button variant="ghost" onClick={() => setReportDialogOpen(true)} className="flex-col h-auto text-destructive hover:text-destructive/80">
                 <Flag className="mb-1" />
                 <span className="text-xs">Signaler</span>
