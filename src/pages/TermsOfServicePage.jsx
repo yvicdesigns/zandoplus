@@ -65,7 +65,7 @@ const TermsOfServicePage = () => {
               animate={{ opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.2 } }}
             >
               Règles à suivre pour une expérience juste et sécurisée pour tous.
-              <br />Dernière mise à jour : 15 juillet 2025
+              <br />Dernière mise à jour : 20 mai 2026
             </motion.p>
           </div>
         </section>
@@ -101,11 +101,21 @@ const TermsOfServicePage = () => {
                <p>Nous nous réservons le droit de supprimer tout contenu et de suspendre ou résilier tout compte qui enfreint ces règles, sans préavis.</p>
             </Section>
             
-            <Section icon={FileText} title="4. Limitation de responsabilité">
-                <p>Zando+ Congo est une plateforme de mise en relation. Nous ne sommes pas partie prenante aux transactions entre acheteurs et vendeurs. Par conséquent, nous ne garantissons pas la qualité, la sécurité ou la légalité des articles proposés, ni la véracité des annonces ou la capacité des vendeurs à vendre des articles et des acheteurs à les payer.</p>
-                <p>En aucun cas, Zando+ Congo ne pourra être tenu responsable des dommages directs ou indirects résultant de l'utilisation de notre plateforme.</p>
+            <Section icon={FileText} title="4. Service d'Achat Sécurisé (Escrow)">
+                <p>Zando+ Congo propose un service d'achat sécurisé dit "escrow" permettant à l'acheteur de déposer un paiement que Zando+ conserve jusqu'à confirmation de réception du bien acheté. Ce service est soumis aux conditions suivantes :</p>
+                <ul>
+                  <li>Une commission de <strong>3%</strong> du montant de la transaction est prélevée sur la part reversée au vendeur. L'acheteur paie le prix affiché sans surcoût.</li>
+                  <li>L'acheteur dispose de <strong>72 heures</strong> après la déclaration de livraison par le vendeur pour confirmer la réception ou ouvrir un litige.</li>
+                  <li>En cas de litige, Zando+ examine les preuves et prend une décision qui peut aboutir à la libération des fonds au vendeur ou au remboursement de l'acheteur.</li>
+                  <li>Zando+ ne peut être tenu responsable en cas de défaillance des opérateurs de paiement mobile (Airtel Money, MTN Money) lors du transfert.</li>
+                </ul>
             </Section>
-            
+
+            <Section icon={Gavel} title="5. Limitation de responsabilité">
+                <p>En dehors du service d'achat sécurisé décrit à l'article 4, Zando+ Congo est une plateforme de mise en relation. Nous ne garantissons pas la qualité, la sécurité ou la légalité des articles proposés hors escrow, ni la véracité des annonces.</p>
+                <p>En aucun cas, Zando+ Congo ne pourra être tenu responsable des dommages directs ou indirects résultant de transactions effectuées en dehors du système d'achat sécurisé.</p>
+            </Section>
+
             <p className="text-center text-gray-600 mt-12">Pour toute question concernant ces Conditions d'Utilisation, veuillez nous contacter via notre <a href="/contact" className="text-custom-green-600 font-semibold hover:underline">page de contact</a>.</p>
           </div>
         </div>

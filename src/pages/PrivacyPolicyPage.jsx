@@ -67,7 +67,7 @@ const PrivacyPolicyPage = () => {
               animate={{ opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.2 } }}
             >
               Votre confiance est notre priorité. Voici comment nous protégeons vos informations.
-              <br />Dernière mise à jour : 15 juillet 2025
+              <br />Dernière mise à jour : 20 mai 2026
             </motion.p>
           </div>
         </section>
@@ -81,9 +81,10 @@ const PrivacyPolicyPage = () => {
             <Section icon={Database} title="1. Collecte de vos informations">
               <p>Nous collectons des informations vous concernant de plusieurs manières. Les informations que nous pouvons collecter sur la plateforme incluent :</p>
               <ul>
-                <li><strong>Données personnelles :</strong> Informations identifiables, telles que votre nom, adresse e-mail, numéro de téléphone, que vous fournissez volontairement lors de votre inscription.</li>
+                <li><strong>Données personnelles :</strong> Informations identifiables, telles que votre nom, adresse e-mail, numéro de téléphone et ville, que vous fournissez volontairement lors de votre inscription.</li>
                 <li><strong>Données dérivées :</strong> Informations collectées automatiquement lorsque vous accédez à la plateforme, telles que votre adresse IP, type de navigateur, pages consultées.</li>
                 <li><strong>Données des annonces :</strong> Informations que vous fournissez lors de la création d’une annonce, y compris les descriptions, photos et prix.</li>
+                <li><strong>Preuves de paiement :</strong> Dans le cadre de l’Achat Sécurisé, les captures d’écran de paiement Mobile Money que vous uploadez sont stockées de manière sécurisée dans notre espace de stockage privé (non accessible au public).</li>
               </ul>
             </Section>
 
@@ -93,6 +94,8 @@ const PrivacyPolicyPage = () => {
                 <li>Créer et gérer votre compte.</li>
                 <li>Faciliter la communication entre acheteurs et vendeurs.</li>
                 <li>Vous envoyer des notifications concernant votre compte ou la plateforme.</li>
+                <li>Personnaliser l’affichage des annonces selon votre ville enregistrée (priorité géographique) afin de vous montrer en premier les annonces proches de vous.</li>
+                <li>Gérer les transactions d’achat sécurisé (escrow) et vérifier les preuves de paiement.</li>
                 <li>Prévenir les activités frauduleuses et renforcer la sécurité.</li>
                 <li>Analyser l’utilisation et les tendances afin d’améliorer nos services.</li>
               </ul>

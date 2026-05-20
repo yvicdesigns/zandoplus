@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon } from 'lucide-react';
+import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -24,7 +24,7 @@ const HelpCenterPage = () => {
       }, 100);
     }
   }, [location]);
-  
+
   const pageVariants = {
     initial: { opacity: 0, y: 30 },
     in: { opacity: 1, y: 0 },
@@ -45,7 +45,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Est-ce que l'utilisation de Zando+ est gratuite ?",
-        a: "Oui, l'inscription et la publication d'annonces de base sont entièrement gratuites. Nous proposons des options payantes pour mettre en avant vos annonces et obtenir plus de visibilité."
+        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées. Aucun abonnement n'est requis. Nous proposons uniquement une option payante pour booster la visibilité d'une annonce (500 FCFA / 7 jours)."
       },
       {
         q: "Comment puis-je réinitialiser mon mot de passe ?",
@@ -74,26 +74,62 @@ const HelpCenterPage = () => {
     ],
     buyers: [
       {
+        q: "Qu'est-ce que l'Achat Sécurisé Zando ?",
+        a: (
+          <>
+            L'Achat Sécurisé Zando est notre système de paiement escrow intégré. Voici comment ça fonctionne :
+            <ol className="list-decimal list-inside mt-2 space-y-1">
+              <li>Vous envoyez le paiement (Airtel Money ou MTN Money) au numéro Zando+.</li>
+              <li>Vous uploadez la capture d'écran de votre paiement sur la plateforme.</li>
+              <li>Zando+ bloque les fonds et notifie le vendeur pour préparer la livraison.</li>
+              <li>Vous avez 72h après la livraison pour confirmer la réception.</li>
+              <li>Seulement après votre confirmation, les fonds sont libérés au vendeur.</li>
+            </ol>
+            <p className="mt-2">En cas de problème, vous pouvez ouvrir un litige dans les 48h suivant la confirmation. Notre équipe interviendra.</p>
+          </>
+        )
+      },
+      {
         q: "Comment puis-je contacter un vendeur ?",
-        a: "Sur la page de l'annonce, vous trouverez les informations de contact du vendeur, comme son numéro de téléphone. Vous pouvez également lui envoyer un message directement via notre plateforme en cliquant sur 'Envoyer un message'."
+        a: "Sur la page de l'annonce, vous trouverez les informations de contact du vendeur, comme son numéro de téléphone. Vous pouvez également lui envoyer un message directement via notre plateforme en cliquant sur 'Envoyer un message'. Pour les achats sécurisés, utilisez le bouton 'Achat Sécurisé Zando ✅'."
       },
       {
         q: "Comment puis-je être sûr de la qualité d'un article ?",
-        a: "Nous vous recommandons de bien lire la description, de regarder toutes les photos et de poser des questions au vendeur. Pour les articles de valeur, privilégiez une rencontre en personne dans un lieu public pour inspecter l'article avant de payer."
+        a: "Nous vous recommandons de bien lire la description, de regarder toutes les photos et de poser des questions au vendeur. Pour les articles de valeur, utilisez l'Achat Sécurisé Zando qui protège votre argent jusqu'à ce que vous confirmiez avoir bien reçu l'article."
       },
       {
         q: "Que faire si je suspecte une annonce frauduleuse ?",
         a: "Si une annonce vous semble suspecte, veuillez la signaler immédiatement en utilisant le bouton 'Signaler cette annonce' sur la page du produit. Notre équipe examinera le signalement dans les plus brefs délais."
+      },
+      {
+        q: "Comment suivre mes transactions ?",
+        a: (
+          <>
+            Rendez-vous sur la page{' '}
+            <Link to="/transactions" className="text-custom-green-600 hover:underline font-semibold">
+              Mes Transactions
+            </Link>{' '}
+            (accessible depuis le menu utilisateur). Vous y retrouvez l'état de chaque achat sécurisé, les boutons d'action disponibles et l'historique complet.
+          </>
+        )
       }
     ],
     sellers: [
       {
         q: "Comment puis-je publier une annonce ?",
-        a: "Une fois connecté, cliquez sur le bouton 'Publier une annonce'. Suivez les étapes pour ajouter un titre, une description, des photos de qualité, fixer un prix et choisir une catégorie."
+        a: "Une fois connecté, cliquez sur le bouton 'Publier une annonce'. Suivez les étapes pour ajouter un titre, une description, des photos de qualité, fixer un prix et choisir une catégorie. La publication est gratuite et illimitée."
+      },
+      {
+        q: "Comment booster mon annonce ?",
+        a: "Depuis votre profil, cliquez sur l'annonce que vous souhaitez mettre en avant, puis sur 'Booster'. Le boost coûte 500 FCFA et place votre annonce en tête des résultats pendant 7 jours avec un badge 'Boosté' visible. Le paiement se fait via Airtel Money ou MTN Money."
+      },
+      {
+        q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
+        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois les fonds bloqués, vous préparez et livrez l'article, puis déclarez la livraison depuis la page 'Mes Transactions'. Une commission de 3% est déduite du montant qui vous est reversé — l'acheteur paie le prix affiché sans surcoût."
       },
       {
         q: "Comment fonctionne la gestion des stocks ?",
-        a: "Lors de la création ou de la modification de votre annonce, vous pouvez spécifier la 'Quantité en stock'. Si vous laissez ce champ vide, l'article est considéré comme unique. Lorsque la quantité atteint 0, votre annonce est automatiquement marquée comme 'Épuisé' pour éviter de recevoir des messages inutiles. Pensez à mettre à jour le stock après chaque vente si vous ne le suivez pas automatiquement !"
+        a: "Lors de la création ou de la modification de votre annonce, vous pouvez spécifier la 'Quantité en stock'. Si vous laissez ce champ vide, l'article est considéré comme unique. Lorsque la quantité atteint 0, votre annonce est automatiquement marquée comme 'Épuisé'."
       },
       {
         q: "Comment puis-je rendre mon annonce plus attractive ?",
@@ -121,7 +157,7 @@ const HelpCenterPage = () => {
     buyerTips: [
       {
         q: "Comment faire une recherche efficace ?",
-        a: "Utilisez des mots-clés précis dans la barre de recherche. N'hésitez pas à utiliser les filtres (catégorie, prix, localisation) pour affiner les résultats et trouver exactement ce que vous cherchez plus rapidement."
+        a: "Utilisez des mots-clés précis dans la barre de recherche. N'hésitez pas à utiliser les filtres (catégorie, prix, localisation) pour affiner les résultats. Les annonces de votre ville apparaissent automatiquement en premier lorsque vous êtes connecté."
       },
       {
         q: "Conseils pour une négociation réussie",
@@ -129,7 +165,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Les règles d'or pour un achat sécurisé",
-        a: "1. Privilégiez les vendeurs vérifiés. 2. Ne payez JAMAIS à l'avance, surtout par des moyens non traçables. 3. Rencontrez le vendeur dans un lieu public. 4. Vérifiez l'article en détail avant de payer. 5. Si une offre semble trop belle pour être vraie, c'est probablement le cas."
+        a: "1. Privilégiez les vendeurs vérifiés. 2. Ne payez jamais à l'avance par des moyens non traçables — utilisez l'Achat Sécurisé Zando ✅ qui protège votre argent jusqu'à réception. 3. Rencontrez le vendeur dans un lieu public si vous payez en main propre. 4. Vérifiez l'article en détail avant de confirmer la réception. 5. Si une offre semble trop belle pour être vraie, c'est probablement le cas."
       }
     ]
   };
@@ -179,14 +215,14 @@ const HelpCenterPage = () => {
         <section className="relative py-20 lg:py-24 hero-pattern">
           <div className="absolute inset-0 bg-gradient-to-br from-custom-green-600/10 via-teal-600/10 to-transparent"></div>
           <div className="container mx-auto px-4 relative z-10 text-center">
-            <motion.h1 
+            <motion.h1
               className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0, transition: { duration: 0.5 } }}
             >
               Centre <span className="gradient-text">d'Aide</span>
             </motion.h1>
-            <motion.p 
+            <motion.p
               className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.2 } }}
@@ -203,7 +239,7 @@ const HelpCenterPage = () => {
             <FaqSection id="buyers" icon={ShoppingCart} title="Pour les Acheteurs" questions={faqs.buyers} />
             <FaqSection id="tips" icon={Zap} title="Techniques de Vente" questions={faqs.tips} />
             <FaqSection id="buyer-tips" icon={Lightbulb} title="Astuces pour Acheteurs" questions={faqs.buyerTips} />
-            
+
             <div className="mt-16 text-center p-8 bg-gray-50 rounded-xl border border-gray-200">
                 <LifeBuoy className="w-12 h-12 text-custom-green-500 mx-auto mb-4"/>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Vous ne trouvez pas de réponse ?</h3>
