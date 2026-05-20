@@ -71,9 +71,21 @@ const HomePage = () => {
               "@type": "Organization",
               "@id": "https://www.zandopluscg.com/#organization",
               "name": "Zando+",
+              "alternateName": "Zando Plus",
               "url": "https://www.zandopluscg.com/",
               "logo": "https://www.zandopluscg.com/icons/icon-192x192.png",
               "description": "La première place de marché en ligne du Congo Brazzaville.",
+              "founder": {
+                "@type": "Person",
+                "name": "Tchissambou Van Yvic",
+                "jobTitle": "Fondateur & CEO",
+                "url": "https://www.zandopluscg.com/about"
+              },
+              "foundingLocation": {
+                "@type": "Place",
+                "name": "Brazzaville, Congo"
+              },
+              "areaServed": "Congo-Brazzaville",
               "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "customer support",

@@ -129,9 +129,52 @@ const AboutPage = () => {
     </motion.div>;
   return <>
       <Helmet>
-        <title>À Propos de Nous - Zando+ Congo</title>
-        <meta name="description" content="Découvrez notre mission de connecter les acheteurs et vendeurs au Congo Brazzaville et l'histoire de notre fondateur, M. Thissambou Van Yvic." />
+        <title>À Propos - Zando+ Congo | Fondateur M. Tchissambou Van Yvic</title>
+        <meta name="description" content="Zando+ Congo est fondée par M. Tchissambou Van Yvic, entrepreneur congolais, CEO de Creative Art Afrik, spécialisé en développement web et design graphique. La première place de marché en ligne du Congo Brazzaville." />
         <link rel="canonical" href="https://www.zandopluscg.com/about" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Person",
+              "@id": "https://www.zandopluscg.com/about#founder",
+              "name": "Tchissambou Van Yvic",
+              "alternateName": "M. Tchissambou Van Yvic",
+              "jobTitle": "Fondateur & CEO",
+              "worksFor": {
+                "@type": "Organization",
+                "name": "Creative Art Afrik"
+              },
+              "nationality": "Congolaise",
+              "knowsAbout": ["Développement web", "Design graphique", "Photographie", "Vidéo", "Intelligence artificielle", "Électricité"],
+              "description": "M. Tchissambou Van Yvic, originaire du Congo-Brazzaville, est le fondateur de Zando+ et CEO de Creative Art Afrik. Passionné de technologie et de créativité, il s'est spécialisé en électricité et informatique, puis en design graphique et développement web au Ghana.",
+              "url": "https://www.zandopluscg.com/about",
+              "sameAs": []
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://www.zandopluscg.com/#organization",
+              "name": "Zando+",
+              "alternateName": "Zando Plus",
+              "url": "https://www.zandopluscg.com/",
+              "logo": "https://www.zandopluscg.com/icons/icon-192x192.png",
+              "description": "La première place de marché en ligne du Congo Brazzaville. Achetez et vendez électronique, véhicules, immobilier, mode et plus encore.",
+              "founder": {
+                "@id": "https://www.zandopluscg.com/about#founder"
+              },
+              "foundingLocation": {
+                "@type": "Place",
+                "name": "Brazzaville, Congo"
+              },
+              "areaServed": "Congo-Brazzaville",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer support",
+                "url": "https://www.zandopluscg.com/contact"
+              }
+            }
+          ]
+        })}</script>
       </Helmet>
       <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="overflow-hidden relative">
         <section className="relative py-20 lg:py-32 hero-pattern">
