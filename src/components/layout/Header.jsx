@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut, ShoppingBag, LogIn, LayoutDashboard, ChevronDown, KeyRound } from 'lucide-react';
+import { Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut, ShoppingBag, LogIn, LayoutDashboard, ChevronDown, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -191,6 +191,10 @@ const Header = memo(({ onLoginClick }) => {
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Mes Messages
                       </Link>
+                      <Link to="/transactions" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
+                        <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
+                        Mes Transactions
+                      </Link>
                       <Link to="/settings" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
                         <Settings className="w-4 h-4 mr-2" />
                         Paramètres
@@ -308,6 +312,10 @@ const Header = memo(({ onLoginClick }) => {
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
+                  </Link>
+                  <Link to="/transactions" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
+                    <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
+                    Mes Transactions
                   </Link>
                   <Link to="/settings" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
                     <Settings className="w-4 h-4 mr-2" />

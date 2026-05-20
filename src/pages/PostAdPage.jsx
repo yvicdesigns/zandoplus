@@ -27,12 +27,6 @@ import { uploadImagesWithWatermark } from '@/lib/imageUtils';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { sanitizeInput } from '@/lib/validationUtils';
 
-const PLAN_LIMITS = {
-  free: 5,
-  boost: 20,
-  pro: Infinity,
-};
-
 const PostAdPage = () => {
   const navigate = useNavigate();
   const { user, updateProfile } = useAuth();
@@ -43,8 +37,6 @@ const PostAdPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [isCheckingLimit, setIsCheckingLimit] = useState(true);
-  const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
 
   const DRAFT_KEY = 'postAdDraft';
@@ -98,16 +90,6 @@ const PostAdPage = () => {
 
   useEffect(() => {
     if (user && !listingsLoading) {
-      const userPlan = user.plan || 'free';
-      const limit = PLAN_LIMITS[userPlan];
-      const activeUserListings = listings.filter(l => l.user_id === user.id && l.status === 'active').length;
-
-      if (activeUserListings >= limit) {
-        setShowLimitDialog(true);
-      } else {
-        setIsCheckingLimit(false);
-      }
-
       setFormData(prev => ({
         ...prev,
         phone: user.phone || '',
@@ -117,7 +99,7 @@ const PostAdPage = () => {
       navigate('/');
       toast({ title: 'Non authentifié', description: 'Veuillez vous connecter pour poster une annonce.', variant: 'destructive' });
     }
-  }, [user, listings, listingsLoading, navigate, toast]);
+  }, [user, listingsLoading, navigate, toast]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -291,15 +273,6 @@ const PostAdPage = () => {
     }
   };
   
-  if (isCheckingLimit) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
-        <Loader2 className="w-12 h-12 animate-spin text-custom-green-500" />
-        <p className="ml-4 text-lg text-gray-700">Vérification de votre compte...</p>
-      </div>
-    );
-  }
-
   const renderStep = () => {
     switch (currentStep) {
       case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} />;
@@ -312,23 +285,6 @@ const PostAdPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-8">
-      <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limite d'annonces atteinte</AlertDialogTitle>
-            <AlertDialogDescription>
-              Vous avez atteint la limite de publications pour votre plan actuel. Pour publier plus d'annonces, veuillez passer à un plan supérieur.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => navigate('/profile')}>Retour au profil</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button onClick={() => navigate('/pricing')} className="gradient-bg hover:opacity-90">Voir les offres</Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">Publiez Votre <span className="gradient-text">Annonce</span></h1>

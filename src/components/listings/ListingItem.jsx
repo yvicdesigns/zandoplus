@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, MapPin, Calendar } from 'lucide-react';
+import { Heart, MapPin, Calendar, Zap } from 'lucide-react';
 import ListingBadges from '@/components/common/ListingBadges';
 import StarRating from '@/components/reviews/StarRating';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -65,8 +65,13 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               }`} 
             />
           </button>
-          <div className="absolute top-3 left-3 z-10">
-             <ListingBadges listing={listing} seller={listing.seller} />
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+            {listing.is_boosted && (
+              <span className="flex items-center gap-1 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                <Zap className="w-3 h-3" /> Boosté
+              </span>
+            )}
+            <ListingBadges listing={listing} seller={listing.seller} />
           </div>
         </div>
         <CardContent className="p-4 flex-grow flex-col justify-between">

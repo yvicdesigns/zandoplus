@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageSquare, Phone, ShieldCheck } from 'lucide-react';
+import { Loader2, MessageSquare, Phone, ShieldCheck, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import SendMessageDialog from '@/components/listing/SendMessageDialog';
+import { categories as CATEGORY_DEFS } from '@/components/post-ad/postAdConstants';
 
 const ActionButtons = ({ listing }) => {
   const { user, openAuthModal } = useAuth();
@@ -66,16 +67,38 @@ const ActionButtons = ({ listing }) => {
   };
 
   const canUseZandoDelivery = listing.delivery_method === 'zando_delivery';
+  const categoryType = CATEGORY_DEFS[listing.category]?.type ?? 'product';
+  const isProduct = !['job', 'service'].includes(categoryType);
+
+  const handleEscrowPayment = () => {
+    if (!user) {
+      openAuthModal();
+      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour utiliser l'achat sécurisé.", variant: "destructive" });
+      return;
+    }
+    navigate(`/escrow/${listing.id}`);
+  };
 
   return (
     <>
       <div className="p-4 border-2 border-gray-200 rounded-lg bg-white shadow-lg space-y-3">
         <h3 className="text-lg font-semibold text-center">Contacter le vendeur</h3>
-        
+
+        {isProduct && (
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            size="lg"
+            onClick={handleEscrowPayment}
+          >
+            <Lock className="mr-2 h-5 w-5" />
+            Achat Sécurisé Zando ✅
+          </Button>
+        )}
+
         {canUseZandoDelivery && (
-            <Button 
-              className="w-full gradient-bg hover:opacity-90" 
-              size="lg" 
+            <Button
+              className="w-full gradient-bg hover:opacity-90"
+              size="lg"
               onClick={handleCreateDelivery}
               disabled={isCreatingDelivery}
             >
@@ -91,7 +114,7 @@ const ActionButtons = ({ listing }) => {
         <Button className="w-full" size="lg" variant="outline" onClick={handleOpenMessageDialog}>
             <MessageSquare className="mr-2 h-5 w-5" /> Envoyer un message
         </Button>
-        
+
         {listing.seller.phone && (
             <a href={`tel:${listing.seller.phone}`} className="w-full inline-block">
                 <Button variant="outline" className="w-full" size="lg">

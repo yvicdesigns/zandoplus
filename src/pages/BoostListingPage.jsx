@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingBag as LoadingIcon, Zap, ShieldCheck, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Zap, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
+const BOOST_AMOUNT = 500;
+const BOOST_DAYS = 7;
 
 const BoostListingPage = () => {
   const { listingId } = useParams();
@@ -18,165 +19,164 @@ const BoostListingPage = () => {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [duration, setDuration] = useState(7);
-
-  const BOOST_PRICE_PER_DAY = 200;
-  const currency = 'FCFA';
-  const totalAmount = duration * BOOST_PRICE_PER_DAY;
+  const [activeBoost, setActiveBoost] = useState(null);
 
   useEffect(() => {
-    const fetchListing = async () => {
+    if (!user) return;
+    const fetchData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: listingData, error } = await supabase
         .from('listings')
         .select('id, title, images, user_id')
         .eq('id', listingId)
         .single();
 
-      if (error || !data) {
-        toast({ title: 'Erreur', description: "L'annonce n'a pas pu être trouvée.", variant: 'destructive' });
+      if (error || !listingData) {
+        toast({ title: 'Erreur', description: "Annonce introuvable.", variant: 'destructive' });
         navigate('/profile');
         return;
       }
-      
-      if (data.user_id !== user?.id) {
-        toast({ title: 'Accès non autorisé', description: "Vous ne pouvez pas booster cette annonce.", variant: 'destructive' });
+      if (listingData.user_id !== user.id) {
+        toast({ title: 'Accès refusé', variant: 'destructive' });
         navigate('/');
         return;
       }
+      setListing(listingData);
 
-      setListing(data);
+      // Vérifie si un boost actif existe déjà
+      const { data: boostData } = await supabase
+        .from('ad_boosts')
+        .select('id, date_fin, statut')
+        .eq('annonce_id', listingId)
+        .eq('statut', 'active')
+        .maybeSingle();
+      setActiveBoost(boostData);
       setLoading(false);
     };
-
-    if (user) {
-      fetchListing();
-    }
+    fetchData();
   }, [listingId, user, navigate, toast]);
 
-  const handleDurationChange = (amount) => {
-    setDuration(prev => Math.max(1, prev + amount));
-  };
-
-  const handleProceedToPayment = async () => {
-    if (duration < 1) {
-      toast({ title: 'Durée invalide', description: 'La durée du boost doit être d\'au moins 1 jour.', variant: 'destructive' });
-      return;
-    }
+  const handleBoost = async () => {
     setIsProcessing(true);
     try {
-      const { data: boostRequest, error } = await supabase
-        .from('boost_requests')
+      const { data: boost, error } = await supabase
+        .from('ad_boosts')
         .insert({
-          listing_id: listing.id,
+          annonce_id: listing.id,
           user_id: user.id,
-          duration_days: duration,
-          total_amount: totalAmount,
-          status: 'pending_payment'
+          montant: BOOST_AMOUNT,
+          statut: 'pending',
         })
         .select('id')
         .single();
 
       if (error) throw error;
 
-      const paymentInfo = {
-        amount: totalAmount, 
-        listingId: listing.id,
-        boostRequestId: boostRequest.id,
-        description: `Boost de ${duration} jours pour: ${listing.title}`,
-        type: 'boost'
-      };
-      localStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
-      navigate('/mobile-payment');
-
-    } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible de créer la demande de boost. Veuillez réessayer.', variant: 'destructive' });
+      navigate('/boost-payment', {
+        state: {
+          boostId: boost.id,
+          listingId: listing.id,
+          listingTitle: listing.title,
+          amount: BOOST_AMOUNT,
+          days: BOOST_DAYS,
+        }
+      });
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingIcon className="w-12 h-12 animate-spin text-custom-green-500" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="w-10 h-10 animate-spin text-custom-green-500" />
+    </div>
+  );
 
   return (
     <>
-      <Helmet>
-        <title>Booster votre annonce - Zando</title>
-        <meta name="description" content={`Mettez en avant votre annonce ${listing?.title} et touchez plus d'acheteurs.`} />
-      </Helmet>
+      <Helmet><title>Booster l'annonce - Zando+</title></Helmet>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-12 px-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-xl mx-auto">
           <Button variant="ghost" onClick={() => navigate('/profile')} className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour au profil
+            <ArrowLeft className="w-4 h-4 mr-2" /> Retour au profil
           </Button>
-          <Card className="w-full shadow-lg border-0">
+
+          <Card className="shadow-lg border-0">
             <CardHeader className="text-center">
               <div className="mx-auto bg-amber-100 p-3 rounded-full w-fit mb-4">
-                  <Zap className="w-8 h-8 text-amber-500" />
+                <Zap className="w-8 h-8 text-amber-500" />
               </div>
-              <CardTitle className="text-3xl font-bold gradient-text">Mettez votre annonce en Vedette !</CardTitle>
-              <CardDescription className="text-lg text-gray-600 pt-2">
-                Atteignez plus d'acheteurs potentiels et vendez plus rapidement.
+              <CardTitle className="text-2xl font-bold">Booster cette annonce</CardTitle>
+              <CardDescription className="text-gray-600 pt-1">
+                Votre annonce apparaît en tête des résultats pendant 7 jours.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-lg">
+
+            <CardContent className="space-y-6">
+              {/* Aperçu annonce */}
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
                 <img
-                  src={listing.images?.[0] || 'https://via.placeholder.com/150'}
+                  src={listing.images?.[0] || 'https://via.placeholder.com/80'}
                   alt={listing.title}
-                  className="w-32 h-32 object-cover rounded-lg border"
+                  className="w-16 h-16 object-cover rounded-lg border"
                 />
-                <div className="text-center sm:text-left">
-                  <p className="text-gray-500">Vous boostez l'annonce :</p>
-                  <h3 className="text-xl font-bold text-gray-800">{listing.title}</h3>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Annonce à booster</p>
+                  <p className="font-semibold text-gray-800 line-clamp-2">{listing.title}</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <Label htmlFor="duration" className="text-lg font-semibold text-center block">Choisissez la durée du boost</Label>
-                <div className="flex items-center justify-center gap-4">
-                  <Button size="icon" variant="outline" onClick={() => handleDurationChange(-1)} disabled={duration <= 1}>
-                    <Minus className="w-5 h-5" />
-                  </Button>
-                  <div className="flex items-center gap-2 font-bold text-2xl">
-                    <Input 
-                      id="duration"
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                      className="w-20 text-center text-2xl font-bold border-2 border-gray-300 focus:border-custom-green-500"
-                    />
-                    <span>Jours</span>
+              {/* Boost actif ? */}
+              {activeBoost && (
+                <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-amber-800">Boost déjà actif</p>
+                    <p className="text-xs text-amber-700">
+                      Expire le {new Date(activeBoost.date_fin).toLocaleDateString('fr-FR')}
+                    </p>
                   </div>
-                  <Button size="icon" variant="outline" onClick={() => handleDurationChange(1)}>
-                    <Plus className="w-5 h-5" />
-                  </Button>
                 </div>
-                <p className="text-center text-sm text-gray-500">{BOOST_PRICE_PER_DAY} {currency} / jour</p>
+              )}
+
+              {/* Détail de l'offre */}
+              <div className="space-y-3">
+                {[
+                  'Affiché en premier dans les résultats de recherche',
+                  'Badge "Boosté" visible sur votre annonce',
+                  'Mis en avant dans sa catégorie',
+                  'Durée : 7 jours',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <CheckCircle className="w-4 h-4 text-custom-green-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">{item}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="text-center bg-green-50 border-l-4 border-custom-green-500 p-4 rounded-r-lg">
-                <p className="text-lg">Prix Total :</p>
-                <p className="text-4xl font-bold text-custom-green-600">
-                  {totalAmount.toLocaleString()} {currency}
-                </p>
+              {/* Prix */}
+              <div className="text-center bg-green-50 border border-custom-green-200 rounded-xl p-5">
+                <p className="text-sm text-gray-500 mb-1">Prix unique</p>
+                <p className="text-4xl font-bold text-custom-green-600">{BOOST_AMOUNT.toLocaleString()} FCFA</p>
+                <p className="text-xs text-gray-400 mt-1">pour {BOOST_DAYS} jours</p>
               </div>
-
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button onClick={handleProceedToPayment} disabled={isProcessing} size="lg" className="w-full gradient-bg hover:opacity-90 text-lg">
-                 {isProcessing ? 'Traitement...' : `Procéder au paiement`}
+
+            <CardFooter className="flex flex-col gap-3">
+              <Button
+                onClick={handleBoost}
+                disabled={isProcessing || !!activeBoost}
+                size="lg"
+                className="w-full gradient-bg hover:opacity-90 text-base"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+                {activeBoost ? 'Boost déjà actif' : 'Booster pour 500 FCFA'}
               </Button>
-               <div className="flex items-center text-sm text-gray-500">
-                <ShieldCheck className="w-4 h-4 mr-2 text-custom-green-500" />
-                <span>Paiement sécurisé via Mobile Money</span>
+              <div className="flex items-center justify-center text-xs text-gray-400 gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Paiement via Airtel Money ou MTN Money
               </div>
             </CardFooter>
           </Card>

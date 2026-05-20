@@ -1,4 +1,6 @@
-import React, { useEffect, Suspense, lazy, memo } from 'react';
+import React, { useEffect, useState, Suspense, lazy, memo } from 'react';
+import { SplashScreen } from '@capacitor/splash-screen';
+import SplashAnimationOverlay from '@/components/common/SplashAnimationOverlay';
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -29,8 +31,6 @@ const EditAdPage = lazy(() => import('@/pages/EditAdPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const MessagesPage = lazy(() => import('@/pages/MessagesPage'));
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const PricingPage = lazy(() => import('@/pages/PricingPage'));
-const PaymentStatusPage = lazy(() => import('@/pages/PaymentStatusPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const MakeAdminPage = lazy(() => import('@/pages/MakeAdminPage'));
 const VerificationPage = lazy(() => import('@/pages/VerificationPage'));
@@ -39,13 +39,10 @@ const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
 const HelpCenterPage = lazy(() => import('@/pages/HelpCenterPage'));
-const FreePlanPage = lazy(() => import('@/pages/FreePlanPage'));
-const BoostPlanPage = lazy(() => import('@/pages/BoostPlanPage'));
-const MobilePaymentPage = lazy(() => import('@/pages/MobilePaymentPage'));
 const BoostListingPage = lazy(() => import('@/pages/BoostListingPage'));
-const PaymentConfirmationPage = lazy(() => import('@/pages/PaymentConfirmationPage'));
 const BoostPaymentConfirmationPage = lazy(() => import('@/pages/BoostPaymentConfirmationPage'));
-const BoostReviewPage = lazy(() => import('@/pages/BoostReviewPage'));
+const EscrowPaymentPage = lazy(() => import('@/pages/EscrowPaymentPage'));
+const TransactionsPage = lazy(() => import('@/pages/TransactionsPage'));
 const PromotionsPage = lazy(() => import('@/pages/PromotionsPage'));
 const EmailConfirmationPage = lazy(() => import('@/pages/EmailConfirmationPage'));
 const ConfirmationRequiredPage = lazy(() => import('@/pages/ConfirmationRequiredPage'));
@@ -120,43 +117,7 @@ const PostAdProtectedRoute = () => {
     );
   }
 
-  const userActiveListingsCount = listings.filter(l => l.user_id === user.id && l.status === 'active').length;
-  
-  let maxListings;
-  switch (user.plan) {
-    case 'free':
-      maxListings = 5;
-      break;
-    case 'boost':
-      maxListings = 20;
-      break;
-    case 'pro':
-      maxListings = 100;
-      break;
-    default:
-      maxListings = 5;
-  }
-
-  if (userActiveListingsCount >= maxListings) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-4 text-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-          <h1 className="text-xl font-bold mb-4">Limite d'Annonces Atteinte</h1>
-          <p className="text-gray-600 mb-6">
-            Vous avez atteint le nombre maximal d'annonces actives pour votre plan ({maxListings}).
-            Veuillez désactiver ou supprimer une annonce, ou mettre à niveau votre plan.
-          </p>
-          <Button onClick={() => navigate('/profile')} className="gradient-bg hover:opacity-90 mr-2">
-            Gérer mes annonces
-          </Button>
-          <Button onClick={() => navigate('/pricing')} variant="outline">
-            Voir les Plans
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+  // Publication gratuite et illimitée — aucune restriction de plan
   return <Outlet />;
 };
 
@@ -180,6 +141,10 @@ const ScrollToTop = () => {
 const AppLayout = memo(() => {
     const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
     useVisitor();
+
+    useEffect(() => {
+      SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+    }, []);
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -232,22 +197,16 @@ const AppContent = () => {
                         <Route path="/admin/diagnostics" element={<AdminDiagnosticsPage />} />
                         <Route path="/admin/email-diagnostics" element={<AdminEmailDiagnosticsPage />} />
                     </Route>
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/payment/success" element={<PaymentStatusPage status="success" />} />
-                    <Route path="/payment/cancel" element={<PaymentStatusPage status="cancel" />} />
-                    <Route path="/payment/confirmation" element={<PaymentConfirmationPage />} />
-                    <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
-                    <Route path="/mobile-payment" element={<MobilePaymentPage />} />
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
+                    <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
+                    <Route path="/escrow/:listingId" element={<EscrowPaymentPage />} />
+                    <Route path="/transactions" element={<TransactionsPage />} />
                     <Route path="/make-admin" element={<MakeAdminPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />
                     <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="/help" element={<HelpCenterPage />} />
-                    <Route path="/free-plan" element={<FreePlanPage />} />
-                    <Route path="/boost-plan" element={<BoostPlanPage />} />
-                    <Route path="/boost-review" element={<BoostReviewPage />} />
                     <Route path="/promotions" element={<PromotionsPage />} />
                     <Route path="/confirm-email" element={<EmailConfirmationPage />} />
                     <Route path="/confirmation-required" element={<ConfirmationRequiredPage />} />
@@ -261,6 +220,8 @@ const AppContent = () => {
 }
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <HelmetProvider>
       <Router>
@@ -270,7 +231,8 @@ function App() {
               <NotificationsProvider>
                 <PaymentProvider>
                   <CartProvider>
-                    <AppContent />
+                    <SplashAnimationOverlay onComplete={() => setSplashDone(true)} />
+                    {splashDone && <AppContent />}
                   </CartProvider>
                 </PaymentProvider>
               </NotificationsProvider>

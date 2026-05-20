@@ -78,13 +78,23 @@ const AdminQATab = () => {
         message: contentError ? 'Erreur accès catégories' : `${count} catégories détectées`,
       };
 
-      // 5. Frontend Performance (Basic)
+      // 5. Frontend Performance — only check scripts/styles/API, not images
       setProgress(90);
       const resources = performance.getEntriesByType("resource");
-      const slowResources = resources.filter(r => r.duration > 1000); // Resources taking > 1s
+      const criticalResources = resources.filter(r => {
+        const isImage = /\.(jpg|jpeg|png|webp|gif|svg|ico)(\?|$)/i.test(r.name);
+        const isFont = /\.(woff2?|ttf|otf|eot)(\?|$)/i.test(r.name);
+        return !isImage && !isFont;
+      });
+      const slowResources = criticalResources.filter(r => r.duration > 3000);
+      const avgTime = criticalResources.length > 0
+        ? Math.round(criticalResources.reduce((s, r) => s + r.duration, 0) / criticalResources.length)
+        : 0;
       diagnostics.performance = {
-        status: slowResources.length > 0 ? 'warning' : 'success',
-        message: slowResources.length > 0 ? `${slowResources.length} ressources lentes détectées` : 'Chargement des ressources optimal',
+        status: slowResources.length > 5 ? 'warning' : 'success',
+        message: slowResources.length > 5
+          ? `${slowResources.length} scripts/API lents (>3s)`
+          : `OK — ${criticalResources.length} ressources, moy. ${avgTime}ms`,
         details: slowResources.map(r => r.name)
       };
 

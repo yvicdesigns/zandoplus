@@ -167,15 +167,15 @@ const AdminCategoriesTab = () => {
                   />
                 </div>
               ) : (
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="font-semibold text-gray-800">{cat.name}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[cat.type]}`}>
+                <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <span className="font-semibold text-gray-800 truncate">{cat.name}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${TYPE_COLORS[cat.type]}`}>
                     {TYPE_LABELS[cat.type]}
                   </span>
-                  <span className="text-xs text-gray-400">/{cat.slug}</span>
-                  <Badge variant="outline" className="text-xs ml-auto">
-                    {cat.subcategories?.length || 0} sous-cat.
-                  </Badge>
+                  <span className="text-xs text-gray-400 hidden sm:inline flex-shrink-0">/{cat.slug}</span>
+                  <span className="text-xs font-semibold text-gray-500 ml-auto flex-shrink-0 whitespace-nowrap">
+                    {cat.subcategories?.length || 0} s.cat.
+                  </span>
                 </div>
               )}
 
