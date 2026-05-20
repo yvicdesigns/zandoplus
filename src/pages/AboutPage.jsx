@@ -131,6 +131,7 @@ const AboutPage = () => {
       <Helmet>
         <title>À Propos de Nous - Zando+ Congo</title>
         <meta name="description" content="Découvrez notre mission de connecter les acheteurs et vendeurs au Congo Brazzaville et l'histoire de notre fondateur, M. Thissambou Van Yvic." />
+        <link rel="canonical" href="https://www.zandopluscg.com/about" />
       </Helmet>
       <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition} className="overflow-hidden relative">
         <section className="relative py-20 lg:py-32 hero-pattern">

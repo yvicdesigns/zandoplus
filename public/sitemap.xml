@@ -81,19 +81,13 @@
   </url>
 
   <url>
-    <loc>https://www.zandopluscg.com/pricing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://www.zandopluscg.com/privacy-policy</loc>
+    <loc>https://www.zandopluscg.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://www.zandopluscg.com/terms-of-service</loc>
+    <loc>https://www.zandopluscg.com/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

@@ -189,6 +189,7 @@ const ListingDetailPage = () => {
         <meta property="og:title" content={`${listing.title} - Zando+`} />
         <meta property="og:description" content={listing.description.replace(/<[^>]*>/g, '').substring(0, 160)} />
         <meta property="og:image" content={listing.images?.[0] || 'https://www.zandopluscg.com/og-image.jpg'} />
+        <link rel="canonical" href={`https://www.zandopluscg.com/listings/${listing.id}`} />
         <meta property="og:url" content={`https://www.zandopluscg.com/listings/${listing.id}`} />
         <meta property="og:type" content="product" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>

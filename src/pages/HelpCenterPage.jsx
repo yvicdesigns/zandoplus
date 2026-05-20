@@ -204,6 +204,7 @@ const HelpCenterPage = () => {
       <Helmet>
         <title>Centre d'Aide - Zando+ Congo</title>
         <meta name="description" content="Trouvez des réponses à vos questions sur l'achat, la vente et la gestion de votre compte sur Zando+ Congo. Notre centre d'aide est là pour vous accompagner." />
+        <link rel="canonical" href="https://www.zandopluscg.com/help" />
       </Helmet>
       <motion.div
         initial="initial"

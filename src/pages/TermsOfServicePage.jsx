@@ -41,6 +41,7 @@ const TermsOfServicePage = () => {
       <Helmet>
         <title>Conditions d'Utilisation - Zando+ Congo</title>
         <meta name="description" content="Consultez les conditions d'utilisation de Zando+ Congo. En utilisant notre plateforme, vous acceptez de respecter ces règles pour garantir une communauté sûre et fiable." />
+        <link rel="canonical" href="https://www.zandopluscg.com/terms" />
       </Helmet>
       <motion.div
         initial="initial"

@@ -41,6 +41,7 @@ const PrivacyPolicyPage = () => {
       <Helmet>
         <title>Politique de Confidentialité - Zando+ Congo</title>
         <meta name="description" content="Découvrez comment Zando+ Congo collecte, utilise et protège vos données personnelles. Votre confiance et votre sécurité sont notre priorité." />
+        <link rel="canonical" href="https://www.zandopluscg.com/privacy" />
         <meta property="og:title" content="Politique de Confidentialité - Zando+ Congo" />
         <meta property="og:description" content="Découvrez comment Zando+ Congo collecte, utilise et protège vos données personnelles. Votre confiance et votre sécurité sont notre priorité." />
       </Helmet>

@@ -87,11 +87,21 @@ const ListingsPage = () => {
   
   const pageDescription = `Parcourez ${listings.length} annonces sur Zando+ Congo. Trouvez les meilleures offres près de chez vous.`;
 
+  const canonicalUrl = localFilters.category
+    ? `https://www.zandopluscg.com/listings?category=${localFilters.category}`
+    : 'https://www.zandopluscg.com/listings';
+
   return (
     <>
       <Helmet>
         <title>{pageTitle} - Zando+ Congo</title>
         <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={`${pageTitle} - Zando+ Congo`} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content="https://www.zandopluscg.com/og-image.jpg" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
       </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">

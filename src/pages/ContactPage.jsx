@@ -91,6 +91,7 @@ const ContactPage = () => {
       <Helmet>
         <title>Contactez-nous - Zando+ Congo</title>
         <meta name="description" content="Contactez l'équipe de Zando+ Congo pour toute question, suggestion ou partenariat. Nous sommes là pour vous aider." />
+        <link rel="canonical" href="https://www.zandopluscg.com/contact" />
       </Helmet>
       <motion.div
         initial="initial"
