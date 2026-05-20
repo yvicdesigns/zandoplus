@@ -27,9 +27,9 @@ const CtaSection = () => {
                 Publier Votre Première Annonce
               </Button>
             </Link>
-            <Link to="/pricing">
+            <Link to="/listings">
               <Button size="lg" variant="outline" className="rounded-full px-8 py-4 text-base font-semibold border-2 border-custom-green-300 hover:bg-custom-green-50 text-custom-green-600 hover:text-custom-green-700">
-                Voir les Plans Tarifaires
+                Parcourir les Annonces
               </Button>
             </Link>
           </div>
