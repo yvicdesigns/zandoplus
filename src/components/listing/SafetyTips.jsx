@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Flag } from 'lucide-react';
+import { Shield, Flag, Lock } from 'lucide-react';
 import ReportListingDialog from '@/components/listing/ReportListingDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { Link } from 'react-router-dom';
 
 const SafetyTips = ({ listingId, listingTitle }) => {
   const [isReportDialogOpen, setReportDialogOpen] = useState(false);
@@ -29,7 +30,13 @@ const SafetyTips = ({ listingId, listingTitle }) => {
           <ul className="space-y-2 text-sm text-gray-600 list-disc list-inside">
             <li>Rencontrez-vous dans un lieu public et bien éclairé.</li>
             <li>Inspectez l'article avant de payer.</li>
-            <li>Ne payez jamais à l'avance.</li>
+            <li>
+              Ne payez jamais à l'avance — sauf via{' '}
+              <span className="inline-flex items-center gap-1 text-green-700 font-medium">
+                <Lock className="w-3 h-3" />l'Achat Sécurisé Zando
+              </span>{' '}
+              qui bloque votre argent jusqu'à réception.
+            </li>
             <li>Faites confiance à votre instinct.</li>
           </ul>
           <Button

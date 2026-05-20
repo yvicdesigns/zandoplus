@@ -66,7 +66,19 @@ export const ListingsProvider = ({ children }) => {
       const { data, error } = await robustQuery(queryFn);
 
       if (error) throw error;
-      setListings(data);
+
+      // Geo-prioritization: when no location filter and sort is "newest",
+      // float listings from the user's city to the top.
+      const userCity = user?.location?.trim().toLowerCase();
+      const shouldGeoSort = userCity && !filters.location && filters.sortBy === 'newest';
+
+      if (shouldGeoSort) {
+        const local = data.filter(l => l.location?.toLowerCase().includes(userCity));
+        const rest  = data.filter(l => !l.location?.toLowerCase().includes(userCity));
+        setListings([...local, ...rest]);
+      } else {
+        setListings(data);
+      }
     } catch (error) {
       console.error('Error fetching listings:', error.message);
       logError(error, { context: 'fetchListings' });
@@ -78,7 +90,7 @@ export const ListingsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [filters, toast]);
+  }, [filters, toast, user]);
 
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
