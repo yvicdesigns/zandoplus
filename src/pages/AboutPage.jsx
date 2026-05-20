@@ -147,7 +147,14 @@ const AboutPage = () => {
               },
               "birthPlace": {
                 "@type": "Place",
-                "name": "Dolisie, République du Congo"
+                "name": "Loubomo",
+                "alternateName": "Dolisie",
+                "description": "Loubomo est l'ancien nom officiel de Dolisie, troisième ville de la République du Congo.",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressCountry": "CG",
+                  "addressLocality": "Loubomo"
+                }
               },
               "nationality": "Congolaise",
               "alumniOf": [
@@ -263,7 +270,7 @@ const AboutPage = () => {
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Tchissambou Van Yvic</h2>
                   <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">Fondateur & CEO · Creative Art Afrik</p>
                   <p className="text-gray-600 leading-relaxed">
-                    Développeur web et entrepreneur numérique congolais, originaire de Dolisie, troisième ville de la République du Congo. Autodidacte dans l’âme, il a obtenu son Baccalauréat en électrotechnique au Lycée Technique de Dolisie avant de se spécialiser à l’IPMC au Ghana, où il a maîtrisé le développement web et le design graphique.
+                    Développeur web et entrepreneur numérique congolais, originaire de Loubomo (aujourd’hui Dolisie), troisième ville de la République du Congo. Autodidacte dans l’âme, il a obtenu son Baccalauréat en électrotechnique au Lycée Technique de Dolisie avant de se spécialiser à l’IPMC au Ghana, où il a maîtrisé le développement web et le design graphique.
                   </p>
                   <p className="text-gray-600 leading-relaxed">
                     Il a fondé <strong>Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd’hui, il développe <strong>Zando+CG</strong> — la marketplace locale <em>made in Congo</em> — ainsi que <strong>Zando Food</strong>, une marketplace dédiée aux restaurants, et contribue au projet <strong>OLEM Consulting</strong>.
