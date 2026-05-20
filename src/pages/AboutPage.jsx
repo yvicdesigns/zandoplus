@@ -139,15 +139,31 @@ const AboutPage = () => {
               "@type": "Person",
               "@id": "https://www.zandopluscg.com/about#founder",
               "name": "Tchissambou Van Yvic",
-              "alternateName": "M. Tchissambou Van Yvic",
+              "alternateName": ["M. Tchissambou Van Yvic", "Van Yvic Tchissambou"],
               "jobTitle": "Fondateur & CEO",
               "worksFor": {
                 "@type": "Organization",
                 "name": "Creative Art Afrik"
               },
+              "birthPlace": {
+                "@type": "Place",
+                "name": "Dolisie, République du Congo"
+              },
               "nationality": "Congolaise",
-              "knowsAbout": ["Développement web", "Design graphique", "Photographie", "Vidéo", "Intelligence artificielle", "Électricité"],
-              "description": "M. Tchissambou Van Yvic, originaire du Congo-Brazzaville, est le fondateur de Zando+ et CEO de Creative Art Afrik. Passionné de technologie et de créativité, il s'est spécialisé en électricité et informatique, puis en design graphique et développement web au Ghana.",
+              "alumniOf": [
+                {
+                  "@type": "EducationalOrganization",
+                  "name": "Lycée Technique de Dolisie",
+                  "description": "Baccalauréat en électrotechnique"
+                },
+                {
+                  "@type": "EducationalOrganization",
+                  "name": "IPMC College of Technology",
+                  "address": { "@type": "PostalAddress", "addressCountry": "GH", "addressLocality": "Accra" }
+                }
+              ],
+              "knowsAbout": ["Développement web", "Design graphique", "Photographie", "Vidéo", "Intelligence artificielle", "Électricité", "Entrepreneuriat numérique"],
+              "description": "Tchissambou Van Yvic est développeur web, entrepreneur numérique et designer, originaire de Dolisie (République du Congo). Fondateur de Creative Art Afrik et de Zando+CG (zandopluscg.com), la première marketplace congolaise de petites annonces. Il travaille également sur Zando Food, une marketplace de restaurants au Congo, et contribue au projet OLEM Consulting. Sa vision : un Congo pleinement numérisé grâce à la technologie et l'intelligence artificielle.",
               "url": "https://www.zandopluscg.com/about",
               "sameAs": []
             },
@@ -234,7 +250,7 @@ const AboutPage = () => {
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <ImageContainer className="order-last md:order-first" onEditClick={() => setIsEditDialogOpen(true)}>
-                {content?.creator_image_url ? <img className="w-full h-full object-cover" alt="Portrait de M. Thissambou Van Yvic" src={content.creator_image_url} /> : <div className="w-full h-full bg-gray-200 animate-pulse"></div>}
+                {content?.creator_image_url ? <img className="w-full h-full object-cover" alt="Portrait de M. Tchissambou Van Yvic, fondateur de Zando+" src={content.creator_image_url} /> : <div className="w-full h-full bg-gray-200 animate-pulse"></div>}
               </ImageContainer>
               <motion.div custom={1} initial="hidden" whileInView="visible" viewport={{
               once: true
@@ -244,38 +260,41 @@ const AboutPage = () => {
                     <Code className="w-4 h-4" />
                     <span>Le Créateur</span>
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-800">À propos de M. Tchissambou Van Yvic</h2>
-                  <p className="text-gray-600 leading-relaxed">M. Tchissambou Van Yvic, originaire du Congo-Brazzaville, CEO de Creative Art Afrik est un passionné de technologie et de créativité. Après avoir obtenu son bac F3 à Dolisie, il a poursuivi ses études à Brazzaville, où il s’est spécialisé en électricité et en informatique.</p>
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Tchissambou Van Yvic</h2>
+                  <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">Fondateur & CEO · Creative Art Afrik</p>
                   <p className="text-gray-600 leading-relaxed">
-                    C’est au Ghana qu’il a véritablement approfondi ses compétences en informatique, notamment dans le domaine du design graphique et de la création de sites web. Depuis, il a élargi son expertise dans plusieurs domaines créatifs.
+                    Développeur web et entrepreneur numérique congolais, originaire de Dolisie, troisième ville de la République du Congo. Autodidacte dans l’âme, il a obtenu son Baccalauréat en électrotechnique au Lycée Technique de Dolisie avant de se spécialiser à l’IPMC au Ghana, où il a maîtrisé le développement web et le design graphique.
                   </p>
-                  <div className="flex flex-wrap gap-4 pt-4">
+                  <p className="text-gray-600 leading-relaxed">
+                    Il a fondé <strong>Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd’hui, il développe <strong>Zando+CG</strong> — la marketplace locale <em>made in Congo</em> — ainsi que <strong>Zando Food</strong>, une marketplace dédiée aux restaurants, et contribue au projet <strong>OLEM Consulting</strong>.
+                  </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    Sa mission : mettre la technologie et l’intelligence artificielle au service du développement économique du Congo, et construire des outils concrets, accessibles, taillés pour le terrain africain.
+                  </p>
+                  <div className="flex flex-wrap gap-4 pt-2">
                     {[{
                     icon: Brush,
-                    label: 'Design Graphique'
+                    label: ‘Design Graphique’
                   }, {
                     icon: Camera,
-                    label: 'Photographie'
+                    label: ‘Photographie’
                   }, {
                     icon: Video,
-                    label: 'Vidéo'
+                    label: ‘Vidéo’
                   }, {
                     icon: Code,
-                    label: 'Web'
+                    label: ‘Web’
                   }, {
                     icon: Zap,
-                    label: 'Électricité'
+                    label: ‘Électricité’
                   }, {
                     icon: Cpu,
-                    label: 'IA'
+                    label: ‘IA’
                   }].map(skill => <div key={skill.label} className="flex items-center gap-2 bg-white p-2 px-3 rounded-lg shadow-sm">
                         <skill.icon className="w-5 h-5 text-custom-green-500" />
                         <span className="text-sm font-medium text-gray-700">{skill.label}</span>
                       </div>)}
                   </div>
-                  <p className="text-gray-600 leading-relaxed pt-4">
-                    Aujourd’hui, M. Van Yvic utilise l’intelligence artificielle pour accélérer ses projets, et il est également un bricoleur passionné, avec une affinité particulière pour l’électricité et le travail manuel. Son approche innovante et sa polyvalence sont les clés de ses réussites professionnelles.
-                  </p>
                 </div>
               </motion.div>
             </div>
