@@ -3,9 +3,11 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
-  Users, Bug, Trophy, CheckCircle2, Clock, XCircle, ChevronDown,
-  ChevronUp, Zap, AlertTriangle, Loader2, RefreshCw, Star
+  Users, Bug, Trophy, CheckCircle2, Clock, ChevronDown,
+  ChevronUp, Zap, AlertTriangle, Loader2, RefreshCw, Star,
+  Copy, Link, Mail, Save
 } from 'lucide-react';
 import { getTierFromPoints } from '@/lib/testerScoring';
 
@@ -42,7 +44,25 @@ const AdminBetaTab = () => {
   const [loading, setLoading]   = useState(true);
   const [actionId, setActionId] = useState(null);
   const [expanded, setExpanded] = useState({});
+  const [playStoreLink, setPlayStoreLinkState] = useState(
+    () => localStorage.getItem('beta_play_store_link') || ''
+  );
+  const [linkSaved, setLinkSaved] = useState(false);
   const { toast } = useToast();
+
+  const savePlayStoreLink = () => {
+    localStorage.setItem('beta_play_store_link', playStoreLink);
+    setLinkSaved(true);
+    setTimeout(() => setLinkSaved(false), 2000);
+    toast({ title: 'Lien Play Store sauvegardé' });
+  };
+
+  const copyActiveEmails = () => {
+    const emails = testers.filter(t => t.status === 'active').map(t => t.email).join(', ');
+    if (!emails) { toast({ title: 'Aucun testeur actif' }); return; }
+    navigator.clipboard.writeText(emails);
+    toast({ title: 'Emails copiés !', description: `${testers.filter(t => t.status === 'active').length} email(s) prêts à coller dans Google Play Console` });
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,7 +100,21 @@ const AdminBetaTab = () => {
       const { error } = await supabase.from('testers').update(updates).eq('id', tester.id);
       if (error) throw error;
       setTesters(prev => prev.map(t => t.id === tester.id ? { ...t, ...updates } : t));
-      toast({ title: `Statut mis à jour → ${STATUS_STYLES[newStatus].label}`, description: tester.full_name });
+
+      // Send activation email automatically
+      if (newStatus === 'active') {
+        const link = localStorage.getItem('beta_play_store_link') || '';
+        const { error: emailErr } = await supabase.functions.invoke('send-tester-activation-email', {
+          body: { to: tester.email, name: tester.full_name, play_store_link: link },
+        });
+        if (emailErr) {
+          toast({ title: 'Testeur activé', description: `Email non envoyé (configurez le lien Play Store). ${tester.full_name}`, variant: 'destructive' });
+        } else {
+          toast({ title: `✅ ${tester.full_name} activé !`, description: `Email d'activation envoyé à ${tester.email}` });
+        }
+      } else {
+        toast({ title: `Statut mis à jour → ${STATUS_STYLES[newStatus].label}`, description: tester.full_name });
+      }
     } catch {
       toast({ title: 'Erreur', variant: 'destructive' });
     } finally {
@@ -116,6 +150,32 @@ const AdminBetaTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Play Store link config */}
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+        <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+          <Link className="w-3.5 h-3.5" /> Lien Google Play (test interne)
+        </p>
+        <div className="flex gap-2">
+          <Input
+            value={playStoreLink}
+            onChange={e => setPlayStoreLinkState(e.target.value)}
+            placeholder="https://play.google.com/apps/internaltest/..."
+            className="flex-1 text-sm bg-white border-blue-200"
+          />
+          <Button onClick={savePlayStoreLink} size="sm"
+            className={`flex-shrink-0 ${linkSaved ? 'bg-green-600' : 'bg-blue-600'} text-white hover:opacity-90`}>
+            {linkSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+          </Button>
+          <Button onClick={copyActiveEmails} size="sm" variant="outline"
+            className="flex-shrink-0 border-blue-200 text-blue-700 hover:bg-blue-100 gap-1.5">
+            <Copy className="w-4 h-4" /> Copier emails
+          </Button>
+        </div>
+        <p className="text-xs text-blue-500 mt-2">
+          Ce lien est envoyé automatiquement par email à chaque testeur activé. Collez les emails copiés dans Google Play Console → Testeurs.
+        </p>
+      </div>
+
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
