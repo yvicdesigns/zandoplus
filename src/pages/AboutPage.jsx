@@ -227,16 +227,16 @@ const AboutPage = () => {
                     À propos de notre plateforme
                   </h2>
                   <p className="text-gray-600 leading-relaxed">
-                    Bienvenue sur notre site, la solution parfaite pour acheter et vendre des articles neufs ou d’occasion en toute simplicité, ici même au Congo Brazzaville. Nous avons créé cette plateforme pour permettre aux Congolais de se connecter et d’échanger leurs biens sans avoir besoin d’un intermédiaire.
+                    Bienvenue sur notre site, la solution parfaite pour acheter et vendre des articles neufs ou d'occasion en toute simplicité, ici même au Congo Brazzaville. Nous avons créé cette plateforme pour permettre aux Congolais de se connecter et d'échanger leurs biens sans avoir besoin d'un intermédiaire.
                   </p>
                   <p className="text-gray-600 leading-relaxed">
-                    Notre objectif est de rendre l’achat et la vente aussi faciles et sûrs que possible. Que ce soit pour vendre des objets que vous n’utilisez plus ou pour trouver des articles uniques à des prix abordables, vous êtes au bon endroit.
+                    Notre objectif est de rendre l'achat et la vente aussi faciles et sûrs que possible. Que ce soit pour vendre des objets que vous n'utilisez plus ou pour trouver des articles uniques à des prix abordables, vous êtes au bon endroit.
                   </p>
                   <p className="text-gray-600 leading-relaxed">
-                    Nous offrons également la possibilité de devenir vendeur ! Il vous suffit de créer un profil et d’ajouter vos articles à vendre. Votre numéro de contact sera enregistré dans votre profil, permettant ainsi aux acheteurs de vous joindre directement pour toute question ou pour finaliser une vente. De plus, les vendeurs peuvent devenir vérifiés en fournissant certains documents, tels que leur passeport ou leur carte d’identité. Cela permettra de renforcer la confiance et la transparence dans les échanges.
+                    Nous offrons également la possibilité de devenir vendeur ! Il vous suffit de créer un profil et d'ajouter vos articles à vendre. Votre numéro de contact sera enregistré dans votre profil, permettant ainsi aux acheteurs de vous joindre directement pour toute question ou pour finaliser une vente. De plus, les vendeurs peuvent devenir vérifiés en fournissant certains documents, tels que leur passeport ou leur carte d'identité. Cela permettra de renforcer la confiance et la transparence dans les échanges.
                   </p>
                   <p className="text-gray-600 font-semibold">
-                    Rejoignez-nous et commencez à vendre ou à acheter aujourd’hui !
+                    Rejoignez-nous et commencez à vendre ou à acheter aujourd'hui !
                   </p>
                   {siteSettings?.launch_date && <div className="flex items-center gap-2 text-gray-600">
                       <CalendarDays className="w-5 h-5 text-custom-green-500" />
@@ -270,33 +270,33 @@ const AboutPage = () => {
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Tchissambou Van Yvic</h2>
                   <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">Fondateur & CEO · Creative Art Afrik</p>
                   <p className="text-gray-600 leading-relaxed">
-                    Développeur web et entrepreneur numérique congolais, originaire de Loubomo (aujourd’hui Dolisie), troisième ville de la République du Congo. Autodidacte dans l’âme, il a obtenu son Baccalauréat en électrotechnique au Lycée Technique de Dolisie avant de se spécialiser à l’IPMC au Ghana, où il a maîtrisé le développement web et le design graphique.
+                    Développeur web et entrepreneur numérique congolais, originaire de Loubomo (aujourd'hui Dolisie), troisième ville de la République du Congo. Autodidacte dans l'âme, il a obtenu son Baccalauréat en électrotechnique au Lycée Technique de Dolisie avant de se spécialiser à l'IPMC au Ghana, où il a maîtrisé le développement web et le design graphique.
                   </p>
                   <p className="text-gray-600 leading-relaxed">
-                    Il a fondé <strong>Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd’hui, il développe <strong>Zando+CG</strong> — la marketplace locale <em>made in Congo</em> — ainsi que <strong>Zando Food</strong>, une marketplace dédiée aux restaurants, et contribue au projet <strong>OLEM Consulting</strong>.
+                    Il a fondé <strong>Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd'hui, il développe <strong>Zando+CG</strong> — la marketplace locale <em>made in Congo</em> — ainsi que <strong>Zando Food</strong>, une marketplace dédiée aux restaurants, et contribue au projet <strong>OLEM Consulting</strong>.
                   </p>
                   <p className="text-gray-600 leading-relaxed">
-                    Sa mission : mettre la technologie et l’intelligence artificielle au service du développement économique du Congo, et construire des outils concrets, accessibles, taillés pour le terrain africain.
+                    Sa mission : mettre la technologie et l'intelligence artificielle au service du développement économique du Congo, et construire des outils concrets, accessibles, taillés pour le terrain africain.
                   </p>
                   <div className="flex flex-wrap gap-4 pt-2">
                     {[{
                     icon: Brush,
-                    label: ‘Design Graphique’
+                    label: 'Design Graphique'
                   }, {
                     icon: Camera,
-                    label: ‘Photographie’
+                    label: 'Photographie'
                   }, {
                     icon: Video,
-                    label: ‘Vidéo’
+                    label: 'Vidéo'
                   }, {
                     icon: Code,
-                    label: ‘Web’
+                    label: 'Web'
                   }, {
                     icon: Zap,
-                    label: ‘Électricité’
+                    label: 'Électricité'
                   }, {
                     icon: Cpu,
-                    label: ‘IA’
+                    label: 'IA'
                   }].map(skill => <div key={skill.label} className="flex items-center gap-2 bg-white p-2 px-3 rounded-lg shadow-sm">
                         <skill.icon className="w-5 h-5 text-custom-green-500" />
                         <span className="text-sm font-medium text-gray-700">{skill.label}</span>
