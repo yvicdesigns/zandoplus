@@ -20,6 +20,7 @@ import AdminChangeRequestsTab from '@/components/admin/AdminChangeRequestsTab';
 import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab';
 import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
 import AdminCategoriesTab from '@/components/admin/AdminCategoriesTab';
+import AdminBetaTab from '@/components/admin/AdminBetaTab';
 import { Helmet } from 'react-helmet-async';
 import {
   Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck,
@@ -61,6 +62,12 @@ const NAV_GROUPS = [
     ],
   },
   {
+    label: 'Beta Programme',
+    items: [
+      { id: 'beta', icon: Users, label: 'Testeurs Beta', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    ],
+  },
+  {
     label: 'Système',
     items: [
       { id: 'approvals', icon: ClipboardCheck, label: 'Approbations', color: 'text-blue-300', bg: 'bg-blue-500/10', adminOnly: true },
@@ -82,6 +89,7 @@ const TAB_LABELS = {
   users: 'Utilisateurs', listings: 'Annonces', deliveries: 'Livraisons',
   reports: 'Signalements', verifications: 'Vérifications', boosts: 'Boosts',
   escrow: 'Escrow',
+  beta: 'Testeurs Beta',
   ads: 'Publicités', payments: 'Paiements', categories: 'Catégories',
   hero: 'Hero Slider', approvals: 'Approbations', audit: 'Audit Logs',
   'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
@@ -105,6 +113,7 @@ const renderTabContent = (activeTab) => {
     case 'email-test': return <AdminEmailTestTab />;
     case 'settings': return <AdminSettingsTab />;
     case 'qa': return <AdminQATab />;
+    case 'beta': return <AdminBetaTab />;
     default: return null;
   }
 };

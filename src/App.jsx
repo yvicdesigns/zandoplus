@@ -23,6 +23,7 @@ import { CartProvider } from '@/hooks/useCart';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { supabase } from '@/lib/customSupabaseClient';
+import BugReportButton from '@/components/beta/BugReportButton';
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const ListingsPage = lazy(() => import('@/pages/ListingsPage'));
@@ -182,6 +183,7 @@ const AppLayout = memo(() => {
             </main>
             <Footer />
             <MobileNavBar />
+            <BugReportButton />
             <Toaster />
             <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
         </div>
