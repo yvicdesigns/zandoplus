@@ -22,6 +22,7 @@ import { PaymentProvider } from '@/contexts/PaymentContext';
 import { CartProvider } from '@/hooks/useCart';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const ListingsPage = lazy(() => import('@/pages/ListingsPage'));
@@ -58,6 +59,8 @@ const AdminEmailDiagnosticsPage = lazy(() => import('@/pages/AdminEmailDiagnosti
 const AuditReportPage = lazy(() => import('@/pages/AuditReportPage'));
 const StorePage = lazy(() => import('@/pages/StorePage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
+const TestersLandingPage = lazy(() => import('@/pages/TestersLandingPage'));
+const TesterDashboardPage = lazy(() => import('@/pages/TesterDashboardPage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -78,6 +81,26 @@ const AdminProtectedRoute = () => {
     return <Navigate to="/" replace />;
   }
 
+  return <Outlet />;
+};
+
+const TesterProtectedRoute = () => {
+  const { user, isLoading } = useAuth();
+  const [isTester, setIsTester] = useState(null);
+
+  useEffect(() => {
+    if (!user) { setIsTester(false); return; }
+    supabase
+      .from('testers')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle()
+      .then(({ data }) => setIsTester(!!data));
+  }, [user]);
+
+  if (isLoading || isTester === null) return <FullPageLoader />;
+  if (!user || !isTester) return <Navigate to="/" replace />;
   return <Outlet />;
 };
 
@@ -213,6 +236,10 @@ const AppContent = () => {
                     <Route path="/installer-app" element={<PwaInstallPage />} />
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
+                    <Route path="/testeurs" element={<TestersLandingPage />} />
+                    <Route element={<TesterProtectedRoute />}>
+                        <Route path="/dashboard/tester" element={<TesterDashboardPage />} />
+                    </Route>
                 </Route>
             </Routes>
         </>
