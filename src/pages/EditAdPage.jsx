@@ -20,7 +20,7 @@ import { sanitizeInput } from '@/lib/validationUtils';
 const EditAdPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { updateListing, listings } = useListings();
   const { toast } = useToast();
   const { siteSettings } = useSiteSettings();
@@ -33,7 +33,7 @@ const EditAdPage = () => {
   const [formData, setFormData] = useState({
     title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '',
     condition: '', location: '', negotiable: false, images: [],
-    delivery_method: 'pickup', delivery_fee: '', quantity: '', is_urgent: false
+    delivery_method: 'pickup', delivery_fee: '', quantity: '', is_urgent: false, phone: ''
   });
   
   const [imageFiles, setImageFiles] = useState([]); // For new uploads
@@ -62,6 +62,7 @@ const EditAdPage = () => {
         quantity: listing.quantity?.toString() ?? '',
         images: listing.images?.map(url => ({ id: url, url })) || [],
         is_urgent: listing.is_urgent || false,
+        phone: user?.phone || '',
       });
       setExistingImages(listing.images || []);
       setPageLoading(false);
@@ -205,15 +206,21 @@ const EditAdPage = () => {
         ...uploadedImageUrls
       ];
       
+      const safePhone = sanitizeInput(formData.phone);
+      if (user && safePhone && safePhone !== user.phone) {
+        await updateProfile({ phone: safePhone });
+      }
+
       const isJob = formData.category && categories[formData.category]?.type === 'job';
 
-      // XSS Protection via sanitization
       const listingData = {
-        ...formData,
         title: sanitizeInput(formData.title),
         description: sanitizeInput(formData.description),
-        location: sanitizeInput(formData.location),
         price: (formData.price && !isNaN(parseFloat(formData.price))) ? parseFloat(formData.price) : null,
+        currency: formData.currency,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        location: sanitizeInput(formData.location),
         delivery_fee: (formData.delivery_fee && !isNaN(parseFloat(formData.delivery_fee))) ? parseFloat(formData.delivery_fee) : null,
         quantity: (formData.quantity && !isNaN(parseInt(formData.quantity, 10))) ? parseInt(formData.quantity, 10) : null,
         images: finalImageUrls,
@@ -221,6 +228,7 @@ const EditAdPage = () => {
         condition: isJob ? null : formData.condition,
         negotiable: isJob ? false : formData.negotiable,
         delivery_method: isJob ? 'pickup' : formData.delivery_method,
+        is_urgent: formData.is_urgent,
       };
 
       await updateListing(id, listingData);
