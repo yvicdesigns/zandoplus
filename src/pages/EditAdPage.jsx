@@ -245,7 +245,7 @@ const EditAdPage = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} />;
-      case 2: return <Step2Details formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} />;
+      case 2: return <Step2Details formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} onAIPrice={(price) => setFormData(prev => ({ ...prev, price }))} />;
       case 3: return <Step3Photos formData={formData} formErrors={formErrors} handleImageUpload={handleImageUpload} removeImage={removeImage} />;
       case 4: return <Step4Review 
                         formData={formData} 

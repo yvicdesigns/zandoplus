@@ -9,8 +9,9 @@ import { conditions, currencies, deliveryMethods } from './postAdConstants';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Info } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
+import PriceEstimator from '@/components/ai/PriceEstimator';
 
-const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectChange, handleRadioChange }) => {
+const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectChange, handleRadioChange, onAIPrice }) => {
   const { categoriesMap } = useCategories();
   const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
   const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
@@ -52,6 +53,9 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
           </div>
           {!isJobCategory && <FormError message={formErrors.price} />}
           {isJobCategory && <p className="text-xs text-gray-500 mt-1">Indiquez un salaire mensuel ou annuel.</p>}
+          {!isJobCategory && onAIPrice && (
+            <PriceEstimator formData={formData} onApply={onAIPrice} />
+          )}
         </div>
 
         {!isJobCategory && (
