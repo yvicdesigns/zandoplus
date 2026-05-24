@@ -71,12 +71,9 @@ export default async function handler(req, res) {
   <meta name="twitter:title"       content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image"       content="${image}" />
-
-  <!-- Redirect browsers that somehow land here -->
-  <meta http-equiv="refresh" content="0;url=${shopUrl}" />
 </head>
 <body>
-  <p>Redirection vers <a href="${shopUrl}">${title}</a>…</p>
+  <p><a href="${shopUrl}">${title}</a></p>
 </body>
 </html>`;
 
