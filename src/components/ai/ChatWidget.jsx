@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const QUICK_REPLIES = [
@@ -48,15 +48,40 @@ const TypingIndicator = () => (
   </div>
 );
 
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+const getDefaultPos = () => ({
+  x: typeof window !== 'undefined' ? window.innerWidth - 68 : 320,
+  y: typeof window !== 'undefined' ? window.innerHeight - 100 : 600,
+});
+
 const ChatWidget = () => {
   const [open, setOpen]         = useState(false);
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: WELCOME },
-  ]);
-  const bottomRef = useRef(null);
-  const inputRef  = useRef(null);
+  const [messages, setMessages] = useState([{ role: 'assistant', content: WELCOME }]);
+  const bottomRef  = useRef(null);
+  const inputRef   = useRef(null);
+  const isDragging = useRef(false);
+  const constraintsRef = useRef(null);
+
+  const [savedPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chatWidgetPos');
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (typeof p.x === 'number' && typeof p.y === 'number') return p;
+      }
+    } catch {}
+    return getDefaultPos();
+  });
+
+  // Motion values drive the button's position — no CSS left/top needed
+  const bx = useMotionValue(savedPos.x);
+  const by = useMotionValue(savedPos.y);
+
+  // chatAnchor tracks where the chat window should open (updated on drag end)
+  const [chatAnchor, setChatAnchor] = useState(savedPos);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,18 +94,15 @@ const ChatWidget = () => {
   const send = async (text) => {
     const userText = (text || input).trim();
     if (!userText || loading) return;
-
     const userMsg = { role: 'user', content: userText };
     const history = [...messages, userMsg];
     setMessages(history);
     setInput('');
     setLoading(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('ai-chatbot', {
+      const { data } = await supabase.functions.invoke('ai-chatbot', {
         body: { messages: history.filter(m => m.role !== 'system') },
       });
-
       const reply = data?.reply || "Désolé, une erreur s'est produite. Réessayez dans un instant.";
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch {
@@ -99,20 +121,70 @@ const ChatWidget = () => {
 
   const showQuickReplies = messages.length <= 1 && !loading;
 
+  const handleDragStart = () => {
+    isDragging.current = true;
+    setOpen(false); // close chat while dragging
+  };
+
+  const handleDragEnd = () => {
+    const newPos = { x: bx.get(), y: by.get() };
+    setChatAnchor(newPos);
+    localStorage.setItem('chatWidgetPos', JSON.stringify(newPos));
+    setTimeout(() => { isDragging.current = false; }, 50);
+  };
+
+  const handleClick = () => {
+    if (!isDragging.current) setOpen(o => !o);
+  };
+
+  // Position the chat window near the button, fitting within viewport
+  const vw = typeof window !== 'undefined' ? window.innerWidth  : 400;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const chatW = Math.min(336, vw - 16);
+  const chatLeft = clamp(chatAnchor.x - chatW + 52, 8, vw - chatW - 8);
+  const spaceAbove = chatAnchor.y - 12;
+  const chatStyle = {
+    position: 'fixed',
+    ...(spaceAbove >= 480
+      ? { bottom: vh - chatAnchor.y + 12 }
+      : { top: chatAnchor.y + 64 }),
+    left: chatLeft,
+    zIndex: 50,
+    width: chatW,
+    maxHeight: 'min(520px, calc(100vh - 100px))',
+  };
+
   return (
     <>
-      {/* Floating button */}
+      {/* Invisible full-viewport div used as drag boundary */}
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 49 }} />
+
+      {/* Draggable floating button */}
       <motion.button
-        onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 left-4 z-40 w-13 h-13 w-[52px] h-[52px] bg-custom-green-500 hover:bg-custom-green-600 text-white rounded-full shadow-lg shadow-green-500/30 flex items-center justify-center transition-colors"
-        whileHover={{ scale: 1.1 }}
+        drag
+        dragMomentum={false}
+        dragElastic={0}
+        dragConstraints={constraintsRef}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          x: bx,
+          y: by,
+          zIndex: 50,
+          touchAction: 'none',
+        }}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onClick={handleClick}
+        className="w-[52px] h-[52px] bg-custom-green-500 hover:bg-custom-green-600 text-white rounded-full shadow-lg shadow-green-500/30 flex items-center justify-center cursor-grab active:cursor-grabbing"
         whileTap={{ scale: 0.95 }}
         aria-label="Assistant Zando+"
       >
         <AnimatePresence mode="wait">
           {open
-            ? <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}><X className="w-5 h-5" /></motion.div>
-            : <motion.div key="chat" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}><MessageCircle className="w-5 h-5" /></motion.div>
+            ? <motion.div key="x"    initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90,  opacity: 0 }}><X             className="w-5 h-5" /></motion.div>
+            : <motion.div key="chat" initial={{ rotate:  90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}><MessageCircle className="w-5 h-5" /></motion.div>
           }
         </AnimatePresence>
       </motion.button>
@@ -125,8 +197,8 @@ const ChatWidget = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-[76px] left-4 z-40 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-            style={{ maxHeight: 'min(520px, calc(100vh - 100px))' }}
+            style={chatStyle}
+            className="bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-custom-green-500 to-emerald-600 px-4 py-3 flex items-center gap-3 flex-shrink-0">
