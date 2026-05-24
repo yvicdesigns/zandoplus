@@ -3,27 +3,16 @@ import React from 'react';
     import { motion } from 'framer-motion';
     import { Card, CardContent } from '@/components/ui/card';
     import { Badge } from '@/components/ui/badge';
-    import { Car, Building, Shirt, Briefcase as BriefcaseBusiness, HeartHandshake, PlugZap, Wheat, Leaf, Tag } from 'lucide-react';
     import { useCategories } from '@/hooks/useCategories';
-
-    const ICON_MAP = {
-      'electronics': { icon: PlugZap, color: 'from-custom-green-500 to-teal-600' },
-      'vehicles': { icon: Car, color: 'from-blue-500 to-indigo-600' },
-      'real-estate': { icon: Building, color: 'from-orange-500 to-red-600' },
-      'fashion': { icon: Shirt, color: 'from-pink-500 to-rose-600' },
-      'jobs': { icon: BriefcaseBusiness, color: 'from-purple-500 to-violet-600' },
-      'services': { icon: HeartHandshake, color: 'from-yellow-500 to-amber-600' },
-      'agro-alimentaire': { icon: Wheat, color: 'from-green-700 to-lime-600' },
-      'traditional-medicine': { icon: Leaf, color: 'from-emerald-500 to-green-600' },
-    };
+    import { getCategoryEmoji, getCategoryColor } from '@/components/post-ad/categoryIcons';
 
     const CategoriesSection = ({ categoryCounts, loading }) => {
       const { categories: dbCategories } = useCategories();
       const categories = dbCategories.map(cat => ({
         slug: cat.slug,
         name: cat.name,
-        icon: ICON_MAP[cat.slug]?.icon || Tag,
-        color: ICON_MAP[cat.slug]?.color || 'from-gray-500 to-gray-600',
+        emoji: getCategoryEmoji(cat.slug),
+        color: getCategoryColor(cat.slug),
         count: categoryCounts?.[cat.slug] || 0,
       }));
 
@@ -58,7 +47,7 @@ import React from 'react';
                     <Card className="category-card p-4 lg:p-6 text-center cursor-pointer border-0 shadow-lg h-full flex flex-col justify-center">
                       <CardContent className="p-0">
                         <div className={`w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center shadow-lg`}>
-                          <category.icon className="w-7 h-7 text-white" />
+                          <span className="text-2xl" role="img">{category.emoji}</span>
                         </div>
                         <h3 className="text-base font-bold mb-1">{category.name}</h3>
                         <p className="text-xs text-gray-600 mb-2">

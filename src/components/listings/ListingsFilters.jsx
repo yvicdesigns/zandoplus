@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useCategories } from '@/hooks/useCategories';
+import { getCategoryEmoji } from '@/components/post-ad/categoryIcons';
 
 const conditions = [
     { value: 'all', label: 'Tout État' },
@@ -36,8 +37,8 @@ const ListingsFilters = ({
 }) => {
   const { categories: dbCategories } = useCategories();
   const categories = [
-    { value: 'all', label: 'Toutes Catégories' },
-    ...dbCategories.map(c => ({ value: c.slug, label: c.name })),
+    { value: 'all', label: '🏷️  Toutes Catégories' },
+    ...dbCategories.map(c => ({ value: c.slug, label: `${getCategoryEmoji(c.slug)}  ${c.name}` })),
   ];
 
   const handleCategoryChange = (val) => {

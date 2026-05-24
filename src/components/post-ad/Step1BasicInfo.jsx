@@ -8,6 +8,7 @@ import FormError from './FormError';
 import { Label } from '@/components/ui/label';
 import ListingHelper from '@/components/ai/ListingHelper';
 import { Camera, X } from 'lucide-react';
+import { getCategoryEmoji } from './categoryIcons';
 
 const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage }) => {
   const fileInputRef = useRef(null);
@@ -45,7 +46,9 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
-                <SelectItem key={cat.slug} value={cat.slug}>{cat.name}</SelectItem>
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {getCategoryEmoji(cat.slug)}  {cat.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
