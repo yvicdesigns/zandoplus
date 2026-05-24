@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,12 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
   const { categories, categoriesMap } = useCategories();
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
+  const [showCustomSub, setShowCustomSub] = useState(false);
+
+  // Reset custom sub when category changes
+  useEffect(() => {
+    setShowCustomSub(false);
+  }, [formData.category]);
   
   return (
     <motion.div
@@ -51,8 +57,16 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
               {isJobCategory && <span className="text-red-500">*</span>}
             </Label>
             <Select
-              value={formData.subcategory}
-              onValueChange={(value) => handleSelectChange('subcategory', value)}
+              value={showCustomSub ? '__other__' : (formData.subcategory || '')}
+              onValueChange={(value) => {
+                if (value === '__other__') {
+                  setShowCustomSub(true);
+                  handleSelectChange('subcategory', '');
+                } else {
+                  setShowCustomSub(false);
+                  handleSelectChange('subcategory', value);
+                }
+              }}
             >
               <SelectTrigger className={isJobCategory && formErrors.subcategory ? 'border-red-500' : ''}>
                 <SelectValue placeholder={isJobCategory ? "Sélectionnez un type de contrat" : "Sélectionnez une sous-catégorie"} />
@@ -61,8 +75,21 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
                 {categoriesMap[formData.category]?.subcategories.map((sub) => (
                   <SelectItem key={sub} value={sub}>{sub}</SelectItem>
                 ))}
+                <SelectItem value="__other__">✏️ Autre (préciser)</SelectItem>
               </SelectContent>
             </Select>
+            {showCustomSub && (
+              <div className="mt-2">
+                <Input
+                  placeholder="Ex: Meubles de bureau en rotin..."
+                  value={formData.subcategory || ''}
+                  onChange={(e) => handleSelectChange('subcategory', e.target.value)}
+                  className="text-sm"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-400 mt-1">Décrivez votre sous-catégorie en quelques mots</p>
+              </div>
+            )}
             {isJobCategory && <FormError message={formErrors.subcategory} />}
           </div>
         )}
