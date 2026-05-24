@@ -2,9 +2,7 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-  // Extract seller ID from the rewritten path or query param
-  const pathParts = req.url.split('?')[0].split('/').filter(Boolean);
-  const id = pathParts[pathParts.length - 1] || req.query.id;
+  const id = req.query.id;
 
   const ua = req.headers['user-agent'] || '';
   const isCrawler = /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|applebot|bingbot|googlebot/i.test(ua);
