@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { ShoppingBag as LoadingIcon, ArrowLeft, Calendar, MapPin, Shield, Star, Phone, Loader2 } from 'lucide-react';
+import { ShoppingBag as LoadingIcon, ArrowLeft, Calendar, MapPin, Shield, Star, Phone, Loader2, Share2, Copy, Check } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ListingItem from '@/components/listings/ListingItem';
@@ -11,6 +11,110 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+
+const ShareShopButton = ({ seller }) => {
+  const [open, setOpen]     = useState(false);
+  const [copied, setCopied] = useState(false);
+  const ref = useRef(null);
+
+  const shopUrl  = `${window.location.origin}/seller/${seller.id}`;
+  const shopText = `Découvrez la boutique de ${seller.name} sur Zando+ Congo 🛍️`;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleShare = async () => {
+    // Use native Web Share API on mobile if available
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: seller.name, text: shopText, url: shopUrl });
+      } catch {}
+      return;
+    }
+    setOpen(o => !o);
+  };
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(shopUrl);
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
+  };
+
+  const PLATFORMS = [
+    {
+      label: 'WhatsApp',
+      color: 'text-green-600',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.858L.054 23.423a.75.75 0 00.918.983l5.741-1.505A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.726 9.726 0 01-4.964-1.356l-.355-.212-3.686.967.984-3.595-.231-.371A9.725 9.725 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+      ),
+      href: `https://wa.me/?text=${encodeURIComponent(shopText + '\n' + shopUrl)}`,
+    },
+    {
+      label: 'Facebook',
+      color: 'text-blue-600',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      ),
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shopUrl)}`,
+    },
+  ];
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleShare}
+        className="border-custom-green-300 text-custom-green-700 hover:bg-custom-green-50"
+      >
+        <Share2 className="w-4 h-4 mr-2" />
+        Partager
+      </Button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-12 bg-white rounded-xl shadow-xl border border-gray-100 p-2 w-48 z-50"
+          >
+            {PLATFORMS.map(p => (
+              <a
+                key={p.label}
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <span className={p.color}>{p.icon}</span>
+                <span className="text-sm font-medium text-gray-700">{p.label}</span>
+              </a>
+            ))}
+            <button
+              onClick={copyLink}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {copied
+                ? <Check className="w-4 h-4 text-green-500" />
+                : <Copy className="w-4 h-4 text-gray-500" />
+              }
+              <span className="text-sm font-medium text-gray-700">
+                {copied ? 'Lien copié !' : 'Copier le lien'}
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const SellerShopPage = () => {
   const { sellerId } = useParams();
@@ -197,7 +301,8 @@ const SellerShopPage = () => {
                     </div>
                 </div>
               </div>
-              <div className="mt-4 md:mt-2 md:ml-auto flex-shrink-0">
+              <div className="mt-4 md:mt-2 md:ml-auto flex-shrink-0 flex items-center gap-2">
+                <ShareShopButton seller={seller} />
                 <Button size="lg" className="gradient-bg hover:opacity-90 shadow-lg" onClick={handleCallSeller} disabled={isCalling}>
                     {isCalling ? (
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
