@@ -63,6 +63,7 @@ const StorePage = lazy(() => import('@/pages/StorePage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
 const TestersLandingPage = lazy(() => import('@/pages/TestersLandingPage'));
 const TesterDashboardPage = lazy(() => import('@/pages/TesterDashboardPage'));
+const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -241,6 +242,7 @@ const AppContent = () => {
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/testeurs" element={<TestersLandingPage />} />
+                    <Route path="/boost-shop" element={<ShopBoostPage />} />
                     <Route element={<TesterProtectedRoute />}>
                         <Route path="/dashboard/tester" element={<TesterDashboardPage />} />
                     </Route>

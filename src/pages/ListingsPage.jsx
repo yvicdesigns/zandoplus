@@ -7,6 +7,7 @@ import ListingItem from '@/components/listings/ListingItem';
 import ListingsFilters from '@/components/listings/ListingsFilters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Helmet } from 'react-helmet-async';
+import AdBanner from '@/components/shop/AdBanner';
 
 const ListingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -106,6 +107,8 @@ const ListingsPage = () => {
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
         <div className="container mx-auto px-4 py-8">
+          <AdBanner position="listings" />
+
           {/* Page Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
             <div>
