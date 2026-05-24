@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,8 +7,11 @@ import { useCategories } from '@/hooks/useCategories';
 import FormError from './FormError';
 import { Label } from '@/components/ui/label';
 import ListingHelper from '@/components/ai/ListingHelper';
+import { Camera, X, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription }) => {
+const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage }) => {
+  const fileInputRef = useRef(null);
   const { categories, categoriesMap } = useCategories();
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
@@ -126,6 +129,55 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
         {onAIDescription && (
           <ListingHelper formData={formData} onApply={onAIDescription} />
         )}
+      </div>
+
+      {/* Photos */}
+      <div>
+        <Label className="block text-sm font-medium mb-1">
+          Photos <span className="text-red-500">*</span>
+          <span className="text-xs font-normal text-gray-400 ml-2">max 10 · JPG/PNG · 5 Mo max</span>
+        </Label>
+
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-2">
+          {(formData.images || []).map((image) => (
+            <div key={image.id} className="relative group">
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                <img src={image.url} alt="aperçu" className="w-full h-full object-cover" />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeImage(image.id)}
+                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+
+          {(formData.images || []).length < 10 && (
+            <>
+              <div
+                className={`aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-custom-green-400 transition-colors ${formErrors.images ? 'border-red-500' : 'border-gray-300'}`}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="w-6 h-6 text-gray-400 mb-1" />
+                <span className="text-xs text-gray-500 text-center px-1">Ajouter</span>
+              </div>
+              <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+            </>
+          )}
+        </div>
+
+        {(formData.images || []).length === 0 && !formErrors.images && (
+          <div
+            className="mt-3 text-center py-8 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-custom-green-300 transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Cliquez pour ajouter des photos</p>
+          </div>
+        )}
+        <FormError message={formErrors.images} />
       </div>
     </motion.div>
   );

@@ -68,8 +68,7 @@ export const categories = {
     ];
 
     export const steps = [
-      { number: 1, title: 'Infos de Base', description: 'Catégorie et description' },
+      { number: 1, title: 'Infos de Base', description: 'Catégorie, description & photos' },
       { number: 2, title: 'Détails', description: 'Prix et état' },
-      { number: 3, title: 'Photos', description: 'Télécharger des images' },
-      { number: 4, title: 'Vérification', description: 'Vérification finale' }
+      { number: 3, title: 'Vérification', description: 'Vérification finale' }
     ];

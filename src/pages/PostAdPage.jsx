@@ -8,7 +8,6 @@ import { steps, categories } from '@/components/post-ad/postAdConstants';
 import PostAdStepper from '@/components/post-ad/PostAdStepper';
 import Step1BasicInfo from '@/components/post-ad/Step1BasicInfo';
 import Step2Details from '@/components/post-ad/Step2Details';
-import Step3Photos from '@/components/post-ad/Step3Photos';
 import Step4Review from '@/components/post-ad/Step4Review';
 import FormControls from '@/components/post-ad/FormControls';
 import { Loader2 } from 'lucide-react';
@@ -196,15 +195,13 @@ const PostAdPage = () => {
         if (formData.categoryType === 'job' && !formData.subcategory) errors.subcategory = "Le type de contrat est requis.";
         if (!formData.title.trim() || formData.title.trim().length < 5) errors.title = "Le titre doit comporter au moins 5 caractères.";
         if (!formData.description.trim() || formData.description.trim().length < 20) errors.description = "La description doit comporter au moins 20 caractères.";
+        if (imageFiles.length === 0) errors.images = "Au moins une photo est requise.";
         break;
       case 2:
         if (!isJobOrService && (!formData.price || parseFloat(formData.price) <= 0)) errors.price = "Le prix doit être un nombre positif.";
         if (!isJobOrService && !formData.condition) errors.condition = "L'état est requis.";
         if (!formData.location.trim()) errors.location = "La localisation est requise.";
         if (!isJobOrService && formData.quantity && (parseInt(formData.quantity, 10) < 0 || !Number.isInteger(Number(formData.quantity)))) errors.quantity = "La quantité doit être un nombre entier positif.";
-        break;
-      case 3:
-        if (imageFiles.length === 0) errors.images = "Au moins une image est requise.";
         break;
       default: break;
     }
@@ -213,7 +210,7 @@ const PostAdPage = () => {
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 4));
+    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 3));
     else toast({ title: "Champs Incomplets ou Invalides", description: "Veuillez corriger les erreurs et remplir tous les champs requis.", variant: "destructive" });
   };
 
@@ -225,7 +222,7 @@ const PostAdPage = () => {
       toast({ title: "Authentification requise", description: "Veuillez vous connecter.", variant: "destructive" });
       return;
     }
-    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
+    if (!validateStep(1) || !validateStep(2)) {
       toast({ title: "Veuillez compléter tous les champs", description: "Remplissez toutes les informations requises avant de soumettre.", variant: "destructive" });
       setCurrentStep(1);
       return;
@@ -290,10 +287,9 @@ const PostAdPage = () => {
   
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} />;
+      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} handleImageUpload={handleImageUpload} removeImage={removeImage} />;
       case 2: return <Step2Details formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} onAIPrice={(price) => setFormData(prev => ({ ...prev, price }))} />;
-      case 3: return <Step3Photos formData={formData} formErrors={formErrors} handleImageUpload={handleImageUpload} removeImage={removeImage} />;
-      case 4: return <Step4Review formData={formData} onBack={prevStep} onSubmit={handleSubmit} isSubmitting={loading} />;
+      case 3: return <Step4Review formData={formData} onBack={prevStep} onSubmit={handleSubmit} isSubmitting={loading} />;
       default: return null;
     }
   };
@@ -326,7 +322,7 @@ const PostAdPage = () => {
           <Card className="border-0 shadow-lg">
             <CardContent className="p-8">
               {renderStep()}
-              {currentStep < 4 ? (
+              {currentStep < 3 ? (
                 <FormControls currentStep={currentStep} prevStep={prevStep} nextStep={nextStep} loading={loading} />
               ) : null}
             </CardContent>
