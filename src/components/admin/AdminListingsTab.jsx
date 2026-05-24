@@ -146,7 +146,14 @@ const AdminListingsTab = memo(() => {
                     </div>
                     <div className="text-sm text-gray-600">
                       <p>Catégorie: <Badge variant="secondary">{listing.category}</Badge></p>
-                      <p>Statut: <Badge variant={listing.status === 'active' ? 'default' : 'outline'} className={listing.status === 'active' ? 'bg-green-100 text-green-800' : ''}>{listing.status}</Badge></p>
+                      <p className="flex items-center gap-1 flex-wrap">
+                        Statut: <Badge variant={listing.status === 'active' ? 'default' : 'outline'} className={listing.status === 'active' ? 'bg-green-100 text-green-800' : listing.status === 'pending_review' ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>{listing.status}</Badge>
+                        {listing.moderation_flags?.length > 0 && (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300 text-[10px]" title={listing.moderation_reason}>
+                            🚨 IA: {listing.moderation_flags[0]}
+                          </Badge>
+                        )}
+                      </p>
                       <p>Posté le: {formatDate(listing.created_at)}</p>
                     </div>
                     <div className="flex items-center space-x-2 justify-self-start md:justify-self-end">

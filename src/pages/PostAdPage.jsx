@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { uploadImagesWithWatermark } from '@/lib/imageUtils';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { sanitizeInput } from '@/lib/validationUtils';
+import { moderateListing } from '@/hooks/useModeration';
 
 const PostAdPage = () => {
   const navigate = useNavigate();
@@ -261,8 +262,22 @@ const PostAdPage = () => {
         delivery_fee: (formData.delivery_fee && !isNaN(parseFloat(formData.delivery_fee))) ? parseFloat(formData.delivery_fee) : null,
       };
 
-      await addListing(listingData);
+      const newListing = await addListing(listingData);
       localStorage.removeItem(DRAFT_KEY);
+
+      // Run moderation in background — non-blocking
+      if (newListing?.id) {
+        moderateListing(newListing).then((modResult) => {
+          if (!modResult.approved) {
+            toast({
+              title: "Annonce en cours de vérification",
+              description: "Votre annonce a été soumise à une vérification manuelle. Elle sera publiée sous 24h.",
+              duration: 8000,
+            });
+          }
+        });
+      }
+
       toast({ title: "Annonce publiée avec succès !", description: "Votre annonce est maintenant en ligne.", className: "bg-custom-green-500 text-white" });
       navigate('/profile');
     } catch (error) {
