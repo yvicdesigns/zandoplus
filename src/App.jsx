@@ -24,6 +24,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { supabase } from '@/lib/customSupabaseClient';
 import BugReportButton from '@/components/beta/BugReportButton';
+import ChatWidget from '@/components/ai/ChatWidget';
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const ListingsPage = lazy(() => import('@/pages/ListingsPage'));
@@ -184,6 +185,7 @@ const AppLayout = memo(() => {
             <Footer />
             <MobileNavBar />
             <BugReportButton />
+            <ChatWidget />
             <Toaster />
             <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
         </div>
