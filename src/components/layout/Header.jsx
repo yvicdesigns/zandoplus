@@ -279,14 +279,14 @@ const Header = memo(({ onLoginClick }) => {
             transition={{ duration: 0.2 }}
             className="lg:hidden bg-white border-t border-green-100 shadow-lg overflow-hidden"
           >
-            <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-5rem)] overflow-y-auto">
               <div className="mb-4">
                 <SearchForm onSearchSubmit={handleSearchSubmit} />
               </div>
 
               <div className="mb-4">
                 <p className="px-1 pt-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Catégories</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {[...mainCategories, ...moreCategories].map(category => (
                     <Link
                       key={category.slug}
