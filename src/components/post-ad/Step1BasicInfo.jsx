@@ -7,8 +7,7 @@ import { useCategories } from '@/hooks/useCategories';
 import FormError from './FormError';
 import { Label } from '@/components/ui/label';
 import ListingHelper from '@/components/ai/ListingHelper';
-import { Camera, X, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Camera, X } from 'lucide-react';
 
 const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage }) => {
   const fileInputRef = useRef(null);
@@ -168,15 +167,6 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
           )}
         </div>
 
-        {(formData.images || []).length === 0 && !formErrors.images && (
-          <div
-            className="mt-3 text-center py-8 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-custom-green-300 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">Cliquez pour ajouter des photos</p>
-          </div>
-        )}
         <FormError message={formErrors.images} />
       </div>
     </motion.div>
