@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCategories } from '@/hooks/useCategories';
 import FormError from './FormError';
 import { Label } from '@/components/ui/label';
+import ListingHelper from '@/components/ai/ListingHelper';
 
-const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors }) => {
+const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription }) => {
   const { categories, categoriesMap } = useCategories();
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
@@ -95,6 +96,9 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
         />
         <p className="text-sm text-gray-500 mt-1">{formData.description.length}/2000 caractères</p>
         <FormError message={formErrors.description} />
+        {onAIDescription && (
+          <ListingHelper formData={formData} onApply={onAIDescription} />
+        )}
       </div>
     </motion.div>
   );
