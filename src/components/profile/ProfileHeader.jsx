@@ -10,6 +10,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -144,6 +146,10 @@ const ProfileHeader = memo(({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="text-xs text-gray-400 font-normal">
+                    Recommandé : 1500 × 500 px · JPG/PNG · max 5 Mo
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={onEditBanner}>
                     <Camera className="w-4 h-4 mr-2" /> Changer la bannière
                   </DropdownMenuItem>
@@ -167,18 +173,28 @@ const ProfileHeader = memo(({
                 </Avatar>
                 
                 {/* Stable camera button overlay - Fixed z-index and opacity handling */}
-                <button
-                  className="absolute inset-0 rounded-full flex items-center justify-center transition-colors hover:bg-black/40 bg-transparent"
-                  onClick={onEditAvatar}
-                  disabled={isUploadingAvatar}
-                  aria-label="Changer la photo de profil"
-                >
-                    {isUploadingAvatar ? (
-                        <Loader2 className="w-8 h-8 text-white animate-spin"/>
-                    ) : (
-                        <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                    )}
-                </button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="absolute inset-0 rounded-full flex items-center justify-center transition-colors hover:bg-black/40 bg-transparent"
+                        onClick={onEditAvatar}
+                        disabled={isUploadingAvatar}
+                        aria-label="Changer la photo de profil"
+                      >
+                        {isUploadingAvatar ? (
+                          <Loader2 className="w-8 h-8 text-white animate-spin"/>
+                        ) : (
+                          <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="font-medium">Photo de profil</p>
+                      <p className="text-xs text-gray-400">400 × 400 px · carré · JPG/PNG · max 2 Mo</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </div>
         </div>
 
