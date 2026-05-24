@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Edit, MapPin, Calendar, Phone, Mail, Settings, Plus, Camera, Loader2, Trash2, MoreVertical, Eye, MessageCircle, Heart, ShieldCheck, DollarSign
+import {
+  Edit, MapPin, Calendar, Phone, Mail, Settings, Plus, Camera, Loader2, Trash2, MoreVertical, Eye, MessageCircle, Heart, ShieldCheck, DollarSign, Share2, Store, Copy, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +14,75 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const ProfileHeader = memo(({ 
-  profileData, 
-  onEdit, 
-  onEditAvatar, 
+const ShareShopDropdown = ({ profileId, profileName }) => {
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const shopUrl = `${window.location.origin}/seller/${profileId}`;
+  const shareText = `Découvrez la boutique de ${profileName} sur Zando+ Congo : ${shopUrl}`;
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Boutique de ${profileName}`, text: shareText, url: shopUrl });
+      } catch {}
+      return;
+    }
+    setOpen(prev => !prev);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shopUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setOpen(false); }, 2000);
+    });
+  };
+
+  return (
+    <div className="relative">
+      <Button variant="outline" onClick={handleNativeShare} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+        <Share2 className="w-4 h-4 mr-2" /> Partager ma boutique
+      </Button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute top-full mt-2 left-0 bg-white border rounded-lg shadow-lg z-20 min-w-[200px] py-1">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+              onClick={() => setOpen(false)}
+            >
+              <span className="text-green-500 font-bold">W</span> Partager sur WhatsApp
+            </a>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shopUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+              onClick={() => setOpen(false)}
+            >
+              <span className="text-blue-600 font-bold">f</span> Partager sur Facebook
+            </a>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 w-full text-left"
+            >
+              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+              {copied ? 'Lien copié !' : 'Copier le lien'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const ProfileHeader = memo(({
+  profileData,
+  onEdit,
+  onEditAvatar,
   onEditBanner,
   onDeleteBanner,
   isUploadingAvatar,
@@ -165,6 +230,16 @@ const ProfileHeader = memo(({
             <Button variant="outline" onClick={onEdit}>
                 <Edit className="w-4 h-4 mr-2" /> Modifier Profil
             </Button>
+            {profileData?.id && (
+              <Link to={`/seller/${profileData.id}`}>
+                <Button variant="outline" className="border-custom-green-300 text-custom-green-700 hover:bg-custom-green-50">
+                  <Store className="w-4 h-4 mr-2" /> Voir ma boutique
+                </Button>
+              </Link>
+            )}
+            {profileData?.id && (
+              <ShareShopDropdown profileId={profileData.id} profileName={profileData?.full_name || 'mon profil'} />
+            )}
             {!profileData?.verified && (
               <Link to="/verification">
                 <Button variant="outline" className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700">
