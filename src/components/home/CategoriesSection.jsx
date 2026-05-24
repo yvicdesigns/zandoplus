@@ -1,10 +1,8 @@
 import React from 'react';
     import { Link } from 'react-router-dom';
     import { motion } from 'framer-motion';
-    import { Card, CardContent } from '@/components/ui/card';
-    import { Badge } from '@/components/ui/badge';
     import { useCategories } from '@/hooks/useCategories';
-    import { getCategoryEmoji, getCategoryColor } from '@/components/post-ad/categoryIcons';
+    import { getCategoryEmoji, getCategoryColor, getCategoryImage } from '@/components/post-ad/categoryIcons';
 
     const CategoriesSection = ({ categoryCounts, loading }) => {
       const { categories: dbCategories } = useCategories();
@@ -13,6 +11,7 @@ import React from 'react';
         name: cat.name,
         emoji: getCategoryEmoji(cat.slug),
         color: getCategoryColor(cat.slug),
+        image: getCategoryImage(cat.slug),
         count: categoryCounts?.[cat.slug] || 0,
       }));
 
@@ -34,34 +33,42 @@ import React from 'react';
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
               {categories.map((category, index) => (
                 <motion.div
-                  key={category.name}
-                  initial={{ opacity: 0, y: 30 }}
+                  key={category.slug}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
                   viewport={{ once: true }}
                 >
-                  <Link to={`/listings?category=${category.slug}`}>
-                    <Card className="category-card p-4 lg:p-6 text-center cursor-pointer border-0 shadow-lg h-full flex flex-col justify-center">
-                      <CardContent className="p-0">
-                        <div className={`w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center shadow-lg`}>
-                          <span className="text-2xl" role="img">{category.emoji}</span>
-                        </div>
-                        <h3 className="text-base font-bold mb-1">{category.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">
+                  <Link to={`/listings?category=${category.slug}`} className="block group">
+                    <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                      <div className="relative aspect-square overflow-hidden">
+                        {category.image ? (
+                          <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${category.color} flex items-center justify-center`}>
+                            <span className="text-4xl" role="img">{category.emoji}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      </div>
+                      <div className="p-2 bg-white text-center">
+                        <h3 className="text-xs font-bold text-gray-800 leading-tight truncate">{category.name}</h3>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
                           {loading ? (
-                            <span className="inline-block h-4 w-20 bg-gray-200 rounded animate-pulse"></span>
+                            <span className="inline-block h-3 w-12 bg-gray-200 rounded animate-pulse" />
                           ) : (
                             `${(category.count || 0).toLocaleString()} annonces`
                           )}
                         </p>
-                        <Badge variant="secondary" className="bg-custom-green-100 text-custom-green-700 text-xs px-2 py-0.5">
-                          Explorer
-                        </Badge>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </Link>
                 </motion.div>
               ))}

@@ -12,6 +12,7 @@ import NotificationsPopover from '@/components/notifications/NotificationsPopove
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import useUnreadMessages from '@/hooks/useUnreadMessages';
+import { getCategoryEmoji } from '@/components/post-ad/categoryIcons';
 
 // Isolated SearchForm component to prevent parent re-renders on keystroke
 const SearchForm = memo(({ className, onSearchSubmit, initialValue = '' }) => {
@@ -115,17 +116,25 @@ const Header = memo(({ onLoginClick }) => {
   }, []);
 
   const mainCategories = [
-    { name: 'Électronique', path: '/listings?category=electronics' },
-    { name: 'Véhicules', path: '/listings?category=vehicles' },
-    { name: 'Immobilier', path: '/listings?category=real-estate' },
-    { name: 'Mode', path: '/listings?category=fashion' },
-    { name: 'Emplois', path: '/listings?category=jobs' },
-    { name: 'Services', path: '/listings?category=services' }
+    { slug: 'electronics',    name: 'Électronique',  path: '/listings?category=electronics' },
+    { slug: 'phones-tablets', name: 'Téléphones',    path: '/listings?category=phones-tablets' },
+    { slug: 'vehicles',       name: 'Véhicules',     path: '/listings?category=vehicles' },
+    { slug: 'real-estate',    name: 'Immobilier',    path: '/listings?category=real-estate' },
+    { slug: 'fashion',        name: 'Mode',          path: '/listings?category=fashion' },
+    { slug: 'jobs',           name: 'Emplois',       path: '/listings?category=jobs' },
   ];
 
   const moreCategories = [
-    { name: 'Agroalimentaire', path: '/listings?category=agro-alimentaire' },
-    { name: 'Médecine traditionnelle', path: '/listings?category=traditional-medicine' }
+    { slug: 'maison-meubles',          name: 'Maison & Meubles',         path: '/listings?category=maison-meubles' },
+    { slug: 'beaute-soins',            name: 'Beauté & Soins',           path: '/listings?category=beaute-soins' },
+    { slug: 'services',                name: 'Services',                 path: '/listings?category=services' },
+    { slug: 'reparation-construction', name: 'Réparation',               path: '/listings?category=reparation-construction' },
+    { slug: 'equipement-commercial',   name: 'Équipement Commercial',    path: '/listings?category=equipement-commercial' },
+    { slug: 'loisirs-sports',          name: 'Loisirs & Sports',         path: '/listings?category=loisirs-sports' },
+    { slug: 'bebes-enfants',           name: 'Bébés & Enfants',          path: '/listings?category=bebes-enfants' },
+    { slug: 'animaux',                 name: 'Animaux',                  path: '/listings?category=animaux' },
+    { slug: 'agro-alimentaire',        name: 'Agroalimentaire',          path: '/listings?category=agro-alimentaire' },
+    { slug: 'traditional-medicine',    name: 'Médecine Traditionnelle',  path: '/listings?category=traditional-medicine' },
   ];
 
   return (
@@ -233,9 +242,10 @@ const Header = memo(({ onLoginClick }) => {
           </Button>
         </div>
 
-        <div className="hidden md:flex items-center justify-center space-x-8 py-3 border-t border-green-100">
+        <div className="hidden md:flex items-center justify-center space-x-6 py-3 border-t border-green-100">
           {mainCategories.map(category => (
-            <Link key={category.name} to={category.path} className="text-sm font-medium text-gray-600 hover:text-custom-green-600 transition-colors">
+            <Link key={category.slug} to={category.path} className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-custom-green-600 transition-colors">
+              <span>{getCategoryEmoji(category.slug)}</span>
               {category.name}
             </Link>
           ))}
@@ -247,8 +257,11 @@ const Header = memo(({ onLoginClick }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {moreCategories.map(category => (
-                  <DropdownMenuItem key={category.name} asChild>
-                    <Link to={category.path}>{category.name}</Link>
+                  <DropdownMenuItem key={category.slug} asChild>
+                    <Link to={category.path} className="flex items-center gap-2">
+                      <span>{getCategoryEmoji(category.slug)}</span>
+                      {category.name}
+                    </Link>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -271,23 +284,21 @@ const Header = memo(({ onLoginClick }) => {
                 <SearchForm onSearchSubmit={handleSearchSubmit} />
               </div>
 
-              <div className="flex flex-col space-y-1 mb-4">
-                <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-400">Catégories</p>
-                {mainCategories.map(category => (
-                  <Link key={category.name} to={category.path} className="text-sm font-medium text-gray-600 hover:text-custom-green-600 py-2 px-3 rounded-lg hover:bg-custom-green-50 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                    {category.name}
-                  </Link>
-                ))}
-                {moreCategories.length > 0 && (
-                  <>
-                    <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-400">Plus</p>
-                    {moreCategories.map(category => (
-                      <Link key={category.name} to={category.path} className="text-sm font-medium text-gray-600 hover:text-custom-green-600 py-2 px-3 rounded-lg hover:bg-custom-green-50 transition-colors" onClick={() => setIsMenuOpen(false)}>
-                        {category.name}
-                      </Link>
-                    ))}
-                  </>
-                )}
+              <div className="mb-4">
+                <p className="px-1 pt-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Catégories</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[...mainCategories, ...moreCategories].map(category => (
+                    <Link
+                      key={category.slug}
+                      to={category.path}
+                      className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl hover:bg-custom-green-50 transition-colors text-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="text-2xl">{getCategoryEmoji(category.slug)}</span>
+                      <span className="text-[10px] font-medium text-gray-600 leading-tight">{category.name}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
 
               {!isLoading && user ? (
