@@ -51,9 +51,11 @@ const AdminListingsTab = memo(() => {
 
   const handleDeleteListing = async () => {
     if (!dialogState.listingId) return;
-    setLoadingAction(dialogState.listingId);
+    const listingId = dialogState.listingId;
+    setLoadingAction(listingId);
+    closeDeleteDialog();
     try {
-      const listing = listings.find(l => l.id === dialogState.listingId);
+      const listing = listings.find(l => l.id === listingId);
       if (listing?.images?.length > 0) {
         const filePaths = listing.images.map(url => {
           try {
@@ -67,15 +69,15 @@ const AdminListingsTab = memo(() => {
           await supabase.storage.from('listing_images').remove(filePaths);
         }
       }
-      const { error } = await supabase.from('listings').delete().eq('id', dialogState.listingId);
+      const { error } = await supabase.rpc('admin_delete_listing', { p_listing_id: listingId });
       if (error) throw error;
+      setListings(prev => prev.filter(l => l.id !== listingId));
       toast({ title: 'Succès', description: 'Annonce supprimée avec succès.', className: 'bg-green-100 text-green-800' });
-      fetchListings();
     } catch (error) {
       toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
+      fetchListings();
     } finally {
       setLoadingAction(null);
-      closeDeleteDialog();
     }
   };
 
