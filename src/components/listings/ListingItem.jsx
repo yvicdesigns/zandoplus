@@ -52,7 +52,8 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             <img   
               className="w-full h-full object-cover object-center"
               alt={listing.title}
-              src={listing.images?.[0] || 'https://via.placeholder.com/300x200?text=Image+Indisponible'} />
+              src={listing.images?.[0] || '/placeholder-image.png'}
+              onError={e => { e.currentTarget.src = 'https://placehold.co/400x300/f3f4f6/9ca3af?text=Image+Indisponible'; }} />
           </Link>
           <button
             onClick={() => toggleFavorite(listing.id)}
@@ -114,7 +115,8 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             <img   
               className="w-full h-full object-cover object-center"
               alt={listing.title}
-              src={listing.images?.[0] || 'https://via.placeholder.com/300x200?text=Image+Indisponible'} />
+              src={listing.images?.[0] || '/placeholder-image.png'}
+              onError={e => { e.currentTarget.src = 'https://placehold.co/400x300/f3f4f6/9ca3af?text=Image+Indisponible'; }} />
           </Link>
           <div className="absolute top-2 left-2 z-10">
              <ListingBadges listing={listing} seller={listing.seller} />
