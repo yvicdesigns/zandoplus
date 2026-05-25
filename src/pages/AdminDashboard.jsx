@@ -193,6 +193,7 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, onNavigate }) 
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const mainRef = React.useRef(null);
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -202,6 +203,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
 
   const fetchStats = async () => {
     try {
@@ -274,7 +280,7 @@ const AdminDashboard = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-x-hidden">
+      <main ref={mainRef} className="flex-1 min-w-0 overflow-x-hidden">
         {/* Top Bar */}
         <div className="sticky top-16 md:top-20 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-4 lg:px-6 py-3 flex items-center gap-3">
           <button
