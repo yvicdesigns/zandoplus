@@ -21,6 +21,7 @@ const ProfilePage = () => {
   const { toast } = useToast();
 
   const [messagesCount, setMessagesCount] = useState(0);
+  const [pendingListings, setPendingListings] = useState([]);
   const [isEditProfileOpen, setEditProfileOpen] = useState(false);
   const [isBannerEditorOpen, setBannerEditorOpen] = useState(false);
   const [bannerImageSrc, setBannerImageSrc] = useState(null);
@@ -50,6 +51,19 @@ const ProfilePage = () => {
       }
     };
     fetchMessageCount();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchPendingListings = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('listings')
+        .select('id, title, images, status, moderation_reason, created_at')
+        .eq('user_id', user.id)
+        .in('status', ['pending_review', 'needs_changes']);
+      if (data) setPendingListings(data);
+    };
+    fetchPendingListings();
   }, [user]);
 
   // Updated Profile Save handler with robust error handling and proper async flow
@@ -251,6 +265,7 @@ const ProfilePage = () => {
             activeListings={activeListings}
             soldListings={soldListings}
             favoriteListings={favoriteListings}
+            pendingListings={pendingListings}
             loading={listingsLoading}
           />
         </div>

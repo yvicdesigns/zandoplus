@@ -3,7 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Search, Eye, Trash2, Star, StarOff } from 'lucide-react';
+import { ShoppingBag, Search, Eye, Trash2, Star, StarOff, CheckCircle, MessageSquare } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +21,8 @@ const AdminListingsTab = memo(() => {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogState, setDialogState] = useState({ isOpen: false, listingId: null });
   const [loadingAction, setLoadingAction] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [rejectDialog, setRejectDialog] = useState({ isOpen: false, listingId: null, reason: '' });
   const { toast } = useToast();
 
   const fetchListings = useCallback(async () => {
@@ -63,6 +67,42 @@ const AdminListingsTab = memo(() => {
     }
   };
 
+  const handleApproveListing = async (listingId) => {
+    setLoadingAction(listingId);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ status: 'active', moderation_flags: [], moderation_reason: null })
+        .eq('id', listingId);
+      if (error) throw error;
+      toast({ title: 'Annonce approuvée', description: 'L\'annonce est maintenant visible.', className: 'bg-green-100 text-green-800' });
+      fetchListings();
+    } catch (error) {
+      toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleRequestChanges = async () => {
+    if (!rejectDialog.listingId) return;
+    setLoadingAction(rejectDialog.listingId);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ status: 'needs_changes', moderation_reason: rejectDialog.reason })
+        .eq('id', rejectDialog.listingId);
+      if (error) throw error;
+      toast({ title: 'Demande envoyée', description: 'Le vendeur sera informé des modifications à apporter.', className: 'bg-amber-100 text-amber-800' });
+      setRejectDialog({ isOpen: false, listingId: null, reason: '' });
+      fetchListings();
+    } catch (error) {
+      toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   const handleToggleFeatured = async (listingId, currentStatus) => {
     setLoadingAction(listingId);
     try {
@@ -87,11 +127,15 @@ const AdminListingsTab = memo(() => {
   
   const filteredListings = useMemo(() => {
     if (!listings) return [];
-    return listings.filter(l => 
-      l.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      l.seller_full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [listings, searchQuery]);
+    return listings.filter(l => {
+      const matchesSearch = l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.seller_full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [listings, searchQuery, statusFilter]);
+
+  const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review' || l.status === 'needs_changes').length, [listings]);
 
   if (loading) {
     return (
@@ -112,16 +156,59 @@ const AdminListingsTab = memo(() => {
         variant="destructive"
         isLoading={loadingAction === dialogState.listingId}
       />
-      <div className="p-4 sm:p-6">
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Rechercher par titre ou vendeur..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full md:w-1/3"
+      {/* Request changes dialog */}
+      <Dialog open={rejectDialog.isOpen} onOpenChange={(open) => !open && setRejectDialog({ isOpen: false, listingId: null, reason: '' })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Demander des modifications</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">Expliquez au vendeur ce qu'il doit corriger :</p>
+          <Textarea
+            placeholder="Ex: Les photos sont floues. Veuillez ajouter une description plus détaillée et un prix correct."
+            value={rejectDialog.reason}
+            onChange={(e) => setRejectDialog(prev => ({ ...prev, reason: e.target.value }))}
+            rows={4}
           />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialog({ isOpen: false, listingId: null, reason: '' })}>Annuler</Button>
+            <Button onClick={handleRequestChanges} disabled={!rejectDialog.reason.trim() || loadingAction === rejectDialog.listingId} className="bg-amber-500 hover:bg-amber-600 text-white">
+              Envoyer la demande
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col md:flex-row gap-3 mb-6">
+          <div className="relative flex-1 md:max-w-xs">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Rechercher par titre ou vendeur..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { value: 'all', label: 'Toutes' },
+              { value: 'active', label: 'Actives' },
+              { value: 'pending_review', label: `En attente${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
+              { value: 'needs_changes', label: 'Modif. requises' },
+              { value: 'inactive', label: 'Inactives' },
+            ].map(f => (
+              <Button
+                key={f.value}
+                size="sm"
+                variant={statusFilter === f.value ? 'default' : 'outline'}
+                onClick={() => setStatusFilter(f.value)}
+                className={statusFilter === f.value ? 'gradient-bg' : ''}
+              >
+                {f.label}
+              </Button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -156,7 +243,17 @@ const AdminListingsTab = memo(() => {
                       </p>
                       <p>Posté le: {formatDate(listing.created_at)}</p>
                     </div>
-                    <div className="flex items-center space-x-2 justify-self-start md:justify-self-end">
+                    <div className="flex items-center gap-2 justify-self-start md:justify-self-end flex-wrap">
+                      {(listing.status === 'pending_review' || listing.status === 'needs_changes') && (
+                        <Button size="sm" onClick={() => handleApproveListing(listing.id)} disabled={loadingAction === listing.id} className="bg-green-500 hover:bg-green-600 text-white h-8 px-3 text-xs gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" /> Approuver
+                        </Button>
+                      )}
+                      {listing.status === 'pending_review' && (
+                        <Button size="sm" variant="outline" onClick={() => setRejectDialog({ isOpen: true, listingId: listing.id, reason: '' })} disabled={loadingAction === listing.id} className="border-amber-400 text-amber-700 hover:bg-amber-50 h-8 px-3 text-xs gap-1">
+                          <MessageSquare className="w-3.5 h-3.5" /> Modif.
+                        </Button>
+                      )}
                       <Button asChild size="icon" variant="ghost"><Link to={`/listings/${listing.id}`}><Eye className="w-4 h-4" /></Link></Button>
                       <Button size="icon" variant="ghost" onClick={() => handleToggleFeatured(listing.id, listing.featured)} disabled={loadingAction === listing.id}>
                         {listing.featured ? <Star className="w-4 h-4 text-amber-500 fill-current" /> : <StarOff className="w-4 h-4 text-gray-400" />}
