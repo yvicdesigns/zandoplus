@@ -53,12 +53,24 @@ const AdminListingsTab = memo(() => {
     if (!dialogState.listingId) return;
     setLoadingAction(dialogState.listingId);
     try {
-      const { error } = await supabase.functions.invoke('admin-actions', {
-        body: { type: 'listing', payload: { action: 'delete', listingId: dialogState.listingId } },
-      });
+      const listing = listings.find(l => l.id === dialogState.listingId);
+      if (listing?.images?.length > 0) {
+        const filePaths = listing.images.map(url => {
+          try {
+            const urlObj = new URL(url);
+            const parts = urlObj.pathname.split('/');
+            const bucketIndex = parts.indexOf('listing_images');
+            return bucketIndex !== -1 ? parts.slice(bucketIndex + 1).join('/') : null;
+          } catch { return null; }
+        }).filter(Boolean);
+        if (filePaths.length > 0) {
+          await supabase.storage.from('listing_images').remove(filePaths);
+        }
+      }
+      const { error } = await supabase.from('listings').delete().eq('id', dialogState.listingId);
       if (error) throw error;
       toast({ title: 'Succès', description: 'Annonce supprimée avec succès.', className: 'bg-green-100 text-green-800' });
-      fetchListings(); 
+      fetchListings();
     } catch (error) {
       toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
     } finally {
