@@ -205,7 +205,6 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTab]);
 
@@ -234,7 +233,7 @@ const AdminDashboard = () => {
       </Helmet>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 flex-shrink-0 sticky top-16 md:top-20 h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] overflow-hidden shadow-2xl">
+      <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 flex-shrink-0 sticky top-16 md:top-[7.75rem] h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)] overflow-hidden shadow-2xl">
         <SidebarNav
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -280,9 +279,9 @@ const AdminDashboard = () => {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main ref={mainRef} className="flex-1 min-w-0 overflow-x-hidden">
+      <main ref={mainRef} className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)]">
         {/* Top Bar */}
-        <div className="sticky top-16 md:top-20 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-4 lg:px-6 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-4 lg:px-6 py-3 flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
