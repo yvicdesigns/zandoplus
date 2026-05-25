@@ -84,13 +84,10 @@ const AdminListingsTab = memo(() => {
   const handleApproveListing = async (listingId) => {
     setLoadingAction(listingId);
     try {
-      const { error } = await supabase
-        .from('listings')
-        .update({ status: 'active', moderation_flags: [], moderation_reason: null })
-        .eq('id', listingId);
+      const { error } = await supabase.rpc('admin_approve_listing', { p_listing_id: listingId });
       if (error) throw error;
+      setListings(prev => prev.map(l => l.id === listingId ? { ...l, status: 'active', moderation_flags: [], moderation_reason: null } : l));
       toast({ title: 'Annonce approuvée', description: 'L\'annonce est maintenant visible.', className: 'bg-green-100 text-green-800' });
-      fetchListings();
     } catch (error) {
       toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
     } finally {
@@ -102,10 +99,7 @@ const AdminListingsTab = memo(() => {
     if (!rejectDialog.listingId) return;
     setLoadingAction(rejectDialog.listingId);
     try {
-      const { error } = await supabase
-        .from('listings')
-        .update({ status: 'needs_changes', moderation_reason: rejectDialog.reason })
-        .eq('id', rejectDialog.listingId);
+      const { error } = await supabase.rpc('admin_request_changes', { p_listing_id: rejectDialog.listingId, p_reason: rejectDialog.reason });
       if (error) throw error;
       toast({ title: 'Demande envoyée', description: 'Le vendeur sera informé des modifications à apporter.', className: 'bg-amber-100 text-amber-800' });
       setRejectDialog({ isOpen: false, listingId: null, reason: '' });
