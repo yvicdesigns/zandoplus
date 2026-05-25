@@ -193,18 +193,17 @@ const AdminListingsTab = memo(() => {
       </Dialog>
 
       <div className="p-4 sm:p-6">
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
-          <div className="relative flex-1 md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Rechercher par titre ou vendeur..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Rechercher par titre ou vendeur..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full md:w-1/3"
+          />
+        </div>
+        <div className="flex gap-2 flex-wrap mb-6">
             {[
               { value: 'all', label: 'Toutes' },
               { value: 'active', label: 'Actives' },
@@ -222,7 +221,6 @@ const AdminListingsTab = memo(() => {
                 {f.label}
               </Button>
             ))}
-          </div>
         </div>
 
         <div className="space-y-4">
