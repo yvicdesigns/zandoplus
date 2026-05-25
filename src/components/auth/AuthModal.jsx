@@ -13,9 +13,11 @@ import AuthFormInput from './AuthFormInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { validateEmail, validatePhone, validatePasswordStrength, sanitizeInput } from '@/lib/validationUtils';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login, register, signInWithProvider, resetPassword } = useAuth();
+  const { siteSettings } = useSiteSettings();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [activeTab, setActiveTab]         = useState('login');
   const [showPassword, setShowPassword]   = useState(false);
@@ -150,8 +152,12 @@ const AuthModal = ({ isOpen, onClose }) => {
             >
               {/* Header */}
               <div className="text-center mb-8">
-                <div className="w-14 h-14 bg-gradient-to-br from-custom-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <span className="text-2xl">🛍️</span>
+                <div className="flex items-center justify-center mb-4">
+                  {siteSettings?.logo_url ? (
+                    <img src={siteSettings.logo_url} alt="Zando+" className="h-12 w-auto object-contain" />
+                  ) : (
+                    <span className="text-3xl font-bold gradient-text">Zando+</span>
+                  )}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">Bienvenue sur Zando+</h2>
                 <p className="text-sm text-gray-500 mt-1">Le marché en ligne du Congo</p>
@@ -162,7 +168,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-3 mb-3"
+                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-3 mb-3 cursor-pointer"
               >
                 <GoogleIcon className="w-5 h-5 flex-shrink-0" />
                 {loading ? 'Connexion...' : 'Continuer avec Google'}
@@ -180,7 +186,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={() => setShowEmailForm(true)}
                 disabled={loading}
-                className="w-full h-12 gradient-bg rounded-xl font-semibold text-sm shadow-md flex items-center justify-center gap-3"
+                className="w-full h-12 gradient-bg rounded-xl font-semibold text-sm shadow-md flex items-center justify-center gap-3 cursor-pointer"
               >
                 <Mail className="w-5 h-5" />
                 Continuer avec e-mail
@@ -215,7 +221,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={() => { setShowEmailForm(false); setError(''); }}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Retour
