@@ -4,12 +4,11 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
 import {
   ShieldCheck, PackageCheck, AlertTriangle, Loader2,
-  Clock, CheckCircle, XCircle, Truck, ArrowLeft
+  Clock, CheckCircle, XCircle, Truck, ArrowLeft, Wallet,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -17,16 +16,18 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 const STATUS_CONFIG = {
-  en_attente_paiement: { label: 'En attente de paiement', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  fonds_bloques:       { label: 'Fonds bloqués', color: 'bg-blue-100 text-blue-800', icon: ShieldCheck },
-  livre:               { label: 'Livré — en attente confirmation', color: 'bg-purple-100 text-purple-800', icon: Truck },
-  confirme:            { label: 'Réception confirmée', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  complete:            { label: 'Terminé', color: 'bg-green-200 text-green-900', icon: CheckCircle },
-  litige:              { label: 'Litige ouvert', color: 'bg-red-100 text-red-800', icon: AlertTriangle },
-  rembourse:           { label: 'Remboursé', color: 'bg-gray-100 text-gray-700', icon: XCircle },
+  en_attente_paiement: { label: 'En attente de paiement',          color: 'bg-yellow-100 text-yellow-800', icon: Clock         },
+  fonds_bloques:       { label: 'Paiement sécurisé',               color: 'bg-blue-100 text-blue-800',    icon: ShieldCheck    },
+  paiement_valide:     { label: 'Paiement validé',                 color: 'bg-indigo-100 text-indigo-800',icon: ShieldCheck    },
+  livre:               { label: 'Livré — en attente confirmation',  color: 'bg-purple-100 text-purple-800',icon: Truck          },
+  confirme:            { label: 'Réception confirmée',             color: 'bg-green-100 text-green-800',  icon: CheckCircle    },
+  retrait_demande:     { label: 'Retrait en cours',                color: 'bg-orange-100 text-orange-800',icon: Wallet         },
+  complete:            { label: 'Terminé',                         color: 'bg-green-200 text-green-900',  icon: CheckCircle    },
+  litige:              { label: 'Litige ouvert',                   color: 'bg-red-100 text-red-800',      icon: AlertTriangle  },
+  rembourse:           { label: 'Remboursé',                       color: 'bg-gray-100 text-gray-700',    icon: XCircle        },
 };
 
-const COMMISSION_RATE = 0.03;
+const COMMISSION_RATE = 0.07;
 
 const StatusBadge = ({ statut }) => {
   const cfg = STATUS_CONFIG[statut] || { label: statut, color: 'bg-gray-100 text-gray-700', icon: Clock };
@@ -38,8 +39,32 @@ const StatusBadge = ({ statut }) => {
   );
 };
 
+const Countdown = ({ targetDate, label }) => {
+  const calc = () => {
+    const diff = new Date(targetDate) - Date.now();
+    if (diff <= 0) return null;
+    const h = Math.floor(diff / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return `${h}h ${m}min`;
+  };
+  const [remaining, setRemaining] = useState(calc);
+
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(calc()), 30_000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+
+  if (!remaining) return null;
+  return (
+    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+      <Clock className="w-4 h-4 flex-shrink-0" />
+      <span>{label} <strong>{remaining}</strong></span>
+    </div>
+  );
+};
+
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-const formatAmount = (n) => n?.toLocaleString?.() ?? '0';
+const formatAmount = (n) => (n ?? 0).toLocaleString('fr-FR');
 
 const TransactionsPage = () => {
   const { user, openAuthModal } = useAuth();
@@ -50,28 +75,34 @@ const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [confirmDialog, setConfirmDialog] = useState(null);
-  const [litigeDialog, setLitigeDialog] = useState(null);
+  const [confirmDialog, setConfirmDialog]     = useState(null);
+  const [litigeDialog, setLitigeDialog]       = useState(null);
   const [livraisonDialog, setLivraisonDialog] = useState(null);
-  const [litigeNote, setLitigeNote] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
+  const [withdrawDialog, setWithdrawDialog]   = useState(null);
+  const [litigeNote, setLitigeNote]           = useState('');
+  const [actionLoading, setActionLoading]     = useState(false);
 
-  const fetch = useCallback(async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const isAchats = tab === 'achats';
-    const field = isAchats ? 'acheteur_id' : 'vendeur_id';
+    // Auto-confirme les transactions livrées dont le délai 72h est dépassé
+    await supabase.rpc('auto_confirm_transactions').catch(() => {});
+
+    const field = tab === 'achats' ? 'acheteur_id' : 'vendeur_id';
     const { data, error } = await supabase
       .from('transactions_escrow')
       .select(`
-        id, statut, montant, created_at, date_limite_confirmation,
+        id, statut, montant, created_at,
         date_livraison_declaree, date_confirmation,
+        paiement_valide_at, auto_confirm_at,
+        withdrawal_available_at, withdrawal_requested_at,
         annonce:annonce_id(id, title, images),
         acheteur:acheteur_id(full_name),
         vendeur:vendeur_id(full_name)
       `)
       .eq(field, user.id)
       .order('created_at', { ascending: false });
+
     if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     else setTransactions(data || []);
     setLoading(false);
@@ -79,26 +110,21 @@ const TransactionsPage = () => {
 
   useEffect(() => {
     if (!user) { openAuthModal(); navigate('/'); return; }
-    fetch();
-  }, [user, fetch, openAuthModal, navigate]);
+    fetchTransactions();
+  }, [user, fetchTransactions, openAuthModal, navigate]);
 
   const doConfirmReception = async (tx) => {
     setActionLoading(true);
-    const { error } = await supabase.from('transactions_escrow')
-      .update({ statut: 'confirme', date_confirmation: new Date().toISOString() })
-      .eq('id', tx.id);
+    const { error } = await supabase.rpc('buyer_confirm_receipt', { p_transaction_id: tx.id });
     setActionLoading(false);
     setConfirmDialog(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Réception confirmée !', description: 'Les fonds seront libérés au vendeur.' });
-    fetch();
+    toast({ title: 'Réception confirmée !', description: 'Le vendeur pourra retirer ses fonds dans 24h.' });
+    fetchTransactions();
   };
 
   const doOuvrirLitige = async (tx) => {
-    if (!litigeNote.trim()) {
-      toast({ title: 'Décrivez le problème', variant: 'destructive' });
-      return;
-    }
+    if (!litigeNote.trim()) { toast({ title: 'Décrivez le problème', variant: 'destructive' }); return; }
     setActionLoading(true);
     const { error } = await supabase.from('transactions_escrow')
       .update({ statut: 'litige', notes_litige: litigeNote.trim() })
@@ -108,34 +134,52 @@ const TransactionsPage = () => {
     setLitigeNote('');
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Litige ouvert', description: 'Notre équipe va examiner votre demande.' });
-    fetch();
+    fetchTransactions();
   };
 
   const doDeclarelivraison = async (tx) => {
     setActionLoading(true);
+    const autoConfirmAt = new Date(Date.now() + 72 * 3_600_000).toISOString();
     const { error } = await supabase.from('transactions_escrow')
-      .update({ statut: 'livre', date_livraison_declaree: new Date().toISOString() })
+      .update({
+        statut: 'livre',
+        date_livraison_declaree: new Date().toISOString(),
+        auto_confirm_at: autoConfirmAt,
+      })
       .eq('id', tx.id);
     setActionLoading(false);
     setLivraisonDialog(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Livraison déclarée !', description: "L'acheteur doit maintenant confirmer la réception." });
-    fetch();
+    toast({ title: 'Livraison déclarée !', description: "L'acheteur a 72h pour confirmer, sinon confirmation automatique." });
+    fetchTransactions();
+  };
+
+  const doRequestWithdrawal = async (tx) => {
+    setActionLoading(true);
+    const { error } = await supabase.rpc('vendor_request_withdrawal', { p_transaction_id: tx.id });
+    setActionLoading(false);
+    setWithdrawDialog(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Retrait demandé !', description: 'Zando+ va envoyer vos fonds sur votre numéro MoMo.' });
+    fetchTransactions();
   };
 
   const canLitige = (tx) => {
     if (tx.statut !== 'confirme') return false;
     const confirmed = tx.date_confirmation ? new Date(tx.date_confirmation) : null;
     if (!confirmed) return false;
-    const hoursSince = (Date.now() - confirmed.getTime()) / 3_600_000;
-    return hoursSince <= 48;
+    return (Date.now() - confirmed.getTime()) / 3_600_000 <= 48;
   };
+
+  const withdrawalReady = (tx) =>
+    tx.withdrawal_available_at && new Date(tx.withdrawal_available_at) <= Date.now();
 
   return (
     <>
       <Helmet><title>Mes Transactions — Zando+</title></Helmet>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-10 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
+
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />
@@ -146,7 +190,6 @@ const TransactionsPage = () => {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-2 bg-white rounded-xl p-1 shadow-sm border w-fit">
             {[{ id: 'achats', label: 'Mes achats' }, { id: 'ventes', label: 'Mes ventes' }].map(t => (
               <button
@@ -162,7 +205,9 @@ const TransactionsPage = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-green-600" /></div>
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+            </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-20 text-gray-400">
               <ShieldCheck className="w-14 h-14 mx-auto mb-3 opacity-30" />
@@ -175,11 +220,13 @@ const TransactionsPage = () => {
                 const netVendeur = tx.montant - commission;
                 const isAchats = tab === 'achats';
                 const otherParty = isAchats ? tx.vendeur?.full_name : tx.acheteur?.full_name;
+                const canWithdraw = withdrawalReady(tx);
 
                 return (
                   <Card key={tx.id} className="shadow-md border-0">
                     <CardContent className="p-4 space-y-4">
-                      {/* Header row */}
+
+                      {/* En-tête */}
                       <div className="flex gap-4 items-start">
                         <img
                           src={tx.annonce?.images?.[0] || 'https://via.placeholder.com/80'}
@@ -194,7 +241,7 @@ const TransactionsPage = () => {
                         <StatusBadge statut={tx.statut} />
                       </div>
 
-                      {/* Amounts */}
+                      {/* Montants */}
                       <div className="bg-gray-50 rounded-xl divide-y text-sm">
                         <div className="flex justify-between px-4 py-2.5">
                           <span className="text-gray-600">Montant payé</span>
@@ -203,7 +250,7 @@ const TransactionsPage = () => {
                         {!isAchats && (
                           <>
                             <div className="flex justify-between px-4 py-2.5 text-gray-500">
-                              <span>Commission Zando (3%)</span>
+                              <span>Commission Zando (7%)</span>
                               <span>— {formatAmount(commission)} FCFA</span>
                             </div>
                             <div className="flex justify-between px-4 py-2.5 bg-green-50 rounded-b-xl">
@@ -214,15 +261,42 @@ const TransactionsPage = () => {
                         )}
                       </div>
 
-                      {/* Action buttons — Acheteur */}
+                      {/* ── Actions ACHETEUR ── */}
+                      {isAchats && tx.statut === 'fonds_bloques' && (
+                        <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 rounded-lg px-4 py-3">
+                          <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                          Votre paiement est sécurisé chez Zando+. En attente de validation.
+                        </div>
+                      )}
+                      {isAchats && tx.statut === 'paiement_valide' && (
+                        <div className="flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 rounded-lg px-4 py-3">
+                          <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                          Paiement validé par Zando+ — votre commande est en préparation.
+                        </div>
+                      )}
                       {isAchats && tx.statut === 'livre' && (
-                        <div className="flex gap-2 flex-wrap">
-                          <Button
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => setConfirmDialog(tx)}
-                          >
-                            <PackageCheck className="w-4 h-4 mr-2" /> Confirmer la réception
-                          </Button>
+                        <div className="space-y-3">
+                          {tx.auto_confirm_at && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 space-y-1">
+                              <Countdown targetDate={tx.auto_confirm_at} label="Confirmation automatique dans" />
+                              <p className="text-xs text-orange-600 mt-1">Si vous ne confirmez pas, la commande sera confirmée automatiquement.</p>
+                            </div>
+                          )}
+                          <div className="flex gap-2 flex-wrap">
+                            <Button
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => setConfirmDialog(tx)}
+                            >
+                              <PackageCheck className="w-4 h-4 mr-2" /> Confirmer la réception
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => { setLitigeDialog(tx); setLitigeNote(''); }}
+                            >
+                              <AlertTriangle className="w-4 h-4 mr-2" /> Litige
+                            </Button>
+                          </div>
                         </div>
                       )}
                       {isAchats && canLitige(tx) && (
@@ -235,21 +309,58 @@ const TransactionsPage = () => {
                         </Button>
                       )}
 
-                      {/* Action buttons — Vendeur */}
+                      {/* ── Actions VENDEUR ── */}
                       {!isAchats && tx.statut === 'fonds_bloques' && (
-                        <Button
-                          className="w-full gradient-bg"
-                          onClick={() => setLivraisonDialog(tx)}
-                        >
-                          <Truck className="w-4 h-4 mr-2" /> Déclarer la livraison
-                        </Button>
-                      )}
-                      {!isAchats && tx.statut === 'confirme' && (
-                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-4 py-3">
-                          <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                          Réception confirmée — les fonds seront libérés sous 24h.
+                        <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 rounded-lg px-4 py-3">
+                          <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                          Paiement reçu — en attente de validation par Zando+.
                         </div>
                       )}
+                      {!isAchats && tx.statut === 'paiement_valide' && (
+                        <Button className="w-full gradient-bg" onClick={() => setLivraisonDialog(tx)}>
+                          <Truck className="w-4 h-4 mr-2" /> Préparer & déclarer la livraison
+                        </Button>
+                      )}
+                      {!isAchats && tx.statut === 'livre' && (
+                        <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 rounded-lg px-4 py-3">
+                          <Truck className="w-4 h-4 flex-shrink-0" />
+                          Livraison déclarée — en attente de confirmation de l'acheteur (72h max).
+                        </div>
+                      )}
+                      {!isAchats && tx.statut === 'confirme' && (
+                        <div className="space-y-3">
+                          {!canWithdraw && tx.withdrawal_available_at && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 space-y-3">
+                              <Countdown targetDate={tx.withdrawal_available_at} label="Retrait disponible dans" />
+                              <Button disabled className="w-full bg-gray-200 text-gray-400 cursor-not-allowed">
+                                <Wallet className="w-4 h-4 mr-2" /> Retrait disponible bientôt...
+                              </Button>
+                            </div>
+                          )}
+                          {canWithdraw && (
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                              onClick={() => setWithdrawDialog(tx)}
+                            >
+                              <Wallet className="w-5 h-5 mr-2" />
+                              Retirer mes fonds — {formatAmount(netVendeur)} FCFA
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {!isAchats && tx.statut === 'retrait_demande' && (
+                        <div className="flex items-center gap-2 text-sm text-orange-700 bg-orange-50 rounded-lg px-4 py-3">
+                          <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                          Retrait en cours — Zando+ prépare l'envoi sur votre MoMo.
+                        </div>
+                      )}
+                      {!isAchats && tx.statut === 'complete' && (
+                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-4 py-3">
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                          Fonds envoyés sur votre MoMo. Transaction terminée ✓
+                        </div>
+                      )}
+
                     </CardContent>
                   </Card>
                 );
@@ -259,78 +370,82 @@ const TransactionsPage = () => {
         </div>
       </div>
 
-      {/* Confirm reception dialog */}
+      {/* Dialog : Confirmer réception */}
       <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmer la réception</DialogTitle>
             <DialogDescription>
-              En confirmant, vous indiquez avoir bien reçu l'article. Les fonds seront libérés au vendeur.
+              En confirmant, vous indiquez avoir bien reçu l'article. Le vendeur pourra retirer ses fonds 24h après votre confirmation.
               Cette action est <strong>irréversible</strong>.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDialog(null)}>Annuler</Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => doConfirmReception(confirmDialog)}
-              disabled={actionLoading}
-            >
-              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Confirmer
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => doConfirmReception(confirmDialog)} disabled={actionLoading}>
+              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Confirmer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Litige dialog */}
+      {/* Dialog : Litige */}
       <Dialog open={!!litigeDialog} onOpenChange={() => setLitigeDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ouvrir un litige</DialogTitle>
-            <DialogDescription>
-              Décrivez le problème. Notre équipe examinera votre demande et vous contactera.
-            </DialogDescription>
+            <DialogDescription>Décrivez le problème. Notre équipe examinera votre demande et vous contactera.</DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Ex: l'article reçu ne correspond pas à la description..."
-            value={litigeNote}
-            onChange={e => setLitigeNote(e.target.value)}
-            rows={4}
-          />
+          <Textarea placeholder="Ex: l'article reçu ne correspond pas à la description..." value={litigeNote} onChange={e => setLitigeNote(e.target.value)} rows={4} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setLitigeDialog(null)}>Annuler</Button>
-            <Button
-              variant="destructive"
-              onClick={() => doOuvrirLitige(litigeDialog)}
-              disabled={actionLoading}
-            >
-              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Soumettre le litige
+            <Button variant="destructive" onClick={() => doOuvrirLitige(litigeDialog)} disabled={actionLoading}>
+              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Soumettre le litige
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Livraison dialog */}
+      {/* Dialog : Déclarer livraison */}
       <Dialog open={!!livraisonDialog} onOpenChange={() => setLivraisonDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Déclarer la livraison</DialogTitle>
             <DialogDescription>
-              En déclarant la livraison, vous confirmez que l'article a été remis à l'acheteur.
-              L'acheteur aura 72h pour confirmer la réception.
+              Confirmez que l'article a été remis à l'acheteur. L'acheteur aura <strong>72h</strong> pour confirmer la réception. Passé ce délai, la commande est confirmée automatiquement et votre retrait sera disponible.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLivraisonDialog(null)}>Annuler</Button>
-            <Button
-              className="gradient-bg"
-              onClick={() => doDeclarelivraison(livraisonDialog)}
-              disabled={actionLoading}
-            >
+            <Button className="gradient-bg" onClick={() => doDeclarelivraison(livraisonDialog)} disabled={actionLoading}>
+              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Confirmer la livraison
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog : Retirer les fonds */}
+      <Dialog open={!!withdrawDialog} onOpenChange={() => setWithdrawDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Retirer vos fonds</DialogTitle>
+            <DialogDescription>
+              Zando+ va envoyer{' '}
+              <strong>
+                {formatAmount(withdrawDialog
+                  ? withdrawDialog.montant - Math.round(withdrawDialog.montant * COMMISSION_RATE)
+                  : 0
+                )} FCFA
+              </strong>{' '}
+              sur votre numéro MoMo enregistré dans votre profil.
+              Vérifiez que votre numéro est à jour dans <strong>Mes paramètres</strong> avant de confirmer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWithdrawDialog(null)}>Annuler</Button>
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => doRequestWithdrawal(withdrawDialog)} disabled={actionLoading}>
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Confirmer la livraison
+              <Wallet className="w-4 h-4 mr-2" /> Confirmer le retrait
             </Button>
           </DialogFooter>
         </DialogContent>

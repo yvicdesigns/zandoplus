@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -18,9 +18,6 @@ export const useAuth = () => {
   return context;
 };
 
-// Session timeout in milliseconds (30 minutes)
-const SESSION_TIMEOUT = 30 * 60 * 1000;
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -28,10 +25,6 @@ export const AuthProvider = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Session timeout refs
-  const lastActivityRef = useRef(Date.now());
-  const timeoutIdRef = useRef(null);
 
   const authService = useAuthService(user, toast);
 
@@ -64,8 +57,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setSession(null);
     setIsLoading(false);
-    
-    if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
 
     if (window.location.pathname !== '/') {
         navigate('/', { replace: true });
@@ -78,33 +69,6 @@ export const AuthProvider = ({ children }) => {
         });
     }
   }, [navigate, toast, user]);
-
-  const resetActivityTimer = useCallback(() => {
-    lastActivityRef.current = Date.now();
-    if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
-    
-    if (user) {
-      timeoutIdRef.current = setTimeout(() => {
-        logout({ 
-          showToast: true, 
-          title: "Session Expirée", 
-          description: "Vous avez été déconnecté pour inactivité." 
-        });
-      }, SESSION_TIMEOUT);
-    }
-  }, [user, logout]);
-
-  useEffect(() => {
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    const handleActivity = () => resetActivityTimer();
-    
-    events.forEach(event => document.addEventListener(event, handleActivity));
-    
-    return () => {
-      events.forEach(event => document.removeEventListener(event, handleActivity));
-      if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
-    };
-  }, [resetActivityTimer]);
 
   const fetchUserProfile = useCallback(async (authUser) => {
     if (!authUser) return null;
@@ -131,16 +95,32 @@ export const AuthProvider = ({ children }) => {
              }
         }
 
+        // Profil inexistant (nouvel utilisateur Google/OAuth) → créer automatiquement
+        if (!profile) {
+            const meta = authUser.user_metadata || {};
+            const newProfile = {
+                id: authUser.id,
+                full_name: meta.full_name || meta.name || authUser.email?.split('@')[0] || 'Utilisateur',
+                avatar_url: meta.avatar_url || meta.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(meta.full_name || 'U')}&background=2EB565&color=fff&size=150`,
+                role: 'viewer',
+            };
+            const { data: created, error: createError } = await supabase
+                .from('profiles')
+                .upsert(newProfile, { onConflict: 'id' })
+                .select('*')
+                .single();
+            if (!createError && created) profile = created;
+        }
+
         if (profileError && profileError.code !== 'PGRST116') {
             console.error('Erreur de récupération du profil:', profileError);
             logError(profileError, { context: 'fetchUserProfile', userId: authUser.id });
-            return authUser;
         }
-        
-        return { 
-            ...authUser, 
-            ...profile, 
-            role: profile?.role || 'viewer' 
+
+        return {
+            ...authUser,
+            ...profile,
+            role: profile?.role || 'viewer'
         };
     } catch (e) {
         console.error("Exception fetching profile:", e);
@@ -160,7 +140,6 @@ export const AuthProvider = ({ children }) => {
             const fullUser = await fetchUserProfile(newSession.user);
             if (mounted) {
                 setUserSafe(fullUser);
-                resetActivityTimer();
             }
         } else {
             if (mounted) setUser(null);
@@ -188,13 +167,23 @@ export const AuthProvider = ({ children }) => {
 
         if (event === 'SIGNED_IN' && newSession === null) return;
 
-        if (event === 'TOKEN_REFRESHED' && newSession === null) {
-          await logout({ showToast: true });
-          return;
+        if (event === 'TOKEN_REFRESHED') {
+          if (newSession === null) {
+            // Vérifier si une session existe quand même avant de déconnecter
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+              await logout({ showToast: false });
+            }
+            // Si session existe, on laisse continuer normalement
+            return;
+          }
         }
-        
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-             setIsLoading(true);
+
+        if (event === 'SIGNED_OUT') {
+          setIsLoading(true);
+        }
+        if (event === 'SIGNED_IN') {
+          setIsLoading(true);
         }
         
         await updateUserSession(newSession);
@@ -221,7 +210,7 @@ export const AuthProvider = ({ children }) => {
       mounted = false;
       authListener?.subscription?.unsubscribe();
     };
-  }, [fetchUserProfile, navigate, logout, resetActivityTimer, setUserSafe]);
+  }, [fetchUserProfile, navigate, logout, setUserSafe]);
 
   useEffect(() => {
     let presenceInterval;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut, ShoppingBag, LogIn, LayoutDashboard, ChevronDown, KeyRound, ShieldCheck } from 'lucide-react';
+import { Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut, ShoppingBag, LogIn, LayoutDashboard, ChevronDown, KeyRound, ShieldCheck, Wallet, ShoppingCart } from 'lucide-react';
+import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -58,6 +59,7 @@ const Header = memo(({ onLoginClick }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Directly derive display values to avoid useEffect flickering
+  const { totalItems: cartCount } = useCart();
   const userName = user?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
   const userEmail = user?.email || '';
   const userAvatar = user?.avatar_url || user?.user_metadata?.avatar_url || '';
@@ -170,6 +172,16 @@ const Header = memo(({ onLoginClick }) => {
                     Publier
                   </Button>
                 </Link>
+                <Link to="/cart" className="relative group">
+                  <div className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <ShoppingCart className="w-6 h-6 text-gray-600 group-hover:text-custom-green-600 transition-colors" />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-custom-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </div>
+                </Link>
                 <Link to="/messages" className="relative group">
                   <div className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <MessageCircle className="w-6 h-6 text-gray-600 group-hover:text-custom-green-600 transition-colors" />
@@ -203,6 +215,10 @@ const Header = memo(({ onLoginClick }) => {
                       <Link to="/transactions" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
                         <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
                         Mes Transactions
+                      </Link>
+                      <Link to="/wallet" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
+                        <Wallet className="w-4 h-4 mr-2 text-emerald-600" />
+                        Mon Portefeuille
                       </Link>
                       <Link to="/settings" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
                         <Settings className="w-4 h-4 mr-2" />
@@ -327,6 +343,10 @@ const Header = memo(({ onLoginClick }) => {
                   <Link to="/transactions" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
                     <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
                     Mes Transactions
+                  </Link>
+                  <Link to="/wallet" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
+                    <Wallet className="w-4 h-4 mr-2 text-emerald-600" />
+                    Mon Portefeuille
                   </Link>
                   <Link to="/settings" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
                     <Settings className="w-4 h-4 mr-2" />

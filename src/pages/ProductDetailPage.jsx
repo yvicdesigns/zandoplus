@@ -19,14 +19,14 @@ function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
   const { toast } = useToast();
 
   const handleAddToCart = useCallback(async () => {
     if (product && selectedVariant) {
       const availableQuantity = selectedVariant.inventory_quantity;
       try {
-        await addToCart(product, selectedVariant, quantity, availableQuantity);
+        addItem({ id: product.id, title: product.title, price: (selectedVariant?.price_in_cents ?? 0) / 100, images: [product.image], user_id: null });
         toast({
           title: "Added to Cart! 🛒",
           description: `${quantity} x ${product.title} (${selectedVariant.title}) added.`,
@@ -39,7 +39,7 @@ function ProductDetailPage() {
         });
       }
     }
-  }, [product, selectedVariant, quantity, addToCart, toast]);
+  }, [product, selectedVariant, quantity, addItem, toast]);
 
   const handleQuantityChange = useCallback((amount) => {
     setQuantity(prevQuantity => {

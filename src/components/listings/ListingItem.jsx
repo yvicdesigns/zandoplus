@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, MapPin, Calendar, Zap } from 'lucide-react';
+import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle } from 'lucide-react';
 import ListingBadges from '@/components/common/ListingBadges';
 import StarRating from '@/components/reviews/StarRating';
 import { supabase } from '@/lib/customSupabaseClient';
 import { cn } from '@/lib/utils';
+import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/components/ui/use-toast';
 
 const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { addItem, isInCart } = useCart();
   const [ratingInfo, setRatingInfo] = useState({ average_rating: 0, review_count: 0 });
+  const isProduct = listing.delivery_method !== 'none';
+  const inCart = isInCart(listing.id);
 
   useEffect(() => {
     const fetchSellerRating = async () => {
@@ -101,6 +108,23 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               <Calendar className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="truncate">Publiée {formatDate(listing.created_at)}</span>
             </div>
+            {isProduct && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                >
+                  Acheter
+                </button>
+                <button
+                  onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
+                  className={`p-2 rounded-lg border transition-colors ${inCart ? 'bg-green-100 border-green-400 text-green-700' : 'border-gray-300 hover:border-green-400 hover:bg-green-50 text-gray-500'}`}
+                  title={inCart ? 'Dans le panier' : 'Ajouter au panier'}
+                >
+                  {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+                </button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -144,12 +168,12 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             </div>
             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{listing.description || 'Aucune description.'}</p>
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-500 mt-2">
+          <div className="flex items-center justify-between text-sm text-gray-500 mt-2 flex-wrap gap-2">
             <div className="flex items-center">
               <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="truncate">{listing.location || 'N/A'}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
                 {ratingInfo.review_count > 0 && (
                   <div className="flex items-center gap-1">
                     <StarRating rating={ratingInfo.average_rating} size={16} />
@@ -160,6 +184,14 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                 <Calendar className="w-4 h-4 mr-1 flex-shrink-0" />
                 <span>{formatDate(listing.created_at)}</span>
               </div>
+              {isProduct && (
+                <button
+                  onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                  className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" /> Acheter
+                </button>
+              )}
             </div>
           </div>
         </div>

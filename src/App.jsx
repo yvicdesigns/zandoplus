@@ -46,6 +46,9 @@ const BoostListingPage = lazy(() => import('@/pages/BoostListingPage'));
 const BoostPaymentConfirmationPage = lazy(() => import('@/pages/BoostPaymentConfirmationPage'));
 const EscrowPaymentPage = lazy(() => import('@/pages/EscrowPaymentPage'));
 const TransactionsPage = lazy(() => import('@/pages/TransactionsPage'));
+const WalletPage = lazy(() => import('@/pages/WalletPage'));
+const CartPage = lazy(() => import('@/pages/CartPage'));
+const CartCheckoutPage = lazy(() => import('@/pages/CartCheckoutPage'));
 const PromotionsPage = lazy(() => import('@/pages/PromotionsPage'));
 const EmailConfirmationPage = lazy(() => import('@/pages/EmailConfirmationPage'));
 const ConfirmationRequiredPage = lazy(() => import('@/pages/ConfirmationRequiredPage'));
@@ -166,6 +169,7 @@ const ScrollToTop = () => {
 
 const AppLayout = memo(() => {
     const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
+    const { pathname } = useLocation();
     useVisitor();
 
     useEffect(() => {
@@ -177,7 +181,7 @@ const AppLayout = memo(() => {
             <Header onLoginClick={openAuthModal} />
             <main className={`flex-grow ${isMobile ? 'pb-24' : ''}`}>
                 <ScrollToTop />
-                <ErrorBoundary>
+                <ErrorBoundary key={pathname}>
                     <Suspense fallback={<FullPageLoader />}>
                         <Outlet />
                     </Suspense>
@@ -229,6 +233,9 @@ const AppContent = () => {
                     <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
                     <Route path="/escrow/:listingId" element={<EscrowPaymentPage />} />
                     <Route path="/transactions" element={<TransactionsPage />} />
+                    <Route path="/wallet" element={<WalletPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/cart/checkout" element={<CartCheckoutPage />} />
                     <Route path="/make-admin" element={<MakeAdminPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />

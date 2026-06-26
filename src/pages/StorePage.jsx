@@ -8,8 +8,7 @@ import { useCart } from '@/hooks/useCart';
 
 const StorePage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { cartItems } = useCart();
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const { totalItems } = useCart();
 
   return (
     <>

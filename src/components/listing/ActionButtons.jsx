@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageSquare, Phone, ShieldCheck, Lock } from 'lucide-react';
+import { MessageSquare, Phone, Lock, ShoppingCart, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/customSupabaseClient';
 import SendMessageDialog from '@/components/listing/SendMessageDialog';
 import { categories as CATEGORY_DEFS } from '@/components/post-ad/postAdConstants';
+import { useCart } from '@/hooks/useCart';
 
 const ActionButtons = ({ listing }) => {
   const { user, openAuthModal } = useAuth();
@@ -14,7 +14,8 @@ const ActionButtons = ({ listing }) => {
   const navigate = useNavigate();
 
   const [isMessageDialogOpen, setMessageDialogOpen] = useState(false);
-  const [isCreatingDelivery, setIsCreatingDelivery] = useState(false);
+  const { addItem, isInCart } = useCart();
+  const inCart = isInCart(listing?.id);
 
   if (!listing || !listing.seller) {
     return null;
@@ -39,34 +40,6 @@ const ActionButtons = ({ listing }) => {
     setMessageDialogOpen(true);
   };
   
-  const handleCreateDelivery = async () => {
-    if (!user) {
-      openAuthModal();
-      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour utiliser Zando Delivery.", variant: "destructive" });
-      return;
-    }
-    
-    setIsCreatingDelivery(true);
-    try {
-      const { data, error } = await supabase.rpc('create_delivery', { p_listing_id: listing.id });
-      if (error) throw error;
-      
-      toast({
-        title: "Commande initiée !",
-        description: "La livraison a été créée. Vous pouvez la suivre dans votre espace 'Suivi'.",
-        className: "bg-custom-green-500 text-white"
-      });
-      navigate('/suivi');
-
-    } catch (error) {
-      console.error("Error creating delivery:", error);
-      toast({ title: "Erreur", description: error.message || "Impossible de créer la livraison.", variant: "destructive" });
-    } finally {
-      setIsCreatingDelivery(false);
-    }
-  };
-
-  const canUseZandoDelivery = listing.delivery_method === 'zando_delivery';
   const categoryType = CATEGORY_DEFS[listing.category]?.type ?? 'product';
   const isProduct = !['job', 'service'].includes(categoryType);
 
@@ -85,31 +58,23 @@ const ActionButtons = ({ listing }) => {
         <h3 className="text-lg font-semibold text-center">Contacter le vendeur</h3>
 
         {isProduct && (
-          <Button
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-            size="lg"
-            onClick={handleEscrowPayment}
-          >
-            <Lock className="mr-2 h-5 w-5" />
-            Achat Sécurisé Zando ✅
-          </Button>
+          <>
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" size="lg" onClick={handleEscrowPayment}>
+              <Lock className="mr-2 h-5 w-5" />
+              Achat Sécurisé Zando ✅
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className={`w-full ${inCart ? 'border-green-500 text-green-700 bg-green-50' : 'border-gray-300 hover:border-green-400'}`}
+              onClick={() => addItem(listing, (title) => toast({ title: inCart ? 'Déjà dans le panier' : 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' }))}
+            >
+              {inCart ? <CheckCircle className="mr-2 h-5 w-5 text-green-600" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
+              {inCart ? 'Dans le panier' : 'Ajouter au panier'}
+            </Button>
+          </>
         )}
 
-        {canUseZandoDelivery && (
-            <Button
-              className="w-full gradient-bg hover:opacity-90"
-              size="lg"
-              onClick={handleCreateDelivery}
-              disabled={isCreatingDelivery}
-            >
-              {isCreatingDelivery ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <ShieldCheck className="mr-2 h-5 w-5" />
-              )}
-              {isCreatingDelivery ? 'Création en cours...' : 'Acheter avec Zando Delivery'}
-            </Button>
-        )}
 
         <Button className="w-full" size="lg" variant="outline" onClick={handleOpenMessageDialog}>
             <MessageSquare className="mr-2 h-5 w-5" /> Envoyer un message

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   if (supabaseUrl && supabaseKey) {
     try {
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/listings?statut=eq.active&select=id,updated_at&order=created_at.desc&limit=1000`,
+        `${supabaseUrl}/rest/v1/listings?status=eq.active&select=id,updated_at&order=created_at.desc&limit=1000`,
         {
           headers: {
             apikey: supabaseKey,

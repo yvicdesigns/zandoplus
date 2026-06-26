@@ -21,7 +21,7 @@ const MessageInput = ({ conversation, onMessageSent }) => {
     const { error } = await supabase.rpc('create_conversation_and_message', {
       p_content: messageText,
       p_conversation_id: conversation.id,
-      p_listing_id: conversation.listing.id
+      p_listing_id: conversation.listing?.id ?? null
     });
 
     setIsSending(false);

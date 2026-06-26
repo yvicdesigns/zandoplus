@@ -138,6 +138,22 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
                 </div>
               ))}
             </RadioGroup>
+            {formData.delivery_method === 'seller_delivery' && (
+              <div className="mt-3 space-y-1">
+                <Label htmlFor="delivery_fee">Frais de livraison (FCFA)</Label>
+                <Input
+                  id="delivery_fee"
+                  name="delivery_fee"
+                  type="number"
+                  min="0"
+                  placeholder="Ex: 1000"
+                  value={formData.delivery_fee}
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-gray-500">Montant que vous facturez pour livrer chez l'acheteur.</p>
+                <FormError message={formErrors.delivery_fee} />
+              </div>
+            )}
           </div>
         </>
       )}

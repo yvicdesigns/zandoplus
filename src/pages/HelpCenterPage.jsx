@@ -125,7 +125,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
-        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois les fonds bloqués, vous préparez et livrez l'article, puis déclarez la livraison depuis la page 'Mes Transactions'. Une commission de 3% est déduite du montant qui vous est reversé — l'acheteur paie le prix affiché sans surcoût."
+        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page 'Mes Transactions'. Une commission de 7% est déduite du montant qui vous est reversé — l'acheteur paie le prix affiché sans surcoût."
       },
       {
         q: "Comment fonctionne la gestion des stocks ?",

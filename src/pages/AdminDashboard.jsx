@@ -21,6 +21,7 @@ import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab';
 import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
 import AdminCategoriesTab from '@/components/admin/AdminCategoriesTab';
 import AdminBetaTab from '@/components/admin/AdminBetaTab';
+import AdminWithdrawalsTab from '@/components/admin/AdminWithdrawalsTab';
 import { Helmet } from 'react-helmet-async';
 import {
   Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck,
@@ -50,6 +51,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'boosts', icon: Zap, label: 'Boosts', color: 'text-amber-400', bg: 'bg-amber-500/10' },
       { id: 'escrow', icon: ShieldCheck, label: 'Escrow', color: 'text-green-400', bg: 'bg-green-500/10' },
+      { id: 'withdrawals', icon: CreditCard, label: 'Retraits', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
       { id: 'ads', icon: Megaphone, label: 'Publicités', color: 'text-purple-400', bg: 'bg-purple-500/10' },
       { id: 'payments', icon: CreditCard, label: 'Paiements', color: 'text-green-400', bg: 'bg-green-500/10', adminOnly: true },
     ],
@@ -88,7 +90,7 @@ const ROLE_LABELS = {
 const TAB_LABELS = {
   users: 'Utilisateurs', listings: 'Annonces', deliveries: 'Livraisons',
   reports: 'Signalements', verifications: 'Vérifications', boosts: 'Boosts',
-  escrow: 'Escrow',
+  escrow: 'Escrow', withdrawals: 'Retraits',
   beta: 'Testeurs Beta',
   ads: 'Publicités', payments: 'Paiements', categories: 'Catégories',
   hero: 'Hero Slider', approvals: 'Approbations', audit: 'Audit Logs',
@@ -104,6 +106,7 @@ const renderTabContent = (activeTab) => {
     case 'verifications': return <AdminVerificationsTab />;
     case 'boosts': return <AdminBoostsTab />;
     case 'escrow': return <AdminEscrowTab />;
+    case 'withdrawals': return <AdminWithdrawalsTab />;
     case 'ads': return <AdminAdsTab />;
     case 'payments': return <AdminPaymentsTab />;
     case 'categories': return <AdminCategoriesTab />;

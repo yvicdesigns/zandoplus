@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  Trash2, 
-  LogOut, 
-  Shield, 
+import {
+  Trash2,
+  LogOut,
+  Shield,
   AlertTriangle,
   User,
-  Lock
+  Lock,
+  Smartphone,
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -30,6 +34,25 @@ const SettingsPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [momoNumber, setMomoNumber] = useState('');
+  const [savingMomo, setSavingMomo] = useState(false);
+  const [momoSaved, setMomoSaved] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('momo_number').eq('id', user.id).single()
+      .then(({ data }) => { if (data?.momo_number) setMomoNumber(data.momo_number); });
+  }, [user]);
+
+  const handleSaveMomo = async () => {
+    setSavingMomo(true);
+    const { error } = await supabase.from('profiles').update({ momo_number: momoNumber.trim() }).eq('id', user.id);
+    setSavingMomo(false);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    setMomoSaved(true);
+    setTimeout(() => setMomoSaved(false), 3000);
+    toast({ title: 'Numéro MoMo enregistré !', className: 'bg-green-100 text-green-800' });
+  };
 
   const handleLogout = async () => {
     try {
@@ -116,6 +139,42 @@ const SettingsPage = () => {
                   Modifier le Profil
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-100 p-3 rounded-full">
+                  <Smartphone className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <CardTitle>Paiement Mobile Money</CardTitle>
+                  <CardDescription>Numéro MTN/Airtel pour recevoir vos paiements</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Ce numéro sera utilisé pour vous envoyer l'argent de vos ventes. Sans numéro enregistré, le bouton de retrait sera désactivé.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Ex: 06XXXXXXXX"
+                  value={momoNumber}
+                  onChange={e => setMomoNumber(e.target.value)}
+                  className="max-w-xs"
+                />
+                <Button onClick={handleSaveMomo} disabled={savingMomo || !momoNumber.trim()} className="gradient-bg">
+                  {savingMomo ? <Loader2 className="w-4 h-4 animate-spin" /> : momoSaved ? <CheckCircle className="w-4 h-4" /> : 'Enregistrer'}
+                </Button>
+              </div>
+              {momoNumber && (
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                  Numéro actuel : <span className="font-mono font-semibold">{momoNumber}</span>
+                </p>
+              )}
             </CardContent>
           </Card>
 

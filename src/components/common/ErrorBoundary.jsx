@@ -6,7 +6,7 @@ import { logError } from '@/lib/errorLogger';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, errorId: null };
+    this.state = { hasError: false, errorId: null, errorMessage: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -15,8 +15,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     const errorId = Math.random().toString(36).substr(2, 9);
-    this.setState({ errorId });
-    
+    this.setState({ errorId, errorMessage: error?.message || 'Unknown error' });
+
     logError(error, {
       componentStack: errorInfo.componentStack,
       errorId
@@ -40,7 +40,8 @@ class ErrorBoundary extends React.Component {
           </h2>
           <p className="text-gray-600 mb-6 max-w-md">
             Nous avons été notifiés de cette erreur et nous travaillons à la résoudre.
-            {this.state.errorId && <span className="block mt-2 text-xs font-mono text-gray-400">Error ID: {this.state.errorId}</span>}
+            {this.state.errorMessage && <span className="block mt-2 text-sm font-mono text-red-500 bg-red-50 px-2 py-1 rounded">{this.state.errorMessage}</span>}
+            {this.state.errorId && <span className="block mt-1 text-xs font-mono text-gray-400">Error ID: {this.state.errorId}</span>}
           </p>
           <div className="flex gap-4">
             <Button 

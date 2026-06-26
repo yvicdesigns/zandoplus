@@ -62,9 +62,9 @@ export const categories = {
     ];
 
     export const deliveryMethods = [
-      { value: 'zando_delivery', label: 'Zando Delivery', description: 'Le suivi de colis est inclus.' },
-      { value: 'seller_delivery', label: 'Livraison par le vendeur', description: 'Zando ne pourra pas suivre cette livraison.' },
-      { value: 'pickup', label: 'Retrait en boutique', description: 'Le client vient chercher sa commande.' }
+      { value: 'zando_delivery', label: 'Zando Delivery', description: 'Zando s\'occupe de la livraison. L\'acheteur peut aussi choisir le retrait.' },
+      { value: 'seller_delivery', label: 'J\'ai mon propre livreur', description: 'Vous gérez la livraison vous-même. Précisez vos frais. L\'acheteur peut aussi choisir Zando Delivery ou le retrait.' },
+      { value: 'pickup', label: 'Retrait en boutique uniquement', description: 'Pas de livraison disponible. L\'acheteur doit venir chercher la commande.' }
     ];
 
     export const steps = [
