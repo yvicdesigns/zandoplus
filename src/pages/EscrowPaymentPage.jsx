@@ -89,32 +89,24 @@ const EscrowPaymentPage = () => {
     if (!proofFile) { toast({ title: 'Capture requise', variant: 'destructive' }); return; }
     setIsSubmitting(true);
     try {
-      const dateLimit = new Date();
-      dateLimit.setHours(dateLimit.getHours() + 72);
-
-      const { data: tx, error: txError } = await supabase
-        .from('transactions_escrow')
-        .insert({
-          annonce_id: listing.id,
-          acheteur_id: user.id,
-          vendeur_id: listing.user_id,
-          montant: listing.price,
-          delivery_choice: deliveryChoice,
-          delivery_fee_paid: deliveryFee,
-          statut: 'en_attente_paiement',
-          date_limite_confirmation: dateLimit.toISOString(),
-        })
-        .select('id')
-        .single();
+      // Prix validés côté serveur via RPC (résistant à la manipulation client)
+      const { data: txId, error: txError } = await supabase.rpc('create_escrow_transaction', {
+        p_annonce_id: listing.id,
+        p_delivery_choice: deliveryChoice,
+      });
       if (txError) throw txError;
 
-      const ext = proofFile.name.split('.').pop();
-      const path = `escrow/${tx.id}_${Date.now()}.${ext}`;
+      const ext = proofFile.name.split('.').pop().toLowerCase();
+      const path = `escrow/${txId}_${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('payment_proofs').upload(path, proofFile, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('payment_proofs').getPublicUrl(path);
-      await supabase.from('transactions_escrow').update({ preuve_paiement_url: publicUrl, statut: 'fonds_bloques' }).eq('id', tx.id);
+      const { error: proofError } = await supabase.rpc('buyer_submit_payment_proof', {
+        p_transaction_id: txId,
+        p_proof_url: publicUrl,
+      });
+      if (proofError) throw proofError;
 
       setSubmitted(true);
     } catch (err) {

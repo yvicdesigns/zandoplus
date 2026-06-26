@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -242,7 +243,7 @@ function ProductDetailPage() {
               )}
             </div>
 
-            <div className="prose prose-invert text-gray-300 mb-6" dangerouslySetInnerHTML={{ __html: product.description }} />
+            <div className="prose prose-invert text-gray-300 mb-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }} />
 
             {product.additional_info?.length > 0 && (
               <div className="mb-6 space-y-4">
@@ -251,7 +252,7 @@ function ProductDetailPage() {
                   .map((info) => (
                     <div key={info.id} className="border-l-2 border-purple-500/50 pl-4">
                       <h3 className="text-lg font-semibold text-white mb-2">{info.title}</h3>
-                      <div className="prose prose-invert text-gray-300 prose-sm" dangerouslySetInnerHTML={{ __html: info.description }} />
+                      <div className="prose prose-invert text-gray-300 prose-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(info.description) }} />
                     </div>
                   ))}
               </div>

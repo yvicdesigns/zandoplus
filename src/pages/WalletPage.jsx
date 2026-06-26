@@ -78,6 +78,25 @@ const WalletPage = () => {
     setSubmitting(false);
     setWithdrawDialog(false);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+
+    // Notify admin by email
+    const [{ data: profile }, { data: settings }] = await Promise.all([
+      supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+      supabase.from('site_settings').select('notification_email').eq('id', 1).single(),
+    ]);
+    // solde_disponible is already net (commission already deducted by get_vendor_wallet)
+    supabase.functions.invoke('notify-withdrawal-request', {
+      body: {
+        vendeur_name: profile?.full_name || 'Vendeur',
+        vendeur_momo: momoNumber,
+        montant: wallet.solde_disponible,
+        commission: 0,
+        net: wallet.solde_disponible,
+        transaction_id: 'portefeuille-global',
+        admin_email: settings?.notification_email || 'zandopluscg@gmail.com',
+      },
+    }).catch(console.error);
+
     toast({ title: 'Demande envoyée !', description: 'Zando+ va traiter votre retrait sous 24h.', className: 'bg-green-100 text-green-800' });
     fetchData();
   };
@@ -120,10 +139,10 @@ const WalletPage = () => {
             <Card className="border-0 shadow-md">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1 text-sm text-gray-500">
-                  <Clock className="w-4 h-4 text-amber-500" /> En attente (48h)
+                  <Clock className="w-4 h-4 text-amber-500" /> En attente (24h)
                 </div>
                 <p className="text-2xl font-bold text-amber-600">{formatAmount(wallet?.solde_en_attente)} <span className="text-sm font-normal text-gray-500">FCFA</span></p>
-                <p className="text-xs text-gray-400 mt-1">Disponible après 48h</p>
+                <p className="text-xs text-gray-400 mt-1">Disponible après 24h</p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-md">

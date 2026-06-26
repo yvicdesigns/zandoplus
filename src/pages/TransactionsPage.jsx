@@ -126,9 +126,10 @@ const TransactionsPage = () => {
   const doOuvrirLitige = async (tx) => {
     if (!litigeNote.trim()) { toast({ title: 'Décrivez le problème', variant: 'destructive' }); return; }
     setActionLoading(true);
-    const { error } = await supabase.from('transactions_escrow')
-      .update({ statut: 'litige', notes_litige: litigeNote.trim() })
-      .eq('id', tx.id);
+    const { error } = await supabase.rpc('buyer_open_dispute', {
+      p_transaction_id: tx.id,
+      p_notes: litigeNote.trim(),
+    });
     setActionLoading(false);
     setLitigeDialog(null);
     setLitigeNote('');
@@ -139,14 +140,7 @@ const TransactionsPage = () => {
 
   const doDeclarelivraison = async (tx) => {
     setActionLoading(true);
-    const autoConfirmAt = new Date(Date.now() + 72 * 3_600_000).toISOString();
-    const { error } = await supabase.from('transactions_escrow')
-      .update({
-        statut: 'livre',
-        date_livraison_declaree: new Date().toISOString(),
-        auto_confirm_at: autoConfirmAt,
-      })
-      .eq('id', tx.id);
+    const { error } = await supabase.rpc('vendor_declare_delivery', { p_transaction_id: tx.id });
     setActionLoading(false);
     setLivraisonDialog(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
