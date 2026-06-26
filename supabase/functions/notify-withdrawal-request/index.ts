@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DEFAULT_ADMIN_EMAIL = 'yvicdesigns@gmail.com';
+const DEFAULT_ADMIN_EMAIL = 'zandopluscg@gmail.com';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
