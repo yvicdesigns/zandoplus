@@ -366,13 +366,29 @@ const TransactionsPage = () => {
                             </div>
                           )}
                           {canWithdraw && (
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
-                              onClick={() => setWithdrawDialog(tx)}
-                            >
-                              <Wallet className="w-5 h-5 mr-2" />
-                              Retirer mes fonds — {formatAmount(netVendeur)} FCFA
-                            </Button>
+                            user?.momo_number ? (
+                              <Button
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                                onClick={() => setWithdrawDialog(tx)}
+                              >
+                                <Wallet className="w-5 h-5 mr-2" />
+                                Retirer mes fonds — {formatAmount(netVendeur)} FCFA
+                              </Button>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+                                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                                  Ajoutez votre numéro MoMo dans vos paramètres pour pouvoir retirer.
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  className="w-full border-orange-300 text-orange-700"
+                                  onClick={() => navigate('/settings')}
+                                >
+                                  Ajouter mon numéro MoMo →
+                                </Button>
+                              </div>
+                            )
                           )}
                         </div>
                       )}
