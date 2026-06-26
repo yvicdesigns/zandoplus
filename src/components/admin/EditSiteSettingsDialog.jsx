@@ -76,7 +76,20 @@ const EditSiteSettingsDialog = ({ isOpen, onClose }) => {
               <Label htmlFor="logo_url">URL du Logo</Label>
               <Input id="logo_url" {...register('logo_url')} />
             </div>
-            {/* Add more fields as needed based on DB schema */}
+          </div>
+          <div className="space-y-2 border-t pt-4">
+            <Label htmlFor="notification_email" className="flex items-center gap-2">
+              📧 Email de notification admin
+            </Label>
+            <Input
+              id="notification_email"
+              type="email"
+              placeholder="ex: zandopluscg@gmail.com"
+              {...register('notification_email')}
+            />
+            <p className="text-xs text-gray-500">
+              Cet email reçoit une alerte automatique dès qu'un vendeur demande un retrait (avec son nom, numéro MoMo et montant).
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>

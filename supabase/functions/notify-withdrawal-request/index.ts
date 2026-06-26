@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ADMIN_EMAIL = 'yvicdesigns@gmail.com';
+const DEFAULT_ADMIN_EMAIL = 'yvicdesigns@gmail.com';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,7 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { vendeur_name, vendeur_momo, montant, commission, net, transaction_id } = await req.json();
+    const { vendeur_name, vendeur_momo, montant, commission, net, transaction_id, admin_email } = await req.json();
+    const ADMIN_EMAIL = admin_email || DEFAULT_ADMIN_EMAIL;
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY non configuré');

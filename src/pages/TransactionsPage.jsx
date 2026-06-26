@@ -164,12 +164,11 @@ const TransactionsPage = () => {
       return;
     }
 
-    // Récupérer le numéro MoMo du vendeur pour la notification
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('momo_number, full_name')
-      .eq('id', user.id)
-      .single();
+    // Récupérer MoMo du vendeur + email de notification admin en parallèle
+    const [{ data: profile }, { data: settings }] = await Promise.all([
+      supabase.from('profiles').select('momo_number, full_name').eq('id', user.id).single(),
+      supabase.from('site_settings').select('notification_email').eq('id', 1).single(),
+    ]);
 
     const commission = Math.round(tx.montant * COMMISSION_RATE);
     const net = tx.montant - commission;
@@ -183,6 +182,7 @@ const TransactionsPage = () => {
         commission,
         net,
         transaction_id: tx.id,
+        admin_email: settings?.notification_email || 'yvicdesigns@gmail.com',
       },
     }).catch(console.error);
 
