@@ -157,9 +157,37 @@ const TransactionsPage = () => {
   const doRequestWithdrawal = async (tx) => {
     setActionLoading(true);
     const { error } = await supabase.rpc('vendor_request_withdrawal', { p_transaction_id: tx.id });
+    if (error) {
+      setActionLoading(false);
+      setWithdrawDialog(null);
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    // Récupérer le numéro MoMo du vendeur pour la notification
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('momo_number, full_name')
+      .eq('id', user.id)
+      .single();
+
+    const commission = Math.round(tx.montant * COMMISSION_RATE);
+    const net = tx.montant - commission;
+
+    // Notifier l'admin par email
+    supabase.functions.invoke('notify-withdrawal-request', {
+      body: {
+        vendeur_name: profile?.full_name || tx.vendeur?.full_name || 'Vendeur',
+        vendeur_momo: profile?.momo_number || '—',
+        montant: tx.montant,
+        commission,
+        net,
+        transaction_id: tx.id,
+      },
+    }).catch(console.error);
+
     setActionLoading(false);
     setWithdrawDialog(null);
-    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Retrait demandé !', description: 'Zando+ va envoyer vos fonds sur votre numéro MoMo.' });
     fetchTransactions();
   };
