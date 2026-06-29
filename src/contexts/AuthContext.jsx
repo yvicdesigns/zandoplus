@@ -132,24 +132,27 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Safety valve: never spin forever — force-unlock after 12 seconds
-    const safetyTimer = setTimeout(() => {
-      if (mounted) setIsLoading(false);
-    }, 12000);
+    // Safety valve: sliding 12s window — resets on each updateUserSession call
+    let safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 12000);
+    const resetSafety = () => {
+      clearTimeout(safetyTimer);
+      safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 12000);
+    };
 
     const updateUserSession = async (newSession) => {
         if (!mounted) return;
-        clearTimeout(safetyTimer);
+        resetSafety();
         setSession(newSession);
         if (newSession?.user) {
             const fullUser = await fetchUserProfile(newSession.user);
-            if (mounted) {
-                setUserSafe(fullUser);
-            }
+            if (mounted) setUserSafe(fullUser);
         } else {
             if (mounted) setUser(null);
         }
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          clearTimeout(safetyTimer);
+        }
     };
 
     supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
@@ -160,7 +163,7 @@ export const AuthProvider = ({ children }) => {
         if (initialSession) {
              updateUserSession(initialSession);
         } else {
-            // OAuth callback: tokens are in the URL — wait for onAuthStateChange
+            // OAuth callback (PKCE): ?code= still in URL → wait for onAuthStateChange
             const oauthInUrl = window.location.hash.includes('access_token') ||
                                window.location.search.includes('code=');
             if (!oauthInUrl && mounted) setIsLoading(false);
@@ -170,30 +173,32 @@ export const AuthProvider = ({ children }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted) return;
-        
+
         console.log(`[Auth Context] onAuthStateChange event: ${event}`, newSession?.user?.id);
 
         if (event === 'SIGNED_IN' && newSession === null) return;
 
         if (event === 'TOKEN_REFRESHED') {
           if (newSession === null) {
-            // Vérifier si une session existe quand même avant de déconnecter
             const { data: { session: currentSession } } = await supabase.auth.getSession();
             if (!currentSession) {
               await logout({ showToast: false });
             }
-            // Si session existe, on laisse continuer normalement
             return;
           }
         }
 
+        // Ne pas remettre isLoading à true pour SIGNED_IN — la page vient de recharger
+        // (OAuth redirige toujours vers un rechargement complet, isLoading démarre à true)
+        // Pour SIGNED_OUT seulement, on réinitialise proprement
         if (event === 'SIGNED_OUT') {
-          setIsLoading(true);
+          setUser(null);
+          setSession(null);
+          setIsLoading(false);
+          clearTimeout(safetyTimer);
+          return;
         }
-        if (event === 'SIGNED_IN') {
-          setIsLoading(true);
-        }
-        
+
         await updateUserSession(newSession);
 
         if (event === 'SIGNED_IN') {
