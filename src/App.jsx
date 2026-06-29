@@ -17,6 +17,7 @@ import { isMobile } from 'react-device-detect';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import { useVisitor } from '@/hooks/useVisitor';
 import PwaInstallModal from '@/components/common/PwaInstallModal';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { PaymentProvider } from '@/contexts/PaymentContext';
 import { CartProvider } from '@/hooks/useCart';
@@ -198,6 +199,7 @@ const AppLayout = memo(() => {
 });
 
 const AppContent = () => {
+    usePushNotifications();
     return (
         <>
             <PwaInstallModal />
