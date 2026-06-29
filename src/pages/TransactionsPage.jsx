@@ -179,7 +179,7 @@ const TransactionsPage = () => {
         commission,
         net,
         transaction_id: tx.id,
-        admin_email: settings?.notification_email || 'yvicdesigns@gmail.com',
+        admin_email: settings?.notification_email || 'zandopluscg@gmail.com',
       },
     }).catch(console.error);
 
