@@ -95,11 +95,16 @@ const AdminEscrowTab = memo(() => {
 
   const handleRelease = async (tx) => {
     setActionLoading({ id: tx.id, type: 'release' });
-    const { error } = await supabase.from('transactions_escrow').update({ statut: 'complete' }).eq('id', tx.id);
+    // Sets confirme + withdrawal_available_at = NOW() so vendor can request withdrawal immediately
+    const { error } = await supabase.from('transactions_escrow').update({
+      statut: 'confirme',
+      date_confirmation: new Date().toISOString(),
+      withdrawal_available_at: new Date().toISOString(),
+    }).eq('id', tx.id);
     setActionLoading(null);
     setReleaseTarget(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Fonds libérés au vendeur.' });
+    toast({ title: 'Fonds libérés — le vendeur peut maintenant retirer.' });
     fetchData();
   };
 
