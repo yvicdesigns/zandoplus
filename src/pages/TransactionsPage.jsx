@@ -82,10 +82,13 @@ const TransactionsPage = () => {
   const [litigeNote, setLitigeNote]           = useState('');
   const [actionLoading, setActionLoading]     = useState(false);
 
+  // Utiliser user.id (primitif stable) plutôt que l'objet user entier
+  // pour éviter les re-fetch à chaque refresh de token
+  const userId = user?.id;
+
   const fetchTransactions = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
     setLoading(true);
-    // Auto-confirme les transactions livrées dont le délai 72h est dépassé
     await supabase.rpc('auto_confirm_transactions').catch(() => {});
 
     const field = tab === 'achats' ? 'acheteur_id' : 'vendeur_id';
@@ -100,13 +103,13 @@ const TransactionsPage = () => {
         acheteur:acheteur_id(full_name),
         vendeur:vendeur_id(full_name)
       `)
-      .eq(field, user.id)
+      .eq(field, userId)
       .order('created_at', { ascending: false });
 
     if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     else setTransactions(data || []);
     setLoading(false);
-  }, [user, tab, toast]);
+  }, [userId, tab, toast]);
 
   useEffect(() => {
     if (!user) { openAuthModal(); navigate('/'); return; }
