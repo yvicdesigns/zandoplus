@@ -21,7 +21,7 @@ async function saveToken(userId, tokenType, token) {
 
 // ── Capacitor Native (Android / iOS) ─────────────────────────────────────────
 async function registerNativePush(userId) {
-  const { PushNotifications } = await import('@capacitor/push-notifications');
+  const { PushNotifications } = await import(/* @vite-ignore */ '@capacitor/push-notifications');
 
   const status = await PushNotifications.checkPermissions();
   let permission = status.receive;
