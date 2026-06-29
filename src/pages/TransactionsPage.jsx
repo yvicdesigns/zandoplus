@@ -89,7 +89,7 @@ const TransactionsPage = () => {
   const fetchTransactions = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    await supabase.rpc('auto_confirm_transactions').catch(() => {});
+    try { await supabase.rpc('auto_confirm_transactions'); } catch (_) {}
 
     const field = tab === 'achats' ? 'acheteur_id' : 'vendeur_id';
     const { data, error } = await supabase
