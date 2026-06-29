@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "790757801602",
+    "project_id": "zandopluscg-c9bec",
+    "storage_bucket": "zandopluscg-c9bec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:790757801602:android:978faf68521e27f3017e9b",
+        "android_client_info": {
+          "package_name": "com.zando.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5kJA4hIl6CGup6xZG9WsX7L7vPue8gkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -6,94 +6,123 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// ─── VAPID Helpers (Web Push) ────────────────────────────────────────────────
+// ── VAPID Web Push ────────────────────────────────────────────────────────────
 
-function base64urlToUint8Array(base64url: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
-  const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(base64);
-  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
-}
-
-function uint8ArrayToBase64url(arr: Uint8Array): string {
+function b64url(arr: Uint8Array): string {
   return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-async function buildVapidAuthHeader(
-  audience: string,
-  vapidPublicKey: string,
-  vapidPrivateKeyB64: string,
-): Promise<string> {
-  const privateKeyBytes = base64urlToUint8Array(vapidPrivateKeyB64);
-
-  const privateKey = await crypto.subtle.importKey(
-    'raw',
-    privateKeyBytes,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign'],
-  );
-
-  const header = uint8ArrayToBase64url(new TextEncoder().encode(JSON.stringify({ alg: 'ES256', typ: 'JWT' })));
-  const now = Math.floor(Date.now() / 1000);
-  const payload = uint8ArrayToBase64url(
-    new TextEncoder().encode(JSON.stringify({ aud: audience, exp: now + 3600, sub: 'mailto:zandopluscg@gmail.com' })),
-  );
-  const sigInput = new TextEncoder().encode(`${header}.${payload}`);
-  const sigBytes = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, sigInput);
-
-  const jwt = `${header}.${payload}.${uint8ArrayToBase64url(new Uint8Array(sigBytes))}`;
-  return `vapid t=${jwt},k=${vapidPublicKey}`;
+function b64urlDecode(s: string): Uint8Array {
+  const p = '='.repeat((4 - (s.length % 4)) % 4);
+  const b = (s + p).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(b), (c) => c.charCodeAt(0));
 }
-
-// ─── Send Web Push ────────────────────────────────────────────────────────────
 
 async function sendWebPush(token: string, payload: object, vapidPublic: string, vapidPrivate: string) {
   const sub = JSON.parse(token);
   const endpoint: string = sub.endpoint;
   const audience = new URL(endpoint).origin;
 
-  const authHeader = await buildVapidAuthHeader(audience, vapidPublic, vapidPrivate);
-  const body = new TextEncoder().encode(JSON.stringify(payload));
+  const privateKey = await crypto.subtle.importKey(
+    'raw', b64urlDecode(vapidPrivate),
+    { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']
+  );
 
-  const response = await fetch(endpoint, {
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(new TextEncoder().encode(JSON.stringify({ alg: 'ES256', typ: 'JWT' })));
+  const claims = b64url(new TextEncoder().encode(JSON.stringify({
+    aud: audience, exp: now + 3600, sub: 'mailto:zandopluscg@gmail.com'
+  })));
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    privateKey,
+    new TextEncoder().encode(`${header}.${claims}`)
+  );
+  const jwt = `${header}.${claims}.${b64url(new Uint8Array(sig))}`;
+
+  const body = new TextEncoder().encode(JSON.stringify(payload));
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': body.length.toString(),
-      Authorization: authHeader,
+      Authorization: `vapid t=${jwt},k=${vapidPublic}`,
       TTL: '86400',
     },
     body,
   });
-
-  return response.status;
+  return res.status;
 }
 
-// ─── Send FCM (Android/iOS via Firebase) ─────────────────────────────────────
+// ── FCM v1 API (Android/iOS) ─────────────────────────────────────────────────
 
-async function sendFcm(token: string, payload: object, fcmServerKey: string) {
-  const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+async function getFcmAccessToken(serviceAccountEmail: string, privateKeyPem: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(new TextEncoder().encode(JSON.stringify({ alg: 'RS256', typ: 'JWT' })));
+  const claims = b64url(new TextEncoder().encode(JSON.stringify({
+    iss: serviceAccountEmail,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  })));
+
+  // Import RSA private key from PEM
+  const pemContent = privateKeyPem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\n/g, '');
+  const keyDer = Uint8Array.from(atob(pemContent), (c) => c.charCodeAt(0));
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8', keyDer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']
+  );
+
+  const sigBytes = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', privateKey,
+    new TextEncoder().encode(`${header}.${claims}`)
+  );
+  const jwt = `${header}.${claims}.${b64url(new Uint8Array(sigBytes))}`;
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+  const tokenData = await tokenRes.json();
+  return tokenData.access_token;
+}
+
+async function sendFcmV1(fcmToken: string, payload: object, serviceAccountEmail: string, privateKeyPem: string, projectId: string) {
+  const accessToken = await getFcmAccessToken(serviceAccountEmail, privateKeyPem);
+  const msg = payload as any;
+
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `key=${fcmServerKey}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      to: token,
-      notification: {
-        title: (payload as any).title || 'Zando+',
-        body: (payload as any).body || (payload as any).message,
-        icon: 'ic_notification',
-        sound: 'default',
+      message: {
+        token: fcmToken,
+        notification: {
+          title: msg.title || 'Zando+',
+          body: msg.body || msg.message || '',
+        },
+        android: {
+          notification: { sound: 'default', channel_id: 'zandoplus_default' },
+        },
+        apns: {
+          payload: { aps: { sound: 'default' } },
+        },
+        data: { url: msg.url || '/' },
       },
-      data: { url: (payload as any).url || '/' },
     }),
   });
-  return response.status;
+  return res.status;
 }
 
-// ─── Main Handler ─────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -107,29 +136,35 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY') || '';
+    const vapidPublic  = Deno.env.get('VAPID_PUBLIC_KEY') || '';
     const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY') || '';
-    const fcmKey = Deno.env.get('FCM_SERVER_KEY') || '';
+    const fcmEmail     = Deno.env.get('FCM_SERVICE_ACCOUNT_EMAIL') || '';
+    const fcmKey       = Deno.env.get('FCM_PRIVATE_KEY') || '';
+    const fcmProject   = 'zandopluscg-c9bec';
 
-    // Récupérer tous les tokens du destinataire
-    const { data: tokens, error } = await supabase
+    const { data: tokens } = await supabase
       .from('push_tokens')
       .select('token_type, token')
       .eq('user_id', user_id);
 
-    if (error || !tokens?.length) {
-      return new Response(JSON.stringify({ sent: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!tokens?.length) {
+      return new Response(JSON.stringify({ sent: 0 }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const payload = { title: title || 'Zando+', body: message, message, url };
+    const payload = { title: title || 'Zando+', body: message, message, url: url || '/' };
+
     const results = await Promise.allSettled(
-      tokens.map((t) =>
-        t.token_type === 'web' && vapidPublic && vapidPrivate
-          ? sendWebPush(t.token, payload, vapidPublic, vapidPrivate)
-          : t.token_type === 'fcm' && fcmKey
-          ? sendFcm(t.token, payload, fcmKey)
-          : Promise.resolve(0),
-      ),
+      tokens.map((t) => {
+        if (t.token_type === 'web' && vapidPublic && vapidPrivate) {
+          return sendWebPush(t.token, payload, vapidPublic, vapidPrivate);
+        }
+        if (t.token_type === 'fcm' && fcmEmail && fcmKey) {
+          return sendFcmV1(t.token, payload, fcmEmail, fcmKey, fcmProject);
+        }
+        return Promise.resolve(0);
+      })
     );
 
     const sent = results.filter((r) => r.status === 'fulfilled').length;

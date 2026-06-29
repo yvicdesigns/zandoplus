@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,50 +12,89 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+async function saveToken(userId, tokenType, token) {
+  await supabase.from('push_tokens').upsert(
+    { user_id: userId, token_type: tokenType, token, user_agent: navigator.userAgent.substring(0, 200) },
+    { onConflict: 'user_id,token' }
+  );
+}
+
+// ── Capacitor Native (Android / iOS) ─────────────────────────────────────────
+async function registerNativePush(userId) {
+  const { PushNotifications } = await import('@capacitor/push-notifications');
+
+  const status = await PushNotifications.checkPermissions();
+  let permission = status.receive;
+
+  if (permission === 'prompt') {
+    const result = await PushNotifications.requestPermissions();
+    permission = result.receive;
+  }
+
+  if (permission !== 'granted') return;
+
+  await PushNotifications.register();
+
+  // Token FCM reçu → sauvegarder dans Supabase
+  PushNotifications.addListener('registration', async ({ value: token }) => {
+    await saveToken(userId, 'fcm', token);
+  });
+
+  // Notification reçue en foreground → afficher un toast natif
+  PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    console.log('[Push] Reçu en foreground:', notification.title);
+  });
+
+  // Clic sur notification → naviguer vers le bon lien
+  PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
+    const url = notification.data?.url;
+    if (url) window.location.href = url;
+  });
+}
+
+// ── Web Push (PWA installée ou navigateur) ────────────────────────────────────
+async function registerWebPush(userId) {
+  if (!VAPID_PUBLIC_KEY) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    let subscription = await reg.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+
+    await saveToken(userId, 'web', JSON.stringify(subscription));
+  } catch (err) {
+    console.debug('[Push] Web push:', err.message);
+  }
+}
+
+// ── Hook principal ────────────────────────────────────────────────────────────
 export function usePushNotifications() {
   const { user } = useAuth();
 
-  const registerWebPush = useCallback(async () => {
-    if (!user || !VAPID_PUBLIC_KEY) return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  const register = useCallback(async () => {
+    if (!user?.id) return;
 
-    try {
-      // Enregistrer le service worker
-      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      await navigator.serviceWorker.ready;
-
-      // Demander permission si pas encore accordée
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
-
-      // Vérifier si déjà abonné
-      let subscription = await reg.pushManager.getSubscription();
-
-      if (!subscription) {
-        subscription = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-        });
-      }
-
-      // Sauvegarder le token dans Supabase (upsert pour éviter les doublons)
-      const token = JSON.stringify(subscription);
-      await supabase.from('push_tokens').upsert(
-        {
-          user_id: user.id,
-          token_type: 'web',
-          token,
-          user_agent: navigator.userAgent.substring(0, 200),
-        },
-        { onConflict: 'user_id,token' }
-      );
-    } catch (err) {
-      // Permission refusée ou SW non supporté — silencieux
-      console.debug('[Push] Web push not available:', err.message);
+    if (Capacitor.isNativePlatform()) {
+      // Android ou iOS natif
+      await registerNativePush(user.id).catch(console.debug);
+    } else {
+      // PWA / navigateur
+      await registerWebPush(user.id).catch(console.debug);
     }
-  }, [user]);
+  }, [user?.id]);
 
-  // Naviguer vers le bon lien quand on clique sur une notif (app déjà ouverte)
+  // Navigation depuis message SW (app déjà ouverte)
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     const handler = (event) => {
@@ -66,8 +106,7 @@ export function usePushNotifications() {
     return () => navigator.serviceWorker.removeEventListener('message', handler);
   }, []);
 
-  // Démarrage automatique à la connexion
   useEffect(() => {
-    if (user) registerWebPush();
-  }, [user, registerWebPush]);
+    if (user) register();
+  }, [user, register]);
 }
