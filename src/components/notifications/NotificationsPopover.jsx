@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, CheckCheck, Zap, AlertTriangle, User, Megaphone } from 'lucide-react';
+import { Bell, MessageSquare, CheckCheck, Zap, AlertTriangle, User, Megaphone, ShoppingBag, ShieldCheck, Truck, PackageCheck, Wallet, RotateCcw } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -14,7 +14,6 @@ const NotificationItem = ({ notification, onRead }) => {
   const getIcon = (type) => {
     switch (type) {
       case 'new_message':
-        // Check if it's a bulk message
         if (notification.content?.message?.includes('Zando+')) {
           return <Megaphone className="w-5 h-5 text-purple-500" />;
         }
@@ -28,7 +27,22 @@ const NotificationItem = ({ notification, onRead }) => {
       case 'verification_rejected':
         return <AlertTriangle className="w-5 h-5 text-red-500" />;
       case 'new_order':
-        return <User className="w-5 h-5 text-green-500" />;
+      case 'new_escrow_order':
+        return <ShoppingBag className="w-5 h-5 text-green-600" />;
+      case 'payment_secured':
+        return <ShieldCheck className="w-5 h-5 text-blue-500" />;
+      case 'payment_validated':
+        return <CheckCheck className="w-5 h-5 text-indigo-500" />;
+      case 'order_shipped':
+        return <Truck className="w-5 h-5 text-purple-500" />;
+      case 'receipt_confirmed':
+        return <PackageCheck className="w-5 h-5 text-green-600" />;
+      case 'withdrawal_complete':
+        return <Wallet className="w-5 h-5 text-green-700" />;
+      case 'dispute_opened':
+        return <AlertTriangle className="w-5 h-5 text-red-500" />;
+      case 'refunded':
+        return <RotateCcw className="w-5 h-5 text-gray-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }

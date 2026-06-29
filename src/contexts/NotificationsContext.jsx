@@ -18,20 +18,22 @@ export const NotificationsProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const userId = user?.id;
+
   const fetchNotifications = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setNotifications([]);
       setUnreadCount(0);
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     const { data, error } = await robustQuery(() =>
       supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(100)
     );
@@ -45,7 +47,7 @@ export const NotificationsProvider = ({ children }) => {
       setUnreadCount(unread);
     }
     setLoading(false);
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchNotifications();
@@ -76,15 +78,15 @@ export const NotificationsProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const channel = supabase
-      .channel('public:notifications')
+      .channel(`notifications:${userId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${user.id}`
+        filter: `user_id=eq.${userId}`
       }, (payload) => {
         const newNotification = payload.new;
         setNotifications(prev => [newNotification, ...prev]);
@@ -120,7 +122,7 @@ export const NotificationsProvider = ({ children }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, toast]);
+  }, [userId, toast]);
 
   const markAsRead = async (notificationId) => {
     const notification = notifications.find(n => n.id === notificationId);
@@ -149,7 +151,7 @@ export const NotificationsProvider = ({ children }) => {
       await supabase
         .from('notifications')
         .update({ is_read: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('is_read', false);
     } catch (e) {
       logError(e, { context: 'markAllAsRead' });
