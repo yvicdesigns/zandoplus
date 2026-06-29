@@ -132,9 +132,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Safety valve: never spin forever — force-unlock after 12 seconds
+    const safetyTimer = setTimeout(() => {
+      if (mounted) setIsLoading(false);
+    }, 12000);
+
     const updateUserSession = async (newSession) => {
         if (!mounted) return;
-        
+        clearTimeout(safetyTimer);
         setSession(newSession);
         if (newSession?.user) {
             const fullUser = await fetchUserProfile(newSession.user);
@@ -155,7 +160,10 @@ export const AuthProvider = ({ children }) => {
         if (initialSession) {
              updateUserSession(initialSession);
         } else {
-            if (mounted) setIsLoading(false);
+            // OAuth callback: tokens are in the URL — wait for onAuthStateChange
+            const oauthInUrl = window.location.hash.includes('access_token') ||
+                               window.location.search.includes('code=');
+            if (!oauthInUrl && mounted) setIsLoading(false);
         }
     });
 
@@ -303,12 +311,15 @@ export const AuthProvider = ({ children }) => {
             provider,
             options: { redirectTo: window.location.origin },
         });
-        if (error) throw new Error(translateSupabaseError(error));
+        if (error) {
+            setIsLoading(false);
+            throw new Error(translateSupabaseError(error));
+        }
+        // No setIsLoading(false) here — page is navigating to Google
     } catch(err) {
-         logError(err, { context: 'signInWithProvider', provider });
-         throw err;
-    } finally {
         setIsLoading(false);
+        logError(err, { context: 'signInWithProvider', provider });
+        throw err;
     }
   };
 
