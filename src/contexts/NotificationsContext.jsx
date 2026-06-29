@@ -61,6 +61,29 @@ export const NotificationsProvider = ({ children }) => {
     }
   }, [user]);
 
+  const playNotificationSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+      // Deux notes : sol (784Hz) puis si (988Hz) — chime court et doux
+      [784, 988].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        osc.connect(gain);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.35);
+      });
+    } catch (_) {}
+  };
+
   const showBrowserNotification = (title, body, url) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const notif = new Notification(title, {
@@ -93,6 +116,9 @@ export const NotificationsProvider = ({ children }) => {
         setUnreadCount(prev => prev + 1);
 
         const message = newNotification.content?.message || 'Vous avez une nouvelle alerte.';
+
+        // Son de notification
+        playNotificationSound();
 
         // In-app toast
         toast({
