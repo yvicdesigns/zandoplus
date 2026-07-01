@@ -55,7 +55,7 @@ const PostAdPage = () => {
       category: '', subcategory: '', categoryName: '', categoryType: '',
       condition: '', location: '', negotiable: false, images: [],
       delivery_method: 'pickup', delivery_fee: '', is_urgent: false,
-      phone: '', quantity: ''
+      phone: '', quantity: '', accepts_cash_on_delivery: false
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -257,6 +257,7 @@ const PostAdPage = () => {
         status: formData.quantity === '0' ? 'inactive' : 'active',
         delivery_method: isJobOrService ? 'none' : formData.delivery_method,
         delivery_fee: (formData.delivery_fee && !isNaN(parseFloat(formData.delivery_fee))) ? parseFloat(formData.delivery_fee) : null,
+        accepts_cash_on_delivery: isJobOrService ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
       };
 
       const newListing = await addListing(listingData);

@@ -8,7 +8,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Search, ShieldCheck, Loader2, CheckCircle, XCircle,
-  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet,
+  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -26,6 +26,9 @@ const STATUS_CONFIG = {
   complete:            { label: 'Terminé',                       color: 'bg-green-200 text-green-900'  },
   litige:              { label: 'Litige',                        color: 'bg-red-100 text-red-800'      },
   rembourse:           { label: 'Remboursé',                     color: 'bg-gray-100 text-gray-700'    },
+  cod_en_attente:      { label: '💵 COD — À livrer',             color: 'bg-orange-100 text-orange-800'},
+  cod_livre:           { label: '✅ COD — Cash collecté',         color: 'bg-green-100 text-green-800'  },
+  cod_annule:          { label: 'COD Annulé',                    color: 'bg-gray-100 text-gray-700'    },
 };
 
 const formatDate = (d) => d
@@ -118,6 +121,24 @@ const AdminEscrowTab = memo(() => {
     fetchData();
   };
 
+  const handleCodDelivered = async (tx) => {
+    setActionLoading({ id: tx.id, type: 'cod_delivered' });
+    const { error } = await supabase.rpc('admin_confirm_cod_delivery', { p_tx_id: tx.id });
+    setActionLoading(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: '💰 COD confirmé — cash collecté, vendeur notifié.' });
+    fetchData();
+  };
+
+  const handleCodCancel = async (tx) => {
+    setActionLoading({ id: tx.id, type: 'cod_cancel' });
+    const { error } = await supabase.from('transactions_escrow').update({ statut: 'cod_annule' }).eq('id', tx.id);
+    setActionLoading(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Commande COD annulée.' });
+    fetchData();
+  };
+
   const filtered = useMemo(() =>
     transactions.filter(tx =>
       tx.annonce?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -131,7 +152,14 @@ const AdminEscrowTab = memo(() => {
     litiges:   transactions.filter(t => t.statut === 'litige').length,
     pending:   transactions.filter(t => t.statut === 'fonds_bloques').length,
     retraits:  transactions.filter(t => t.statut === 'retrait_demande').length,
+    cod:       transactions.filter(t => t.statut === 'cod_en_attente').length,
   }), [transactions]);
+
+  // Commandes COD en attente de livraison
+  const codPending = useMemo(() =>
+    transactions.filter(t => t.statut === 'cod_en_attente'),
+    [transactions]
+  );
 
   // Transactions retrait demandé en haut (priorité)
   const withdrawalRequests = useMemo(() =>
@@ -164,7 +192,61 @@ const AdminEscrowTab = memo(() => {
               <Wallet className="w-4 h-4" /> {counts.retraits} retrait{counts.retraits !== 1 ? 's' : ''} à envoyer ⚡
             </div>
           )}
+          {counts.cod > 0 && (
+            <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-300 px-3 py-1.5 rounded-lg text-sm text-yellow-700 font-bold">
+              <Banknote className="w-4 h-4" /> {counts.cod} livraison{counts.cod !== 1 ? 's' : ''} COD à effectuer
+            </div>
+          )}
         </div>
+
+        {/* ── SECTION COD : Livraisons à effectuer ── */}
+        {codPending.length > 0 && (
+          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 space-y-3">
+            <h3 className="font-bold text-yellow-800 flex items-center gap-2">
+              <Banknote className="w-5 h-5" /> Livraisons COD à effectuer (cash à collecter)
+            </h3>
+            {codPending.map(tx => (
+              <div key={tx.id} className="bg-white rounded-xl border border-yellow-200 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{tx.annonce?.title || 'Annonce supprimée'}</p>
+                    <p className="text-xs text-gray-500">Acheteur : <strong>{tx.acheteur?.full_name}</strong> — {tx.acheteur?.phone}</p>
+                    <p className="text-xs text-gray-500">Vendeur : <strong>{tx.vendeur?.full_name}</strong></p>
+                    {tx.adresse_livraison && <p className="text-xs text-gray-600 mt-1">📍 {tx.adresse_livraison}</p>}
+                    {tx.telephone_contact && <p className="text-xs text-gray-600">📞 {tx.telephone_contact}</p>}
+                  </div>
+                  <StatusBadge statut={tx.statut} />
+                </div>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3">
+                  <p className="text-xs text-yellow-700 font-semibold">Cash à collecter</p>
+                  <p className="text-lg font-bold text-yellow-900">{(tx.montant + 1500).toLocaleString('fr-FR')} FCFA</p>
+                  <p className="text-xs text-gray-500">(Prix {tx.montant.toLocaleString()} + Livraison 1 500 FCFA)</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleCodDelivered(tx)}
+                    disabled={actionLoading?.id === tx.id}
+                  >
+                    {actionLoading?.id === tx.id && actionLoading?.type === 'cod_delivered'
+                      ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+                    Cash collecté ✅
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-300 text-red-600 hover:bg-red-50"
+                    onClick={() => handleCodCancel(tx)}
+                    disabled={actionLoading?.id === tx.id}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" /> Annuler
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ── SECTION PRIORITAIRE : Retraits demandés ── */}
         {withdrawalRequests.length > 0 && (

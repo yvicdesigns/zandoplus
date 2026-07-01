@@ -25,6 +25,10 @@ const STATUS_CONFIG = {
   complete:            { label: 'Terminé',                         color: 'bg-green-200 text-green-900',  icon: CheckCircle    },
   litige:              { label: 'Litige ouvert',                   color: 'bg-red-100 text-red-800',      icon: AlertTriangle  },
   rembourse:           { label: 'Remboursé',                       color: 'bg-gray-100 text-gray-700',    icon: XCircle        },
+  // COD
+  cod_en_attente:      { label: '💵 En attente de livraison',      color: 'bg-orange-100 text-orange-800',icon: Truck          },
+  cod_livre:           { label: '✅ Livré — cash collecté',         color: 'bg-green-100 text-green-800',  icon: CheckCircle    },
+  cod_annule:          { label: 'Annulé',                          color: 'bg-gray-100 text-gray-700',    icon: XCircle        },
 };
 
 const COMMISSION_RATE = 0.07;

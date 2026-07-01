@@ -46,6 +46,7 @@ const HelpCenterPage = lazy(() => import('@/pages/HelpCenterPage'));
 const BoostListingPage = lazy(() => import('@/pages/BoostListingPage'));
 const BoostPaymentConfirmationPage = lazy(() => import('@/pages/BoostPaymentConfirmationPage'));
 const EscrowPaymentPage = lazy(() => import('@/pages/EscrowPaymentPage'));
+const CashOnDeliveryPage = lazy(() => import('@/pages/CashOnDeliveryPage'));
 const TransactionsPage = lazy(() => import('@/pages/TransactionsPage'));
 const WalletPage = lazy(() => import('@/pages/WalletPage'));
 const CartPage = lazy(() => import('@/pages/CartPage'));
@@ -234,6 +235,7 @@ const AppContent = () => {
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
                     <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
                     <Route path="/escrow/:listingId" element={<EscrowPaymentPage />} />
+                    <Route path="/cod/:listingId" element={<CashOnDeliveryPage />} />
                     <Route path="/transactions" element={<TransactionsPage />} />
                     <Route path="/wallet" element={<WalletPage />} />
                     <Route path="/cart" element={<CartPage />} />

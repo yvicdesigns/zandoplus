@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Phone, Lock, ShoppingCart, CheckCircle } from 'lucide-react';
+import { MessageSquare, Phone, Lock, ShoppingCart, CheckCircle, Banknote } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -52,6 +52,15 @@ const ActionButtons = ({ listing }) => {
     navigate(`/escrow/${listing.id}`);
   };
 
+  const handleCodPayment = () => {
+    if (!user) {
+      openAuthModal();
+      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour commander.", variant: "destructive" });
+      return;
+    }
+    navigate(`/cod/${listing.id}`);
+  };
+
   return (
     <>
       <div className="p-4 border-2 border-gray-200 rounded-lg bg-white shadow-lg space-y-3">
@@ -63,6 +72,12 @@ const ActionButtons = ({ listing }) => {
               <Lock className="mr-2 h-5 w-5" />
               Achat Sécurisé Zando ✅
             </Button>
+            {listing.accepts_cash_on_delivery && (
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg" onClick={handleCodPayment}>
+                <Banknote className="mr-2 h-5 w-5" />
+                Payer à la livraison 💵
+              </Button>
+            )}
             <Button
               variant="outline"
               size="lg"

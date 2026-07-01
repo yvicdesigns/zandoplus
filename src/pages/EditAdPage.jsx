@@ -32,7 +32,7 @@ const EditAdPage = () => {
   const [formData, setFormData] = useState({
     title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '',
     condition: '', location: '', negotiable: false, images: [],
-    delivery_method: 'pickup', delivery_fee: '', quantity: '', is_urgent: false, phone: ''
+    delivery_method: 'pickup', delivery_fee: '', quantity: '', is_urgent: false, phone: '', accepts_cash_on_delivery: false
   });
   
   const [imageFiles, setImageFiles] = useState([]); // For new uploads
@@ -62,6 +62,7 @@ const EditAdPage = () => {
         images: listing.images?.map(url => ({ id: url, url })) || [],
         is_urgent: listing.is_urgent || false,
         phone: user?.phone || '',
+        accepts_cash_on_delivery: listing.accepts_cash_on_delivery || false,
       });
       setExistingImages(listing.images || []);
       setPageLoading(false);
@@ -226,6 +227,7 @@ const EditAdPage = () => {
         negotiable: isJob ? false : formData.negotiable,
         delivery_method: isJob ? 'pickup' : formData.delivery_method,
         is_urgent: formData.is_urgent,
+        accepts_cash_on_delivery: isJob ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
       };
 
       await updateListing(id, listingData);

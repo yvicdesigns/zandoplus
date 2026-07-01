@@ -154,6 +154,26 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
                 <FormError message={formErrors.delivery_fee} />
               </div>
             )}
+
+            {formData.delivery_method !== 'pickup' && (
+              <div className="flex items-start space-x-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <Checkbox
+                  id="accepts_cash_on_delivery"
+                  name="accepts_cash_on_delivery"
+                  checked={!!formData.accepts_cash_on_delivery}
+                  onCheckedChange={(checked) => handleSelectChange('accepts_cash_on_delivery', checked)}
+                  className="mt-0.5"
+                />
+                <div>
+                  <Label htmlFor="accepts_cash_on_delivery" className="cursor-pointer font-semibold">
+                    Accepter le paiement à la livraison 💵
+                  </Label>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Zando livre le produit et collecte le cash sur place. Vous recevez votre paiement après livraison (commission 7% + 1 500 FCFA frais Zando Delivery).
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
