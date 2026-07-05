@@ -178,15 +178,9 @@ export const AuthProvider = ({ children }) => {
 
         if (event === 'SIGNED_IN' && newSession === null) return;
 
-        if (event === 'TOKEN_REFRESHED') {
-          if (newSession === null) {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            if (!currentSession) {
-              await logout({ showToast: false });
-            }
-            return;
-          }
-        }
+        // TOKEN_REFRESHED with null is transient (network blip) — never force-logout here.
+        // Supabase will retry automatically; let SIGNED_OUT handle intentional logouts.
+        if (event === 'TOKEN_REFRESHED' && newSession === null) return;
 
         // Ne pas remettre isLoading à true pour SIGNED_IN — la page vient de recharger
         // (OAuth redirige toujours vers un rechargement complet, isLoading démarre à true)
