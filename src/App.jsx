@@ -92,6 +92,22 @@ const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
+const ProtectedRoute = () => {
+  const { user, isLoading, openAuthModal } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      openAuthModal();
+      navigate('/', { replace: true });
+    }
+  }, [isLoading, user, openAuthModal, navigate]);
+
+  if (isLoading) return <FullPageLoader />;
+  if (!user) return null;
+  return <Outlet />;
+};
+
 const TesterProtectedRoute = () => {
   const { user, isLoading } = useAuth();
   const [isTester, setIsTester] = useState(null);
@@ -216,12 +232,8 @@ const AppContent = () => {
                         <Route path="/post-ad" element={<PostAdPage />} />
                     </Route>
                     <Route path="/edit-ad/:id" element={<EditAdPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/verification" element={<VerificationPage />} />
-                    <Route path="/messages" element={<MessagesPage />} />
-                    <Route path="/messages/:conversationId" element={<MessagesPage />} />
                     <Route path="/suivi" element={<TrackingPage />} />
                     <Route path="/data-deletion" element={<DataDeletionPage />} />
                     <Route path="/changelog" element={<ChangelogPage />} />
@@ -234,12 +246,18 @@ const AppContent = () => {
                     </Route>
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
                     <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
-                    <Route path="/escrow/:listingId" element={<EscrowPaymentPage />} />
-                    <Route path="/cod/:listingId" element={<CashOnDeliveryPage />} />
-                    <Route path="/transactions" element={<TransactionsPage />} />
-                    <Route path="/wallet" element={<WalletPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/cart/checkout" element={<CartCheckoutPage />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/escrow/:listingId" element={<EscrowPaymentPage />} />
+                      <Route path="/cod/:listingId" element={<CashOnDeliveryPage />} />
+                      <Route path="/transactions" element={<TransactionsPage />} />
+                      <Route path="/wallet" element={<WalletPage />} />
+                      <Route path="/messages" element={<MessagesPage />} />
+                      <Route path="/messages/:conversationId" element={<MessagesPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route path="/cart/checkout" element={<CartCheckoutPage />} />
+                    </Route>
                     <Route path="/make-admin" element={<MakeAdminPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
