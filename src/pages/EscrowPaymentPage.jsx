@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { ShieldCheck, UploadCloud, CheckCircle, ArrowLeft, Loader2, Copy, AlertTriangle, Truck, Store, Package, Banknote } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 
 const COMMISSION_RATE = 0.07;
 const ZANDO_DELIVERY_FEE = 1500; // FCFA — modifiable
@@ -24,6 +25,7 @@ const EscrowPaymentPage = () => {
   const { toast } = useToast();
 
   const [listing, setListing] = useState(null);
+  const [cityConfig, setCityConfig] = useState(null);
   const [paymentNumber, setPaymentNumber] = useState('');
   const [proofFile, setProofFile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,7 @@ const EscrowPaymentPage = () => {
     if (!user) { openAuthModal(); navigate('/'); return; }
     const fetchData = async () => {
       const [{ data: listingData }, { data: settings }] = await Promise.all([
-        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, accepts_cash_on_delivery, seller:profiles(full_name, phone)').eq('id', listingId).single(),
+        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, accepts_cash_on_delivery, location, seller:profiles(full_name, phone)').eq('id', listingId).single(),
         supabase.from('site_settings').select('whatsapp_number').eq('id', 1).single(),
       ]);
       if (!listingData) { navigate('/listings'); return; }
@@ -45,10 +47,20 @@ const EscrowPaymentPage = () => {
         navigate(`/listings/${listingId}`);
         return;
       }
+
+      const city = extractCity(listingData.location);
+      const cityConf = await fetchCityDeliveryConfig(supabase, city);
+      setCityConfig(cityConf);
+
       setListing(listingData);
       if (settings) setPaymentNumber(settings.whatsapp_number);
-      // Si retrait uniquement, forcer pickup
-      if (listingData.delivery_method === 'pickup') setDeliveryChoice('pickup');
+
+      // Déterminer le choix de livraison initial
+      if (listingData.delivery_method === 'pickup') {
+        setDeliveryChoice('pickup');
+      } else if (cityConf && !cityConf.zando_delivery_enabled) {
+        setDeliveryChoice('pickup');
+      }
       setLoading(false);
     };
     fetchData();
@@ -64,14 +76,18 @@ const EscrowPaymentPage = () => {
   const totalAmount = listing ? listing.price + deliveryFee : 0;
   const commission = listing ? Math.round(listing.price * COMMISSION_RATE) : 0;
 
-  // Options de livraison disponibles selon le vendeur
+  // Options de livraison disponibles selon le vendeur et la config ville
   const availableOptions = () => {
     if (!listing) return [];
     if (listing.delivery_method === 'pickup') return [DELIVERY_OPTIONS[2]];
-    const opts = [DELIVERY_OPTIONS[0], DELIVERY_OPTIONS[2]]; // Zando + pickup toujours
-    if (listing.delivery_method === 'seller_delivery') {
-      opts.splice(1, 0, { ...DELIVERY_OPTIONS[1], fee: listing.delivery_fee || 0 });
+    const opts = [];
+    if (!cityConfig || cityConfig.zando_delivery_enabled) {
+      opts.push(DELIVERY_OPTIONS[0]);
     }
+    if (listing.delivery_method === 'seller_delivery' && (!cityConfig || cityConfig.seller_delivery_enabled)) {
+      opts.push({ ...DELIVERY_OPTIONS[1], fee: listing.delivery_fee || 0 });
+    }
+    opts.push(DELIVERY_OPTIONS[2]); // retrait toujours disponible
     return opts;
   };
 
@@ -201,7 +217,7 @@ const EscrowPaymentPage = () => {
                 </div>
 
                 {/* Option COD */}
-                {listing.accepts_cash_on_delivery && (
+                {listing.accepts_cash_on_delivery && (!cityConfig || cityConfig.cod_enabled) && (
                   <div className="space-y-2 pt-1">
                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
                       <Banknote className="w-3 h-3" /> Ou payer en cash

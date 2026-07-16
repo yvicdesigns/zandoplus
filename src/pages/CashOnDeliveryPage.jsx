@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
 import { Banknote, Truck, ArrowLeft, Loader2, CheckCircle, MapPin, Phone } from 'lucide-react';
+import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 
 const COMMISSION_RATE = 0.07;
 
@@ -49,26 +50,41 @@ const CashOnDeliveryPage = () => {
 
   useEffect(() => {
     if (!user) { openAuthModal(); navigate('/'); return; }
-    supabase
-      .from('listings')
-      .select('id, title, price, currency, images, user_id, accepts_cash_on_delivery, seller:profiles(full_name, phone)')
-      .eq('id', listingId)
-      .single()
-      .then(({ data }) => {
-        if (!data || !data.accepts_cash_on_delivery) {
-          toast({ title: 'Option indisponible', description: 'Ce vendeur n\'accepte pas le paiement à la livraison.', variant: 'destructive' });
-          navigate(`/listings/${listingId}`);
-          return;
-        }
-        if (data.user_id === user.id) {
-          toast({ title: 'Action impossible', description: 'Vous ne pouvez pas acheter votre propre annonce.', variant: 'destructive' });
-          navigate(`/listings/${listingId}`);
-          return;
-        }
-        setListing(data);
-        setTelephone(user.phone || '');
-        setLoading(false);
-      });
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from('listings')
+        .select('id, title, price, currency, images, user_id, accepts_cash_on_delivery, location, seller:profiles(full_name, phone)')
+        .eq('id', listingId)
+        .single();
+
+      if (!data || !data.accepts_cash_on_delivery) {
+        toast({ title: 'Option indisponible', description: "Ce vendeur n'accepte pas le paiement à la livraison.", variant: 'destructive' });
+        navigate(`/listings/${listingId}`);
+        return;
+      }
+      if (data.user_id === user.id) {
+        toast({ title: 'Action impossible', description: 'Vous ne pouvez pas acheter votre propre annonce.', variant: 'destructive' });
+        navigate(`/listings/${listingId}`);
+        return;
+      }
+
+      const city = extractCity(data.location);
+      const cityConf = await fetchCityDeliveryConfig(supabase, city);
+      if (cityConf && !cityConf.cod_enabled) {
+        toast({
+          title: 'COD indisponible',
+          description: `Le paiement à la livraison n'est pas encore disponible à ${city}. Choisissez un autre mode de paiement.`,
+          variant: 'destructive',
+        });
+        navigate(`/escrow/${listingId}`);
+        return;
+      }
+
+      setListing(data);
+      setTelephone(user.phone || '');
+      setLoading(false);
+    };
+    fetchData();
   }, [listingId, user, navigate, openAuthModal, toast]);
 
   const handleSubmit = async () => {
