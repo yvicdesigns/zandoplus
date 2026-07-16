@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle } from 'lucide-react';
+import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle, Banknote } from 'lucide-react';
 import ListingBadges from '@/components/common/ListingBadges';
 import StarRating from '@/components/reviews/StarRating';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -109,20 +109,30 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               <span className="truncate">Publiée {formatDate(listing.created_at)}</span>
             </div>
             {isProduct && (
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.id}`); }}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
-                >
-                  Acheter
-                </button>
-                <button
-                  onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
-                  className={`p-2 rounded-lg border transition-colors ${inCart ? 'bg-green-100 border-green-400 text-green-700' : 'border-gray-300 hover:border-green-400 hover:bg-green-50 text-gray-500'}`}
-                  title={inCart ? 'Dans le panier' : 'Ajouter au panier'}
-                >
-                  {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-                </button>
+              <div className="mt-3 flex flex-col gap-1.5">
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    Acheter
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
+                    className={`p-2 rounded-lg border transition-colors ${inCart ? 'bg-green-100 border-green-400 text-green-700' : 'border-gray-300 hover:border-green-400 hover:bg-green-50 text-gray-500'}`}
+                    title={inCart ? 'Dans le panier' : 'Ajouter au panier'}
+                  >
+                    {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+                  </button>
+                </div>
+                {listing.accepts_cash_on_delivery && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); navigate(`/cod/${listing.id}`); }}
+                    className="w-full flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    <Banknote className="w-3.5 h-3.5" /> Payer à la livraison
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -185,12 +195,23 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                 <span>{formatDate(listing.created_at)}</span>
               </div>
               {isProduct && (
-                <button
-                  onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.id}`); }}
-                  className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  <ShoppingCart className="w-3.5 h-3.5" /> Acheter
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                    className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> Acheter
+                  </button>
+                  {listing.accepts_cash_on_delivery && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); navigate(`/cod/${listing.id}`); }}
+                      className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-2 py-1.5 rounded-lg transition-colors"
+                      title="Payer à la livraison"
+                    >
+                      <Banknote className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
