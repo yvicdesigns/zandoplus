@@ -21,6 +21,8 @@ const ActionButtons = ({ listing }) => {
     return null;
   }
 
+  console.log('[ActionButtons] cod:', listing.accepts_cash_on_delivery, '| category:', listing.category, '| owner?', user?.id === listing.seller.id);
+
   const isOwner = user && user.id === listing.seller.id;
 
   if (isOwner) {
