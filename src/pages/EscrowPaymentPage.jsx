@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
-import { ShieldCheck, UploadCloud, CheckCircle, ArrowLeft, Loader2, Copy, AlertTriangle, Truck, Store, Package } from 'lucide-react';
+import { ShieldCheck, UploadCloud, CheckCircle, ArrowLeft, Loader2, Copy, AlertTriangle, Truck, Store, Package, Banknote } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const COMMISSION_RATE = 0.07;
@@ -36,7 +36,7 @@ const EscrowPaymentPage = () => {
     if (!user) { openAuthModal(); navigate('/'); return; }
     const fetchData = async () => {
       const [{ data: listingData }, { data: settings }] = await Promise.all([
-        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, seller:profiles(full_name, phone)').eq('id', listingId).single(),
+        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, accepts_cash_on_delivery, seller:profiles(full_name, phone)').eq('id', listingId).single(),
         supabase.from('site_settings').select('whatsapp_number').eq('id', 1).single(),
       ]);
       if (!listingData) { navigate('/listings'); return; }
@@ -155,6 +155,20 @@ const EscrowPaymentPage = () => {
               <p className="text-xs text-green-700">Votre argent est protégé. Zando ne libère le paiement qu'après votre confirmation de réception.</p>
             </div>
           </div>
+
+          {listing.accepts_cash_on_delivery && (
+            <button
+              onClick={() => navigate(`/cod/${listing.id}`)}
+              className="w-full flex items-center gap-3 bg-orange-50 border border-orange-300 hover:border-orange-400 hover:bg-orange-100 rounded-xl p-4 text-left transition-colors"
+            >
+              <Banknote className="w-8 h-8 text-orange-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-orange-800">Payer à la livraison 💵</p>
+                <p className="text-xs text-orange-700">Zando livre et collecte le cash sur place. +1 500 FCFA frais de livraison.</p>
+              </div>
+              <span className="text-orange-500 text-lg">›</span>
+            </button>
+          )}
 
           <Card className="shadow-lg border-0">
             <CardHeader><CardTitle className="text-lg">Récapitulatif</CardTitle></CardHeader>
