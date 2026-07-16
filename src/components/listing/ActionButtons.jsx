@@ -21,14 +21,20 @@ const ActionButtons = ({ listing }) => {
     return null;
   }
 
-  console.log('[ActionButtons] cod:', listing.accepts_cash_on_delivery, '| category:', listing.category, '| owner?', user?.id === listing.seller.id);
-
   const isOwner = user && user.id === listing.seller.id;
 
   if (isOwner) {
     return (
-        <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 text-center">
+        <div className="space-y-2">
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 text-center">
             <p className="text-sm text-gray-600">C'est votre annonce. Les options d'achat ne sont pas disponibles pour vous.</p>
+          </div>
+          {listing.accepts_cash_on_delivery && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg text-xs text-orange-700">
+              <Banknote className="w-4 h-4 shrink-0" />
+              <span>Paiement à la livraison activé — les acheteurs voient le bouton orange.</span>
+            </div>
+          )}
         </div>
     );
   }
