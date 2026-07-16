@@ -22,12 +22,13 @@ import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
 import AdminCategoriesTab from '@/components/admin/AdminCategoriesTab';
 import AdminBetaTab from '@/components/admin/AdminBetaTab';
 import AdminWithdrawalsTab from '@/components/admin/AdminWithdrawalsTab';
+import AdminDeliveryConfigTab from '@/components/admin/AdminDeliveryConfigTab';
 import { Helmet } from 'react-helmet-async';
 import {
   Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck,
   Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity,
   FileText, ClipboardCheck, CreditCard, LayoutGrid, Menu, X,
-  ChevronRight, BarChart3, Home, Wallet, AlertTriangle,
+  ChevronRight, BarChart3, Home, Wallet, AlertTriangle, MapPin,
   TrendingUp, ArrowRight, RefreshCw, Bell
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -46,6 +47,7 @@ const NAV_GROUPS = [
       { id: 'users',         icon: Users,        label: 'Utilisateurs',   color: 'text-blue-400',   bg: 'bg-blue-500/20',    badge: 'total_users' },
       { id: 'listings',      icon: ShoppingBag,  label: 'Annonces',       color: 'text-emerald-400',bg: 'bg-emerald-500/20', badge: 'total_listings' },
       { id: 'deliveries',    icon: Truck,         label: 'Livraisons',     color: 'text-orange-400', bg: 'bg-orange-500/20' },
+      { id: 'delivery-config', icon: MapPin,      label: 'Config Livraison', color: 'text-cyan-400',   bg: 'bg-cyan-500/20' },
       { id: 'reports',       icon: Flag,          label: 'Signalements',   color: 'text-red-400',    bg: 'bg-red-500/20',     badge: 'pending_reports',    badgeAlert: true },
       { id: 'verifications', icon: ShieldCheck,   label: 'Vérifications',  color: 'text-teal-400',   bg: 'bg-teal-500/20' },
     ],
@@ -106,7 +108,8 @@ const renderTabContent = (activeTab) => {
   switch (activeTab) {
     case 'users':         return <AdminUsersTab />;
     case 'listings':      return <AdminListingsTab />;
-    case 'deliveries':    return <AdminDeliveriesTab />;
+    case 'deliveries':       return <AdminDeliveriesTab />;
+    case 'delivery-config':  return <AdminDeliveryConfigTab />;
     case 'reports':       return <AdminReportsTab />;
     case 'verifications': return <AdminVerificationsTab />;
     case 'boosts':        return <AdminBoostsTab />;
