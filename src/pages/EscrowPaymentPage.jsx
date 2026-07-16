@@ -148,28 +148,6 @@ const EscrowPaymentPage = () => {
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour
           </Button>
 
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-            <ShieldCheck className="w-8 h-8 text-custom-green-500 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-green-800">Achat Sécurisé Zando ✅</p>
-              <p className="text-xs text-green-700">Votre argent est protégé. Zando ne libère le paiement qu'après votre confirmation de réception.</p>
-            </div>
-          </div>
-
-          {listing.accepts_cash_on_delivery && (
-            <button
-              onClick={() => navigate(`/cod/${listing.id}`)}
-              className="w-full flex items-center gap-3 bg-orange-50 border border-orange-300 hover:border-orange-400 hover:bg-orange-100 rounded-xl p-4 text-left transition-colors"
-            >
-              <Banknote className="w-8 h-8 text-orange-500 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-orange-800">Payer à la livraison 💵</p>
-                <p className="text-xs text-orange-700">Zando livre et collecte le cash sur place. +1 500 FCFA frais de livraison.</p>
-              </div>
-              <span className="text-orange-500 text-lg">›</span>
-            </button>
-          )}
-
           <Card className="shadow-lg border-0">
             <CardHeader><CardTitle className="text-lg">Récapitulatif</CardTitle></CardHeader>
             <CardContent className="space-y-5">
@@ -183,7 +161,7 @@ const EscrowPaymentPage = () => {
                 </div>
               </div>
 
-              {/* Choix livraison */}
+              {/* Choix livraison / paiement */}
               <div className="space-y-2">
                 <p className="font-semibold text-gray-800">Mode de livraison</p>
                 {listing.delivery_method === 'pickup' && (
@@ -192,7 +170,12 @@ const EscrowPaymentPage = () => {
                     Ce vendeur propose uniquement le retrait en boutique.
                   </div>
                 )}
+
+                {/* Options escrow (mobile money) */}
                 <div className="space-y-2">
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" /> Payer par Mobile Money
+                  </p>
                   {options.map(opt => {
                     const Icon = opt.icon;
                     const isSelected = deliveryChoice === opt.value;
@@ -216,6 +199,28 @@ const EscrowPaymentPage = () => {
                     );
                   })}
                 </div>
+
+                {/* Option COD */}
+                {listing.accepts_cash_on_delivery && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
+                      <Banknote className="w-3 h-3" /> Ou payer en cash
+                    </p>
+                    <button
+                      onClick={() => navigate(`/cod/${listing.id}`)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-orange-300 bg-orange-50 hover:border-orange-400 hover:bg-orange-100 text-left transition-colors"
+                    >
+                      <div className="p-2 rounded-lg bg-orange-100">
+                        <Banknote className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-orange-800">Payer à la livraison 💵</p>
+                        <p className="text-xs text-gray-500">Zando livre et collecte le cash sur place</p>
+                      </div>
+                      <span className="text-sm font-bold text-orange-700">+1 500 FCFA</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Détail financier */}
