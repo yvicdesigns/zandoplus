@@ -31,12 +31,6 @@ const ZONES = [
     quartiers: 'Talangaï, Mfilou, Madibou, Djiri, Kingasani',
     fee: 3500,
   },
-  {
-    id: 'hors',
-    label: 'Hors Brazzaville',
-    quartiers: 'Pointe-Noire, Dolisie, autres villes',
-    fee: 7000,
-  },
 ];
 
 const CashOnDeliveryPage = () => {

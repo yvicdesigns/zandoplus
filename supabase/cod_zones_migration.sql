@@ -29,7 +29,6 @@ BEGIN
     WHEN 'zone1' THEN 1000   -- Proche : Poto-Poto, Moungali, Centre-ville
     WHEN 'zone2' THEN 2000   -- Moyen : Bacongo, Makélékélé, Ouenzé
     WHEN 'zone3' THEN 3500   -- Éloigné : Talangaï, Mfilou, Madibou, Djiri
-    WHEN 'hors'  THEN 7000   -- Hors Brazzaville : Pointe-Noire, Dolisie…
     ELSE 2000
   END;
 
