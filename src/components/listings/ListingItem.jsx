@@ -111,7 +111,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             {isProduct && (
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                  onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.id}`); }}
                   className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
                 >
                   Acheter
@@ -186,7 +186,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               </div>
               {isProduct && (
                 <button
-                  onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                  onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.id}`); }}
                   className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <ShoppingCart className="w-3.5 h-3.5" /> Acheter
