@@ -1,39 +1,65 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { Loader2 } from 'lucide-react';
+import { Loader2, WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Dedicated OAuth callback page for PKCE flow.
-// Supabase redirects here after Google auth with ?code=xxx.
-// _initialize() in the Supabase client automatically exchanges the code.
-// We navigate home as soon as getSession() resolves (or after 5s max).
-// AuthContext's onAuthStateChange then picks up the SIGNED_IN event.
+// OAuth PKCE callback page.
+// Supabase auto-exchanges the ?code= here in _initialize() (via detectSessionInUrl).
+// CRITICAL: We must NOT navigate home until getSession() resolves (initializePromise done).
+// If we navigate early, ALL Supabase data queries on the home page block waiting for
+// initializePromise, freezing the entire app (categories, listings, settings — everything).
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
+  const [stage, setStage] = useState('waiting'); // 'waiting' | 'slow' | 'failed'
 
   useEffect(() => {
     let mounted = true;
     const go = () => { if (mounted) navigate('/', { replace: true }); };
 
-    // 5-second max: on mobile with slow network, the PKCE exchange can take a while.
-    // Navigate home regardless — AuthContext will show logged-in state once the exchange
-    // completes (via onAuthStateChange SIGNED_IN → updateUserSession).
-    const timeout = setTimeout(go, 5000);
+    // After 12s, reassure the user the connection is slow (not broken)
+    const slowTimer = setTimeout(() => { if (mounted) setStage('slow'); }, 12000);
+    // After 45s, give up and show error — network is truly unreachable
+    const failTimer = setTimeout(() => { if (mounted) setStage('failed'); }, 45000);
 
-    // getSession() waits for _initialize() (which runs the PKCE exchange) then resolves.
-    // On success: session is in storage, we go home, AuthContext shows user as logged in.
-    // On failure: we still go home (user can try again).
-    supabase.auth.getSession().then(go).catch(go);
+    // Wait for Supabase _initialize() to complete (PKCE exchange + session store).
+    // ONLY then navigate home. This ensures every subsequent Supabase call resolves
+    // instantly from the cached initializePromise instead of waiting for a slow exchange.
+    supabase.auth.getSession()
+      .then(go)
+      .catch(go);
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
+      clearTimeout(slowTimer);
+      clearTimeout(failTimer);
     };
   }, [navigate]);
 
+  if (stage === 'failed') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-6 text-center">
+        <WifiOff className="w-12 h-12 text-gray-400" />
+        <div>
+          <p className="font-semibold text-gray-700">Connexion impossible</p>
+          <p className="text-sm text-gray-500 mt-1">La connexion prend trop de temps. Vérifiez votre réseau.</p>
+        </div>
+        <Button
+          className="gradient-bg hover:opacity-90 rounded-full px-6"
+          onClick={() => navigate('/', { replace: true })}
+        >
+          Retour à l'accueil
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
       <Loader2 className="w-10 h-10 animate-spin text-custom-green-500" />
+      <p className="text-sm text-gray-500">
+        {stage === 'slow' ? 'Connexion lente, patience...' : 'Connexion en cours...'}
+      </p>
     </div>
   );
 };
