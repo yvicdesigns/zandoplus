@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const userRef = useRef(null); // ref pour accéder à user courant dans les closures d'effets
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }) => {
   const closeAuthModal = () => setIsAuthModalOpen(false);
   
   const setUserSafe = useCallback((newUser) => {
+    userRef.current = newUser;
     setUser(prev => {
       if (JSON.stringify(prev) === JSON.stringify(newUser)) return prev;
       return newUser;
@@ -219,9 +221,21 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    // Quand l'app revient au premier plan (Custom Tab OAuth, onglet PWA, Capacitor),
+    // on vérifie si une session est apparue pendant qu'on était en arrière-plan.
+    // On ne refetch le profil que si l'utilisateur n'est pas encore reconnu.
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible' || !mounted) return;
+      if (userRef.current) return; // Déjà connecté — pas besoin de re-vérifier
+      const { data: { session: latestSession } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      if (latestSession && mounted) await updateUserSession(latestSession);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       mounted = false;
       authListener?.subscription?.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchUserProfile, navigate, logout, setUserSafe]);
 
@@ -310,19 +324,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithProvider = async (provider) => {
-    setIsLoading(true);
+    // Ne pas toucher isLoading ici :
+    // - Sur web (PWA) : la page navigue vers Google → React est détruit → pas de spinner résiduel
+    // - Sur Capacitor / Custom Tab : la page reste vivante → si on met isLoading=true ici,
+    //   l'app tourne indéfiniment si l'OAuth n'aboutit pas (cancel, redirect fail...).
+    //   Le onAuthStateChange/visibilitychange gère la suite quand l'OAuth réussit.
     try {
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: { redirectTo: window.location.origin },
         });
-        if (error) {
-            setIsLoading(false);
-            throw new Error(translateSupabaseError(error));
-        }
-        // No setIsLoading(false) here — page is navigating to Google
+        if (error) throw new Error(translateSupabaseError(error));
     } catch(err) {
-        setIsLoading(false);
         logError(err, { context: 'signInWithProvider', provider });
         throw err;
     }

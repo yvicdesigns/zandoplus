@@ -123,9 +123,12 @@ const AuthModal = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       await signInWithProvider('google');
+      // Sur web (PWA) : la page navigue vers Google → le finally s'exécute brièvement avant navigation
+      // Sur Custom Tab / Capacitor : signInWithProvider retourne immédiatement après avoir lancé l'OAuth
     } catch (err) {
       setError(err.message);
-      setLoading(false);
+    } finally {
+      setLoading(false); // Toujours reset — évite le bouton bloqué sur "Connexion..." au retour
     }
   };
 
