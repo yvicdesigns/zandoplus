@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -194,7 +196,7 @@ export const AuthProvider = ({ children }) => {
         // (OAuth redirige toujours vers un rechargement complet, isLoading démarre à true)
         // Pour SIGNED_OUT seulement, on réinitialise proprement
         if (event === 'SIGNED_OUT') {
-          setUser(null);
+          setUserSafe(null); // also resets userRef.current so visibilitychange can re-check
           setSession(null);
           setIsLoading(false);
           clearTimeout(safetyTimer);
@@ -232,10 +234,29 @@ export const AuthProvider = ({ children }) => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // iOS Capacitor native: OAuth redirects to com.zando.app://login#access_token=...
+    // iOS routes the custom scheme back to the app, firing appUrlOpen.
+    let appUrlOpenHandle = null;
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        if (!url.startsWith('com.zando.app://') || !mounted) return;
+        const hashIdx = url.indexOf('#');
+        if (hashIdx === -1) return;
+        const params = new URLSearchParams(url.slice(hashIdx + 1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token && refresh_token && mounted) {
+          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (!error && data?.session && mounted) await updateUserSession(data.session);
+        }
+      }).then(handle => { appUrlOpenHandle = handle; });
+    }
+
     return () => {
       mounted = false;
       authListener?.subscription?.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      appUrlOpenHandle?.remove();
     };
   }, [fetchUserProfile, navigate, logout, setUserSafe]);
 
@@ -324,15 +345,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithProvider = async (provider) => {
-    // Ne pas toucher isLoading ici :
-    // - Sur web (PWA) : la page navigue vers Google → React est détruit → pas de spinner résiduel
-    // - Sur Capacitor / Custom Tab : la page reste vivante → si on met isLoading=true ici,
-    //   l'app tourne indéfiniment si l'OAuth n'aboutit pas (cancel, redirect fail...).
-    //   Le onAuthStateChange/visibilitychange gère la suite quand l'OAuth réussit.
+    // iOS native Capacitor: redirect to custom URL scheme so iOS routes it back to the app.
+    // Android: window.location.origin = https://localhost, Capacitor intercepts it.
+    // Web/PWA: current origin (https://www.zandopluscg.com).
+    // Note: com.zando.app://login must be added to Supabase's allowed redirect URLs.
+    const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+    const redirectTo = isIOSNative ? 'com.zando.app://login' : window.location.origin;
     try {
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
-            options: { redirectTo: window.location.origin },
+            options: { redirectTo },
         });
         if (error) throw new Error(translateSupabaseError(error));
     } catch(err) {
