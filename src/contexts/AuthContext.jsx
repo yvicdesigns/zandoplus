@@ -132,11 +132,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Safety valve: sliding 12s window — resets on each updateUserSession call
-    let safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 12000);
+    // Safety valve: sliding 8s window — resets on each updateUserSession call
+    let safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 8000);
     const resetSafety = () => {
       clearTimeout(safetyTimer);
-      safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 12000);
+      safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 8000);
     };
 
     const updateUserSession = async (newSession) => {
@@ -155,20 +155,26 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+    supabase.auth.getSession()
+      .then(({ data: { session: initialSession }, error }) => {
         if (error) {
-             console.error("Error getting initial session:", error);
-             logError(error, { context: 'getSession' });
+          console.error("Error getting initial session:", error);
+          logError(error, { context: 'getSession' });
         }
         if (initialSession) {
-             updateUserSession(initialSession);
+          updateUserSession(initialSession);
         } else {
-            // OAuth callback (PKCE): ?code= still in URL → wait for onAuthStateChange
-            const oauthInUrl = window.location.hash.includes('access_token') ||
-                               window.location.search.includes('code=');
-            if (!oauthInUrl && mounted) setIsLoading(false);
+          // OAuth callback: ?code= still in URL → wait for onAuthStateChange
+          const oauthInUrl = window.location.hash.includes('access_token') ||
+                             window.location.search.includes('code=');
+          if (!oauthInUrl && mounted) setIsLoading(false);
         }
-    });
+      })
+      .catch((err) => {
+        // Rejet inattendu (rare) — on débloque le chargement quand même
+        console.error("getSession rejection:", err);
+        if (mounted) setIsLoading(false);
+      });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {

@@ -63,10 +63,14 @@ const SplashAnimationOverlay = ({ onComplete }) => {
 const isIOS = Capacitor.getPlatform() === 'ios';
 
 const ConditionalSplash = ({ onComplete }) => {
-  if (!isIOS) {
-    onComplete?.();
-    return null;
-  }
+  // IMPORTANT: ne jamais appeler onComplete() pendant le render —
+  // React interdit de modifier l'état d'un composant parent en cours de render.
+  // On passe par useEffect qui s'exécute APRÈS le premier rendu.
+  useEffect(() => {
+    if (!isIOS) onComplete?.();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!isIOS) return null;
   return <SplashAnimationOverlay onComplete={onComplete} />;
 };
 
