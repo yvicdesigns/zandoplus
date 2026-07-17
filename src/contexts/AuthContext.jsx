@@ -363,11 +363,12 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithProvider = async (provider) => {
     // iOS native Capacitor: redirect to custom URL scheme so iOS routes it back to the app.
-    // Android: window.location.origin = https://localhost, Capacitor intercepts it.
-    // Web/PWA: current origin (https://www.zandopluscg.com).
-    // Note: com.zando.app://login must be added to Supabase's allowed redirect URLs.
+    // Web/PWA: dedicated /auth/callback page handles the PKCE code exchange explicitly,
+    //   which is more reliable than relying on Supabase's auto-detection on mobile browsers.
     const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
-    const redirectTo = isIOSNative ? 'com.zando.app://login' : window.location.origin;
+    const redirectTo = isIOSNative
+      ? 'com.zando.app://login'
+      : `${window.location.origin}/auth/callback`;
     try {
         const { error } = await supabase.auth.signInWithOAuth({
             provider,

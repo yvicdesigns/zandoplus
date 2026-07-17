@@ -69,6 +69,7 @@ const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
 const TestersLandingPage = lazy(() => import('@/pages/TestersLandingPage'));
 const TesterDashboardPage = lazy(() => import('@/pages/TesterDashboardPage'));
 const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
+const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -268,6 +269,7 @@ const AppContent = () => {
                     <Route path="/confirm-email" element={<EmailConfirmationPage />} />
                     <Route path="/confirmation-required" element={<ConfirmationRequiredPage />} />
                     <Route path="/installer-app" element={<PwaInstallPage />} />
+                    <Route path="/auth/callback" element={<AuthCallbackPage />} />
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/testeurs" element={<TestersLandingPage />} />
