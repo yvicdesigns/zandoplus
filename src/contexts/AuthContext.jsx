@@ -24,6 +24,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // True while a PKCE/OAuth exchange is in progress (?code= or #access_token= was in the URL).
+  // Prevents the header from flashing "Se connecter" if the safety timer fires before the exchange
+  // completes. Clears when getSession() resolves (exchange done, success or failure).
+  const [isOAuthPending, setIsOAuthPending] = useState(
+    () => window.location.hash.includes('access_token') || window.location.search.includes('code=')
+  );
   const userRef = useRef(null); // ref pour accéder à user courant dans les closures d'effets
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
@@ -161,28 +167,26 @@ export const AuthProvider = ({ children }) => {
 
     supabase.auth.getSession()
       .then(({ data: { session: initialSession }, error }) => {
+        if (mounted) setIsOAuthPending(false); // Exchange completed (success or failure)
         if (error) {
           console.error("Error getting initial session:", error);
           logError(error, { context: 'getSession' });
-          // On error (e.g. PKCE exchange failed — expired code, network issue),
-          // unblock the UI immediately. Never leave the user stuck on a spinner.
           if (mounted) setIsLoading(false);
           return;
         }
         if (initialSession) {
           updateUserSession(initialSession);
         } else {
-          // PKCE: ?code= still in URL → Supabase is exchanging it → wait for onAuthStateChange
-          // Implicit: #access_token= in hash → wait for onAuthStateChange
+          // If no session and no OAuth code in URL: unblock immediately.
+          // If OAuth was pending, isOAuthPending=false above already clears the skeleton.
           const oauthInUrl = window.location.hash.includes('access_token') ||
                              window.location.search.includes('code=');
           if (!oauthInUrl && mounted) setIsLoading(false);
         }
       })
       .catch((err) => {
-        // Rejet inattendu (rare) — on débloque le chargement quand même
         console.error("getSession rejection:", err);
-        if (mounted) setIsLoading(false);
+        if (mounted) { setIsOAuthPending(false); setIsLoading(false); }
       });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -443,6 +447,7 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     isLoading,
+    isOAuthPending,
     login,
     register,
     logout,

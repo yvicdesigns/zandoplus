@@ -51,7 +51,8 @@ const SearchForm = memo(({ className, onSearchSubmit, initialValue = '' }) => {
 
 const Header = memo(({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, isOAuthPending } = useAuth();
+  const authPending = isLoading || isOAuthPending;
   const unreadCount = useUnreadMessages();
   const { siteSettings, loading: siteSettingsLoading } = useSiteSettings();
   const navigate = useNavigate();
@@ -164,7 +165,7 @@ const Header = memo(({ onLoginClick }) => {
           </div>
 
           <nav className="hidden lg:flex items-center space-x-4 shrink-0">
-            {!isLoading && user ? (
+            {!authPending && user ? (
               <>
                 <Link to="/post-ad">
                   <Button className="gradient-bg hover:opacity-90 rounded-full px-6 transition-opacity">
@@ -238,7 +239,7 @@ const Header = memo(({ onLoginClick }) => {
                   </div>
                 </div>
               </>
-            ) : !isLoading && !user ? (
+            ) : !authPending && !user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/reset-password" className="text-sm font-medium text-gray-500 hover:text-custom-green-600 transition-colors">
                   Mot de passe oublié ?
@@ -317,7 +318,7 @@ const Header = memo(({ onLoginClick }) => {
                 </div>
               </div>
 
-              {!isLoading && user ? (
+              {!authPending && user ? (
                 <div className="space-y-2">
                   <Link to="/post-ad" onClick={() => setIsMenuOpen(false)}>
                     <Button className="w-full gradient-bg hover:opacity-90 rounded-full">
@@ -363,7 +364,7 @@ const Header = memo(({ onLoginClick }) => {
                     Déconnexion
                   </button>
                 </div>
-              ) : !isLoading && !user ? (
+              ) : !authPending && !user ? (
                 <div className="space-y-3">
                   <Button onClick={handleLoginClick} className="w-full gradient-bg hover:opacity-90 rounded-full">
                     <LogIn className="w-4 h-4 mr-2" />
