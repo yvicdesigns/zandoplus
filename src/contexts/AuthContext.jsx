@@ -164,11 +164,16 @@ export const AuthProvider = ({ children }) => {
         if (error) {
           console.error("Error getting initial session:", error);
           logError(error, { context: 'getSession' });
+          // On error (e.g. PKCE exchange failed — expired code, network issue),
+          // unblock the UI immediately. Never leave the user stuck on a spinner.
+          if (mounted) setIsLoading(false);
+          return;
         }
         if (initialSession) {
           updateUserSession(initialSession);
         } else {
-          // OAuth callback: ?code= still in URL → wait for onAuthStateChange
+          // PKCE: ?code= still in URL → Supabase is exchanging it → wait for onAuthStateChange
+          // Implicit: #access_token= in hash → wait for onAuthStateChange
           const oauthInUrl = window.location.hash.includes('access_token') ||
                              window.location.search.includes('code=');
           if (!oauthInUrl && mounted) setIsLoading(false);

@@ -8,6 +8,9 @@ const customSupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    flowType: 'pkce', // PKCE returns ?code= (query param) instead of #access_token= (hash)
+                      // Safari ITP strips hash fragments from cross-site redirects (supabase.co → zandopluscg.com)
+                      // causing Google OAuth to fail on all mobile browsers. PKCE is immune to this.
   },
 });
 
