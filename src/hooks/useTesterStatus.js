@@ -14,8 +14,11 @@ export function useTesterStatus() {
       .select('id, full_name, status, points, score, device_model, android_version')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => { setTester(data); setLoading(false); });
-  }, [user]);
+      .then(({ data, error }) => {
+        if (!error) setTester(data);
+        setLoading(false);
+      });
+  }, [user?.id]);
 
   return {
     tester,
@@ -25,7 +28,7 @@ export function useTesterStatus() {
       if (!user) return;
       supabase.from('testers').select('id, full_name, status, points, score, device_model, android_version')
         .eq('user_id', user.id).maybeSingle()
-        .then(({ data }) => setTester(data));
+        .then(({ data, error }) => { if (!error) setTester(data); });
     },
   };
 }

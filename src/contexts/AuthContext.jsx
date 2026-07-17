@@ -154,14 +154,24 @@ export const AuthProvider = ({ children }) => {
         resetSafety();
         setSession(newSession);
         if (newSession?.user) {
+            // Show user IMMEDIATELY from session metadata (available without any network request).
+            // Google OAuth provides full_name + avatar_url in user_metadata already.
+            // This eliminates the "skeleton for 2-5s while fetchUserProfile runs" delay.
+            const meta = newSession.user.user_metadata || {};
+            const immediateUser = {
+                ...newSession.user,
+                full_name: meta.full_name || meta.name || newSession.user.email?.split('@')[0] || 'Utilisateur',
+                avatar_url: meta.avatar_url || meta.picture || null,
+                role: 'viewer', // Conservative default; profile fetch may update to 'admin'
+            };
+            if (mounted) setUserSafe(immediateUser);
+            if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
+            // Fetch full profile in background (role, phone, location, etc.)
             const fullUser = await fetchUserProfile(newSession.user);
             if (mounted) setUserSafe(fullUser);
         } else {
             if (mounted) setUser(null);
-        }
-        if (mounted) {
-          setIsLoading(false);
-          clearTimeout(safetyTimer);
+            if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
         }
     };
 
