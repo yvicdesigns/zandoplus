@@ -234,6 +234,17 @@ export const AuthProvider = ({ children }) => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Sur mobile, le navigateur peut restaurer la page depuis le bfcache (back-forward cache)
+    // au lieu de la recharger après OAuth. Dans ce cas, React ne se réinitialise pas,
+    // mais on peut détecter le retour via pageshow et refetch la session.
+    const handlePageShow = async (event) => {
+      if (!event.persisted || !mounted) return;
+      if (userRef.current) return;
+      const { data: { session: latestSession } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      if (latestSession && mounted) await updateUserSession(latestSession);
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
     // iOS Capacitor native: OAuth redirects to com.zando.app://login#access_token=...
     // iOS routes the custom scheme back to the app, firing appUrlOpen.
     let appUrlOpenHandle = null;
@@ -256,6 +267,7 @@ export const AuthProvider = ({ children }) => {
       mounted = false;
       authListener?.subscription?.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
       appUrlOpenHandle?.remove();
     };
   }, [fetchUserProfile, navigate, logout, setUserSafe]);
