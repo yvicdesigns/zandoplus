@@ -142,11 +142,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Safety valve: sliding 8s window — resets on each updateUserSession call
-    let safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 8000);
+    // Safety valve: sliding 8s window — resets on each updateUserSession call.
+    // Clears BOTH isLoading and isOAuthPending so AuthCallbackPage can navigate
+    // even if getSession() hangs (e.g. Supabase API timeout on slow networks).
+    let safetyTimer = setTimeout(() => { if (mounted) { setIsLoading(false); setIsOAuthPending(false); } }, 8000);
     const resetSafety = () => {
       clearTimeout(safetyTimer);
-      safetyTimer = setTimeout(() => { if (mounted) setIsLoading(false); }, 8000);
+      safetyTimer = setTimeout(() => { if (mounted) { setIsLoading(false); setIsOAuthPending(false); } }, 8000);
     };
 
     const updateUserSession = async (newSession) => {
@@ -289,7 +291,11 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('pageshow', handlePageShow);
       appUrlOpenHandle?.remove();
     };
-  }, [fetchUserProfile, navigate, logout, setUserSafe]);
+  // NOTE: `logout` intentionally omitted from deps — it's not used inside this effect.
+  // Including it caused the effect to re-run on every user change (logout depends on user),
+  // which set mounted=false mid-flight and silently skipped setIsOAuthPending(false).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchUserProfile, navigate, setUserSafe]);
 
   useEffect(() => {
     let presenceInterval;
