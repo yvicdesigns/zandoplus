@@ -1,40 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/customSupabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // OAuth PKCE callback page.
-// Supabase auto-exchanges the ?code= here in _initialize() (via detectSessionInUrl).
-// CRITICAL: We must NOT navigate home until getSession() resolves (initializePromise done).
-// If we navigate early, ALL Supabase data queries on the home page block waiting for
-// initializePromise, freezing the entire app (categories, listings, settings — everything).
+// CRITICAL: We do NOT call getSession() here anymore.
+// Previously, AuthCallbackPage.useEffect ran BEFORE AuthProvider.useEffect (child effects
+// run before parent effects in React). This caused navigate('/') to fire BEFORE
+// AuthProvider's updateUserSession could set the user — home rendered with user=null.
+//
+// Fix: watch isLoading + isOAuthPending from AuthProvider. Navigate only when AuthProvider
+// has finished processing the session (both flags cleared = user is already set in context).
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
+  const { isLoading, isOAuthPending } = useAuth();
   const [stage, setStage] = useState('waiting'); // 'waiting' | 'slow' | 'failed'
 
+  // Navigate once AuthProvider signals it's done (both loading flags cleared).
+  // At this point user is already set in context — home will render logged-in on first paint.
   useEffect(() => {
-    let mounted = true;
-    const go = () => { if (mounted) navigate('/', { replace: true }); };
+    if (!isLoading && !isOAuthPending) {
+      navigate('/', { replace: true });
+    }
+  }, [isLoading, isOAuthPending, navigate]);
 
-    // After 12s, reassure the user the connection is slow (not broken)
-    const slowTimer = setTimeout(() => { if (mounted) setStage('slow'); }, 12000);
-    // After 45s, give up and show error — network is truly unreachable
-    const failTimer = setTimeout(() => { if (mounted) setStage('failed'); }, 45000);
-
-    // Wait for Supabase _initialize() to complete (PKCE exchange + session store).
-    // ONLY then navigate home. This ensures every subsequent Supabase call resolves
-    // instantly from the cached initializePromise instead of waiting for a slow exchange.
-    supabase.auth.getSession()
-      .then(go)
-      .catch(go);
-
+  // Show "slow" message after 12s, "failed" UI after 45s (network truly unreachable)
+  useEffect(() => {
+    const slowTimer = setTimeout(() => setStage('slow'), 12000);
+    const failTimer = setTimeout(() => setStage('failed'), 45000);
     return () => {
-      mounted = false;
       clearTimeout(slowTimer);
       clearTimeout(failTimer);
     };
-  }, [navigate]);
+  }, []);
 
   if (stage === 'failed') {
     return (
