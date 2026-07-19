@@ -156,19 +156,20 @@ export const AuthProvider = ({ children }) => {
         resetSafety();
         setSession(newSession);
         if (newSession?.user) {
-            // Show user IMMEDIATELY from session metadata (available without any network request).
-            // Google OAuth provides full_name + avatar_url in user_metadata already.
-            // This eliminates the "skeleton for 2-5s while fetchUserProfile runs" delay.
+            // Show user IMMEDIATELY from session metadata (no network needed).
+            // Google OAuth provides full_name + avatar_url in user_metadata.
             const meta = newSession.user.user_metadata || {};
             const immediateUser = {
                 ...newSession.user,
                 full_name: meta.full_name || meta.name || newSession.user.email?.split('@')[0] || 'Utilisateur',
                 avatar_url: meta.avatar_url || meta.picture || null,
-                role: 'viewer', // Conservative default; profile fetch may update to 'admin'
+                role: 'viewer',
             };
             if (mounted) setUserSafe(immediateUser);
             if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
-            // Fetch full profile in background (role, phone, location, etc.)
+            // Skip DB fetch if the same user is already loaded (prevents double call when
+            // both onAuthStateChange and getSession().then() fire for the same session).
+            if (userRef.current?.id === newSession.user.id) return;
             const fullUser = await fetchUserProfile(newSession.user);
             if (mounted) setUserSafe(fullUser);
         } else {
@@ -189,11 +190,10 @@ export const AuthProvider = ({ children }) => {
         if (initialSession) {
           updateUserSession(initialSession);
         } else {
-          // If no session and no OAuth code in URL: unblock immediately.
-          // If OAuth was pending, isOAuthPending=false above already clears the skeleton.
-          const oauthInUrl = window.location.hash.includes('access_token') ||
-                             window.location.search.includes('code=');
-          if (!oauthInUrl && mounted) setIsLoading(false);
+          // No session (exchange failed or user not logged in) — unblock immediately.
+          // isOAuthPending is already cleared above; clearing isLoading lets
+          // AuthCallbackPage navigate home without waiting for the 8s safety timer.
+          if (mounted) setIsLoading(false);
         }
       })
       .catch((err) => {

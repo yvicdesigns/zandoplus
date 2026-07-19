@@ -3,6 +3,7 @@
       "short_name": "Zando+",
       "description": "Achetez et vendez en toute simplicité au Congo. La première place de marché pour les petites annonces, l'immobilier, les véhicules et plus encore.",
       "start_url": "/",
+      "scope": "/",
       "display": "standalone",
       "background_color": "#F0FDF4",
       "theme_color": "#2EB565",
