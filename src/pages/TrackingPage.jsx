@@ -140,7 +140,7 @@ const TrackingPage = () => {
                     </div>
                     <div className="flex justify-end">
                       <Button asChild variant="outline">
-                        <Link to={`/listings/${delivery.listing.id}`}>Voir l'annonce</Link>
+                        <Link to={`/listings/${delivery.listing.listing_slug || delivery.listing.id}`}>Voir l'annonce</Link>
                       </Button>
                     </div>
                   </CardContent>

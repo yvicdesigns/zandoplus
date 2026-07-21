@@ -55,7 +55,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
     return (
       <Card className="listing-card overflow-hidden cursor-pointer border-0 shadow-lg h-full flex flex-col">
         <div className="relative bg-gray-100 aspect-w-16 aspect-h-9 h-48"> {/* Fixed height for image container */}
-          <Link to={`/listings/${listing.id}`}>
+          <Link to={`/listings/${listing.listing_slug || listing.id}`}>
             <img   
               className="w-full h-full object-cover object-center"
               alt={listing.title}
@@ -84,7 +84,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
         </div>
         <CardContent className="p-4 flex-grow flex-col justify-between">
           <div>
-            <Link to={`/listings/${listing.id}`}>
+            <Link to={`/listings/${listing.listing_slug || listing.id}`}>
               <h3 className="text-base font-bold mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors">
                 {listing.title}
               </h3>
@@ -145,7 +145,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
     <Card className="listing-card overflow-hidden cursor-pointer border-0 shadow-lg">
       <div className="flex">
         <div className="relative w-48 h-48 flex-shrink-0 bg-gray-100"> {/* Fixed height for image container */}
-          <Link to={`/listings/${listing.id}`}>
+          <Link to={`/listings/${listing.listing_slug || listing.id}`}>
             <img   
               className="w-full h-full object-cover object-center"
               alt={listing.title}
@@ -159,7 +159,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
         <div className="flex-1 p-4 flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start mb-2">
-              <Link to={`/listings/${listing.id}`}>
+              <Link to={`/listings/${listing.listing_slug || listing.id}`}>
                 <h3 className="text-base md:text-lg font-bold line-clamp-1 hover:text-custom-green-600 transition-colors">
                   {listing.title}
                 </h3>

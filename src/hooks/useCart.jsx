@@ -30,6 +30,7 @@ export const CartProvider = ({ children }) => {
       if (prev.find(i => i.id === listing.id)) return prev;
       const newItem = {
         id: listing.id,
+        listing_slug: listing.listing_slug || null,
         title: listing.title,
         price: Number(listing.price) || 0,
         currency: listing.currency || 'FCFA',

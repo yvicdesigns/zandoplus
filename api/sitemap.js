@@ -28,13 +28,13 @@ export default async function handler(req, res) {
 
     try {
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/listings?status=eq.active&select=id,updated_at&order=created_at.desc&limit=1000`,
+        `${supabaseUrl}/rest/v1/listings?status=eq.active&select=id,listing_slug,updated_at&order=created_at.desc&limit=1000`,
         { headers }
       );
       const listings = await response.json();
       if (Array.isArray(listings)) {
         listingUrls = listings.map((l) => ({
-          loc: `https://www.zandopluscg.com/listings/${l.id}`,
+          loc: `https://www.zandopluscg.com/listings/${l.listing_slug || l.id}`,
           lastmod: l.updated_at ? l.updated_at.split('T')[0] : undefined,
           changefreq: 'weekly',
           priority: '0.7',

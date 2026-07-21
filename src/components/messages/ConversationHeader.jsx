@@ -119,7 +119,7 @@ const ConversationHeader = ({ conversation }) => {
               {listing.currency || 'FCFA'} {listing.price?.toLocaleString()}
             </p>
           </div>
-          <Link to={`/listings/${listing.id}`}>
+          <Link to={`/listings/${listing.listing_slug || listing.id}`}>
             <Button size="sm" variant="outline">
               Voir l'annonce
             </Button>

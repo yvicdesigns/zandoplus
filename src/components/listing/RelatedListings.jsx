@@ -40,7 +40,7 @@ const RelatedListings = ({ listings, loading }) => {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {listings.map(listing => (
-            <Link key={listing.id} to={`/listings/${listing.id}`} className="block">
+            <Link key={listing.id} to={`/listings/${listing.listing_slug || listing.id}`} className="block">
               <Card className="hover:shadow-md transition-shadow duration-200">
                 <div className="flex">
                   <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-l-lg">

@@ -20,6 +20,8 @@ import { Helmet } from 'react-helmet-async';
 import { useListings } from '@/contexts/ListingsContext';
 import { sanitizeHtml, sanitizeInput } from '@/lib/validationUtils';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const ListingDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,14 +43,18 @@ const ListingDetailPage = () => {
     setLoading(true);
     setLoadingRelated(true);
     try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*, seller:profiles(*)')
-        .eq('id', id)
-        .single();
+      const isUUID = UUID_REGEX.test(id);
+      const query = supabase.from('listings').select('*, seller:profiles(*)');
+      const { data, error } = await (isUUID ? query.eq('id', id) : query.eq('listing_slug', id)).single();
 
       if (error || !data) {
         throw new Error("Annonce non trouvée ou erreur de chargement.");
+      }
+
+      // Redirect old UUID links to the canonical slug URL
+      if (isUUID && data.listing_slug) {
+        navigate(`/listings/${data.listing_slug}`, { replace: true });
+        return;
       }
       
       // XSS Protection: Sanitize dynamic content before component rendering
@@ -61,7 +67,7 @@ const ListingDetailPage = () => {
       setListing(sanitizedListing);
 
       if (user?.id !== data.user_id) {
-        await supabase.rpc('increment_listing_view', { p_listing_id: id });
+        await supabase.rpc('increment_listing_view', { p_listing_id: data.id });
       }
 
       if (data.category) {
@@ -166,7 +172,7 @@ const ListingDetailPage = () => {
     "name": listing.title,
     "description": listing.description.replace(/<[^>]*>/g, '').substring(0, 500),
     "image": listing.images?.[0] || '',
-    "url": `https://www.zandopluscg.com/listings/${listing.id}`,
+    "url": `https://www.zandopluscg.com/listings/${listing.listing_slug || listing.id}`,
     "offers": {
       "@type": "Offer",
       "price": listing.price,
@@ -191,8 +197,8 @@ const ListingDetailPage = () => {
         <meta property="og:image" content={listing.images?.[0] || 'https://www.zandopluscg.com/og-image.jpg'} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <link rel="canonical" href={`https://www.zandopluscg.com/listings/${listing.id}`} />
-        <meta property="og:url" content={`https://www.zandopluscg.com/listings/${listing.id}`} />
+        <link rel="canonical" href={`https://www.zandopluscg.com/listings/${listing.listing_slug || listing.id}`} />
+        <meta property="og:url" content={`https://www.zandopluscg.com/listings/${listing.listing_slug || listing.id}`} />
         <meta property="og:type" content="product" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>

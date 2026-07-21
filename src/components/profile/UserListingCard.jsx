@@ -42,7 +42,7 @@ const UserListingCard = memo(({ listing, isFavoriteView = false }) => {
     <>
       <Card className="listing-card overflow-hidden border shadow-sm flex flex-col group">
         <div className="relative bg-gray-100">
-          <Link to={`/listings/${listing.id}`}>
+          <Link to={`/listings/${listing.listing_slug || listing.id}`}>
             <img
               className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
               alt={listing.title}
@@ -55,7 +55,7 @@ const UserListingCard = memo(({ listing, isFavoriteView = false }) => {
           </div>
         </div>
         <CardContent className="p-4 flex flex-col flex-grow">
-          <Link to={`/listings/${listing.id}`} className="flex-grow">
+          <Link to={`/listings/${listing.listing_slug || listing.id}`} className="flex-grow">
             <h3 className="font-bold mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors">
               {listing.title}
             </h3>

@@ -66,7 +66,7 @@ const CartPage = () => {
                         className="w-16 h-16 object-cover rounded-lg border flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <Link to={`/listings/${item.id}`} className="font-semibold text-gray-800 text-sm hover:text-custom-green-600 line-clamp-2">{item.title}</Link>
+                        <Link to={`/listings/${item.listing_slug || item.id}`} className="font-semibold text-gray-800 text-sm hover:text-custom-green-600 line-clamp-2">{item.title}</Link>
                         <p className="text-custom-green-600 font-bold mt-1">{formatAmount(item.price)} {item.currency}</p>
                       </div>
                       <button onClick={() => removeItem(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
