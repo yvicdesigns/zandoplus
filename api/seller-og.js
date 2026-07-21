@@ -3,6 +3,7 @@ export default async function handler(req, res) {
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
   const id = req.query.id;
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   const ua = req.headers['user-agent'] || '';
 
@@ -27,8 +28,11 @@ export default async function handler(req, res) {
   // Social crawlers: fetch seller data and return rich OG HTML
   let seller = null;
   try {
+    const filter = isUUID
+      ? `id=eq.${encodeURIComponent(id)}`
+      : `shop_slug=eq.${encodeURIComponent(id)}`;
     const dbRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=full_name,bio,avatar_url,banner_url,location`,
+      `${supabaseUrl}/rest/v1/profiles?${filter}&select=id,full_name,bio,avatar_url,banner_url,location,shop_slug`,
       {
         headers: {
           apikey: supabaseKey,
@@ -40,7 +44,8 @@ export default async function handler(req, res) {
     seller = Array.isArray(data) ? data[0] : null;
   } catch (_) {}
 
-  const shopUrl = `https://www.zandopluscg.com/seller/${id}`;
+  const sellerSlug = seller?.shop_slug || id;
+  const shopUrl = `https://www.zandopluscg.com/seller/${sellerSlug}`;
   const title = seller?.full_name
     ? `Boutique de ${seller.full_name} | Zando+ Congo`
     : 'Zando+ Congo - Achetez, Vendez, Simplement.';

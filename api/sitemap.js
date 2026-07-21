@@ -52,15 +52,32 @@ export default async function handler(req, res) {
       );
       const sellerListings = await sellerRes.json();
       if (Array.isArray(sellerListings)) {
-        const seen = new Set();
-        sellerUrls = sellerListings
-          .filter((l) => l.seller_id && !seen.has(l.seller_id) && seen.add(l.seller_id))
-          .map((l) => ({
-            loc: `https://www.zandopluscg.com/seller/${l.seller_id}`,
-            lastmod: l.updated_at ? l.updated_at.split('T')[0] : undefined,
-            changefreq: 'weekly',
-            priority: '0.6',
-          }));
+        // Deduplicate seller_ids, keep most recent updated_at
+        const sellerMap = {};
+        sellerListings.forEach((l) => {
+          if (l.seller_id && (!sellerMap[l.seller_id] || l.updated_at > sellerMap[l.seller_id])) {
+            sellerMap[l.seller_id] = l.updated_at;
+          }
+        });
+        const uniqueIds = Object.keys(sellerMap).slice(0, 500);
+
+        // Fetch slugs for all unique sellers
+        const slugRes = await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=in.(${uniqueIds.join(',')})&select=id,shop_slug`,
+          { headers }
+        );
+        const slugData = await slugRes.json();
+        const slugMap = {};
+        if (Array.isArray(slugData)) {
+          slugData.forEach((p) => { if (p.shop_slug) slugMap[p.id] = p.shop_slug; });
+        }
+
+        sellerUrls = uniqueIds.map((id) => ({
+          loc: `https://www.zandopluscg.com/seller/${slugMap[id] || id}`,
+          lastmod: sellerMap[id] ? sellerMap[id].split('T')[0] : undefined,
+          changefreq: 'weekly',
+          priority: '0.6',
+        }));
       }
     } catch {
       // On error, skip seller pages

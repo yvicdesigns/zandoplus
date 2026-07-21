@@ -12,12 +12,14 @@ import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const ShareShopButton = ({ seller }) => {
   const [open, setOpen]     = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef(null);
 
-  const shopUrl  = `${window.location.origin}/seller/${seller.id}`;
+  const shopUrl  = `${window.location.origin}/seller/${seller.shop_slug || seller.id}`;
   const shopText = `Découvrez la boutique de ${seller.name} sur Zando+ Congo 🛍️`;
 
   // Close dropdown on outside click
@@ -132,32 +134,42 @@ const SellerShopPage = () => {
     const fetchSellerData = async () => {
       setLoading(true);
 
-      const sellerPromise = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', sellerId)
-        .single();
-        
-      const listingsPromise = supabase
-        .from('listings')
-        .select('*', { count: 'exact' })
-        .eq('user_id', sellerId)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      const isUUID = UUID_REGEX.test(sellerId);
 
-      const ratingPromise = supabase
-        .from('reviews')
-        .select('rating')
-        .eq('seller_id', sellerId);
-      
-      const [{ data: sellerData, error: sellerError }, { data: listingsData, error: listingsError }, { data: ratingData, error: ratingError }] = await Promise.all([sellerPromise, listingsPromise, ratingPromise]);
+      // Fetch by id (UUID) or by shop_slug
+      const sellerPromise = isUUID
+        ? supabase.from('profiles').select('*').eq('id', sellerId).single()
+        : supabase.from('profiles').select('*').eq('shop_slug', sellerId).single();
+
+      const { data: sellerData, error: sellerError } = await sellerPromise;
 
       if (sellerError || !sellerData) {
         console.error("Erreur de récupération du vendeur:", sellerError);
         navigate('/');
         return;
       }
-      
+
+      // Redirect UUID links to the canonical slug URL
+      if (isUUID && sellerData.shop_slug) {
+        navigate(`/seller/${sellerData.shop_slug}`, { replace: true });
+        return;
+      }
+
+      const profileId = sellerData.id;
+
+      const [{ data: listingsData, error: listingsError }, { data: ratingData }] = await Promise.all([
+        supabase
+          .from('listings')
+          .select('*', { count: 'exact' })
+          .eq('user_id', profileId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('reviews')
+          .select('rating')
+          .eq('seller_id', profileId),
+      ]);
+
       const formattedSeller = {
           ...sellerData,
           name: sellerData.full_name || 'Vendeur Anonyme',
@@ -240,9 +252,9 @@ const SellerShopPage = () => {
       <Helmet>
         <title>Boutique de {seller.name} - Zando+ Congo</title>
         <meta name="description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
-        <link rel="canonical" href={`https://www.zandopluscg.com/seller/${seller.id}`} />
+        <link rel="canonical" href={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`} />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`https://www.zandopluscg.com/seller/${seller.id}`} />
+        <meta property="og:url" content={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`} />
         <meta property="og:title" content={`Boutique de ${seller.name} - Zando+ Congo`} />
         <meta property="og:description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
         <meta property="og:image" content={seller.banner || seller.avatar || 'https://www.zandopluscg.com/og-image.jpg'} />

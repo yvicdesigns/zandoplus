@@ -16,11 +16,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const ShareShopDropdown = ({ profileId, profileName }) => {
+const ShareShopDropdown = ({ profileSlug, profileName }) => {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const shopUrl = `${window.location.origin}/seller/${profileId}`;
+  const shopUrl = `${window.location.origin}/seller/${profileSlug}`;
   const shareText = `Découvrez la boutique de ${profileName} sur Zando+ Congo : ${shopUrl}`;
 
   const handleNativeShare = async () => {
@@ -247,14 +247,14 @@ const ProfileHeader = memo(({
                 <Edit className="w-4 h-4 mr-2" /> Modifier Profil
             </Button>
             {profileData?.id && (
-              <Link to={`/seller/${profileData.id}`}>
+              <Link to={`/seller/${profileData.shop_slug || profileData.id}`}>
                 <Button variant="outline" className="border-custom-green-300 text-custom-green-700 hover:bg-custom-green-50">
                   <Store className="w-4 h-4 mr-2" /> Voir ma boutique
                 </Button>
               </Link>
             )}
             {profileData?.id && (
-              <ShareShopDropdown profileId={profileData.id} profileName={profileData?.full_name || 'mon profil'} />
+              <ShareShopDropdown profileSlug={profileData.shop_slug || profileData.id} profileName={profileData?.full_name || 'mon profil'} />
             )}
             {!profileData?.verified && (
               <Link to="/verification">

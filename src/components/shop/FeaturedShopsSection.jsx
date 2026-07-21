@@ -22,7 +22,7 @@ const ShopCard = ({ boost, index }) => {
       transition={{ delay: index * 0.07 }}
     >
       <Link
-        to={`/seller/${seller.id}`}
+        to={`/seller/${seller.shop_slug || seller.id}`}
         className="group flex flex-col items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 hover:border-custom-green-300 hover:shadow-md transition-all duration-200 text-center"
       >
         <div className="relative">
@@ -59,7 +59,7 @@ const FeaturedShopsSection = () => {
   useEffect(() => {
     supabase
       .from('shop_boosts')
-      .select('id, plan, seller:profiles(id, full_name, avatar_url, verified)')
+      .select('id, plan, seller:profiles(id, full_name, avatar_url, verified, shop_slug)')
       .eq('status', 'active')
       .gt('end_date', new Date().toISOString())
       .order('plan', { ascending: false }) // premium first

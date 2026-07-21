@@ -20,7 +20,7 @@ const SellerInfo = ({ seller, averageRating = 0, reviewCount = 0 }) => {
   const lastSeen = seller.last_seen ? `Vu ${formatDistanceToNow(new Date(seller.last_seen), { addSuffix: true, locale: fr })}` : null;
 
   const navigateToShop = () => {
-    navigate(`/seller/${seller.id}`);
+    navigate(`/seller/${seller.shop_slug || seller.id}`);
   };
 
   return (

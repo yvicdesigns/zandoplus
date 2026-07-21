@@ -41,7 +41,7 @@ export const ListingsProvider = ({ children }) => {
       const queryFn = () => {
         let query = supabase
           .from('listings')
-          .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen)')
+          .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
           .eq('status', 'active');
 
         if (filters.category) query = query.eq('category', filters.category);
@@ -170,7 +170,7 @@ export const ListingsProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('listings')
         .insert({ ...listingData, user_id: user.id, status: 'active' })
-        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen)')
+        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
         .single();
       
       if (error) throw error;
@@ -189,7 +189,7 @@ export const ListingsProvider = ({ children }) => {
         .from('listings')
         .update(updatedData)
         .eq('id', id)
-        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen)')
+        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
         .single();
       
       if (error) throw error;
