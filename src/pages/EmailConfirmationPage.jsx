@@ -13,6 +13,7 @@ const EmailConfirmationPage = () => {
     <>
       <Helmet>
         <title>Confirmez votre e-mail - Zando+ Congo</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Vérifiez votre boîte de réception pour confirmer votre adresse e-mail et activer votre compte Zando+ Congo." />
       </Helmet>
       <div className="min-h-[calc(100vh-200px)] flex items-start sm:items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 px-4 py-12">

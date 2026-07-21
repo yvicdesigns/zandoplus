@@ -5,10 +5,16 @@ export default async function handler(req, res) {
   const id = req.query.id;
 
   const ua = req.headers['user-agent'] || '';
-  const isCrawler = /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot|applebot|bingbot|googlebot/i.test(ua);
 
-  if (!isCrawler) {
-    // Serve the SPA for normal browsers
+  // Only social/messaging crawlers need this server-rendered OG HTML.
+  // Search engines (Googlebot, Bingbot, Applebot) execute JavaScript and can
+  // read react-helmet meta tags from the SPA — sending them a thin HTML causes
+  // "Crawled - currently not indexed" in Google Search Console.
+  const isSocialCrawler = /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot/i.test(ua);
+
+  if (!isSocialCrawler) {
+    // Serve the SPA for browsers AND search engines (Google, Bing, Apple).
+    // The SPA renders full seller content + react-helmet meta tags that Google reads.
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const indexRes = await fetch(`${proto}://${host}/index.html`);
@@ -18,7 +24,7 @@ export default async function handler(req, res) {
     return res.send(html);
   }
 
-  // Fetch seller from Supabase
+  // Social crawlers: fetch seller data and return rich OG HTML
   let seller = null;
   try {
     const dbRes = await fetch(
@@ -54,17 +60,18 @@ export default async function handler(req, res) {
   <meta charset="utf-8" />
   <title>${title}</title>
   <meta name="description" content="${description}" />
+  <link rel="canonical" href="${shopUrl}" />
 
   <!-- Open Graph -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="${shopUrl}" />
-  <meta property="og:title"       content="${title}" />
-  <meta property="og:description" content="${description}" />
-  <meta property="og:image"       content="${image}" />
+  <meta property="og:type"         content="website" />
+  <meta property="og:url"          content="${shopUrl}" />
+  <meta property="og:title"        content="${title}" />
+  <meta property="og:description"  content="${description}" />
+  <meta property="og:image"        content="${image}" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:site_name"   content="Zando+ Congo" />
-  <meta property="og:locale"      content="fr_CG" />
+  <meta property="og:site_name"    content="Zando+ Congo" />
+  <meta property="og:locale"       content="fr_CG" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />

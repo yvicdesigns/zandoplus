@@ -14,5 +14,9 @@ Disallow: /admin-diagnostics
 Disallow: /admin-email-diagnostics
 Disallow: /payment
 Disallow: /confirmation-required
+Disallow: /auth/callback
+Disallow: /confirm-email
+Disallow: /reset-password
+Disallow: /installer-app
 
 Sitemap: https://www.zandopluscg.com/sitemap.xml

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -162,15 +163,20 @@ const ResetPasswordPage = () => {
 
   if (viewState === 'checking') {
     return (
-      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
-        <Loader2 className="w-12 h-12 animate-spin text-custom-green-500 mb-4" />
-        <p className="text-gray-600">Vérification sécurisée...</p>
-      </div>
+      <>
+        <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
+        <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+          <Loader2 className="w-12 h-12 animate-spin text-custom-green-500 mb-4" />
+          <p className="text-gray-600">Vérification sécurisée...</p>
+        </div>
+      </>
     );
   }
 
   if (viewState === 'request' || viewState === 'sent') {
       return (
+        <>
+        <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
         <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
             <Card className="shadow-2xl border-t-4 border-custom-green-500">
@@ -246,11 +252,14 @@ const ResetPasswordPage = () => {
             </Card>
           </motion.div>
         </div>
+        </>
       );
   }
 
   if (updateSuccess) {
      return (
+        <>
+        <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
         <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-4">
          <Card className="w-full max-w-md shadow-lg border-t-4 border-custom-green-500">
             <CardHeader className="text-center">
@@ -267,10 +276,16 @@ const ResetPasswordPage = () => {
             </CardContent>
          </Card>
       </div>
+      </>
      )
   }
 
   return (
+    <>
+    <Helmet>
+      <title>Réinitialisation du mot de passe - Zando+ Congo</title>
+      <meta name="robots" content="noindex, nofollow" />
+    </Helmet>
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -321,6 +336,7 @@ const ResetPasswordPage = () => {
         </Card>
       </motion.div>
     </div>
+    </>
   );
 };
 

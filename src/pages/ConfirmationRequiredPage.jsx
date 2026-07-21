@@ -20,6 +20,7 @@ const ConfirmationRequiredPage = () => {
     <>
       <Helmet>
         <title>Confirmation Requise - Zando+ Congo</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Vérifiez votre boîte de réception pour confirmer votre compte Zando+ Congo." />
       </Helmet>
       <div className="min-h-[calc(100vh-200px)] flex items-start sm:items-center justify-center bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 px-4 py-12">

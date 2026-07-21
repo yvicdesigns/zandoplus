@@ -240,6 +240,17 @@ const SellerShopPage = () => {
       <Helmet>
         <title>Boutique de {seller.name} - Zando+ Congo</title>
         <meta name="description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
+        <link rel="canonical" href={`https://www.zandopluscg.com/seller/${seller.id}`} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={`https://www.zandopluscg.com/seller/${seller.id}`} />
+        <meta property="og:title" content={`Boutique de ${seller.name} - Zando+ Congo`} />
+        <meta property="og:description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
+        <meta property="og:image" content={seller.banner || seller.avatar || 'https://www.zandopluscg.com/og-image.jpg'} />
+        <meta property="og:site_name" content="Zando+ Congo" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Boutique de ${seller.name} - Zando+ Congo`} />
+        <meta name="twitter:description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
+        <meta name="twitter:image" content={seller.banner || seller.avatar || 'https://www.zandopluscg.com/og-image.jpg'} />
       </Helmet>
       <div className="min-h-screen bg-slate-50">
         <motion.div 

@@ -21,17 +21,15 @@ export default async function handler(req, res) {
   ];
 
   let listingUrls = [];
+  let sellerUrls = [];
 
   if (supabaseUrl && supabaseKey) {
+    const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
+
     try {
       const response = await fetch(
         `${supabaseUrl}/rest/v1/listings?status=eq.active&select=id,updated_at&order=created_at.desc&limit=1000`,
-        {
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-          },
-        }
+        { headers }
       );
       const listings = await response.json();
       if (Array.isArray(listings)) {
@@ -45,9 +43,31 @@ export default async function handler(req, res) {
     } catch {
       // On error, proceed with static pages only
     }
+
+    try {
+      // Sellers who have at least one active listing
+      const sellerRes = await fetch(
+        `${supabaseUrl}/rest/v1/listings?status=eq.active&select=seller_id,updated_at&order=updated_at.desc&limit=2000`,
+        { headers }
+      );
+      const sellerListings = await sellerRes.json();
+      if (Array.isArray(sellerListings)) {
+        const seen = new Set();
+        sellerUrls = sellerListings
+          .filter((l) => l.seller_id && !seen.has(l.seller_id) && seen.add(l.seller_id))
+          .map((l) => ({
+            loc: `https://www.zandopluscg.com/seller/${l.seller_id}`,
+            lastmod: l.updated_at ? l.updated_at.split('T')[0] : undefined,
+            changefreq: 'weekly',
+            priority: '0.6',
+          }));
+      }
+    } catch {
+      // On error, skip seller pages
+    }
   }
 
-  const allUrls = [...staticPages, ...listingUrls];
+  const allUrls = [...staticPages, ...listingUrls, ...sellerUrls];
 
   const urlEntries = allUrls
     .map((u) => {

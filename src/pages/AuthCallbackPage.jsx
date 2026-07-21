@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, WifiOff } from 'lucide-react';
@@ -37,6 +38,8 @@ const AuthCallbackPage = () => {
 
   if (stage === 'failed') {
     return (
+      <>
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-6 text-center">
         <WifiOff className="w-12 h-12 text-gray-400" />
         <div>
@@ -50,16 +53,20 @@ const AuthCallbackPage = () => {
           Retour à l'accueil
         </Button>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+    <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
       <Loader2 className="w-10 h-10 animate-spin text-custom-green-500" />
       <p className="text-sm text-gray-500">
         {stage === 'slow' ? 'Connexion lente, patience...' : 'Connexion en cours...'}
       </p>
     </div>
+    </>
   );
 };
 

@@ -99,6 +99,7 @@ const PwaInstallPage = () => {
     <>
       <Helmet>
         <title>Installer l'application Zando+ Congo</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="Suivez les instructions pour installer l'application Zando+ sur votre appareil mobile pour un accès rapide et facile." />
         <meta property="og:title" content="Installer l'application Zando+ Congo" />
         <meta property="og:description" content="Suivez les instructions pour installer l'application Zando+ sur votre appareil mobile pour un accès rapide et facile." />
