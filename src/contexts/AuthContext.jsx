@@ -156,6 +156,12 @@ export const AuthProvider = ({ children }) => {
         resetSafety();
         setSession(newSession);
         if (newSession?.user) {
+            // Same user already fully loaded — just clear loading flags, no re-fetch.
+            // Check BEFORE setUserSafe so userRef hasn't been overwritten yet.
+            if (userRef.current?.id === newSession.user.id) {
+                if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
+                return;
+            }
             // Show user IMMEDIATELY from session metadata (no network needed).
             // Google OAuth provides full_name + avatar_url in user_metadata.
             const meta = newSession.user.user_metadata || {};
@@ -167,13 +173,10 @@ export const AuthProvider = ({ children }) => {
             };
             if (mounted) setUserSafe(immediateUser);
             if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
-            // Skip DB fetch if the same user is already loaded (prevents double call when
-            // both onAuthStateChange and getSession().then() fire for the same session).
-            if (userRef.current?.id === newSession.user.id) return;
             const fullUser = await fetchUserProfile(newSession.user);
             if (mounted) setUserSafe(fullUser);
         } else {
-            if (mounted) setUser(null);
+            if (mounted) setUserSafe(null); // resets userRef so re-login re-fetches profile
             if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
         }
     };
