@@ -69,8 +69,9 @@ const EditSiteSettingsDialog = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="whatsapp_number">Numéro WhatsApp</Label>
-              <Input id="whatsapp_number" {...register('whatsapp_number')} />
+              <Label htmlFor="whatsapp_number">📱 Numéro de paiement MoMo (Airtel / MTN)</Label>
+              <Input id="whatsapp_number" placeholder="+242XXXXXXXXX" {...register('whatsapp_number')} />
+              <p className="text-xs text-gray-500">Numéro affiché aux clients pour envoyer les paiements escrow.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="logo_url">URL du Logo</Label>
