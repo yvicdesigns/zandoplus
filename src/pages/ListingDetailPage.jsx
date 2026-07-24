@@ -124,7 +124,7 @@ const ListingDetailPage = () => {
   }, [listing?.id, fetchReviews]);
 
   const handleReviewSubmit = async (reviewData) => {
-    const { error } = await supabase.from('reviews').insert([reviewData]);
+    const { error } = await supabase.from('reviews').insert([{ ...reviewData, verified_purchase: true }]);
     if (error) {
       toast({ title: 'Erreur', description: 'Impossible de soumettre votre avis.', variant: 'destructive' });
       throw error;

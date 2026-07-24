@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { ShoppingBag as LoadingIcon, ArrowLeft, Calendar, MapPin, Shield, Star, Phone, Loader2, Share2, Copy, Check } from 'lucide-react';
+import { ShoppingBag as LoadingIcon, ArrowLeft, Calendar, MapPin, Shield, Star, Phone, Loader2, Share2, Copy, Check, MessageSquare } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import ReviewItem from '@/components/reviews/ReviewItem';
+import StarRating from '@/components/reviews/StarRating';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -128,6 +130,7 @@ const SellerShopPage = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ratingInfo, setRatingInfo] = useState({ average_rating: 0, review_count: 0 });
+  const [sellerReviews, setSellerReviews] = useState([]);
   const [isCalling, setIsCalling] = useState(false);
 
   useEffect(() => {
@@ -166,8 +169,9 @@ const SellerShopPage = () => {
           .order('created_at', { ascending: false }),
         supabase
           .from('reviews')
-          .select('rating')
-          .eq('seller_id', profileId),
+          .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, avatar_url)')
+          .eq('seller_id', profileId)
+          .order('created_at', { ascending: false }),
       ]);
 
       const formattedSeller = {
@@ -187,6 +191,7 @@ const SellerShopPage = () => {
       if (ratingData && ratingData.length > 0) {
         const avg = ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length;
         setRatingInfo({ average_rating: avg, review_count: ratingData.length });
+        setSellerReviews(ratingData);
       }
 
       setLoading(false);
@@ -366,6 +371,31 @@ const SellerShopPage = () => {
               </div>
             )}
           </motion.div>
+
+          {sellerReviews.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-10"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <MessageSquare className="w-6 h-6 text-custom-green-600" />
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Avis clients ({ratingInfo.review_count})
+                </h2>
+                <div className="flex items-center gap-1.5 ml-2">
+                  <StarRating rating={ratingInfo.average_rating} size={18} />
+                  <span className="font-semibold text-gray-700">{ratingInfo.average_rating.toFixed(1)}</span>
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {sellerReviews.map(review => (
+                  <ReviewItem key={review.id} review={review} />
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </>
