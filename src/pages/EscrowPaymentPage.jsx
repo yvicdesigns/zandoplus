@@ -136,6 +136,16 @@ const EscrowPaymentPage = () => {
         },
       }).catch(() => {});
 
+      // Push notification to seller (fire-and-forget)
+      supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: listing.user_id,
+          title: '🛒 Nouvelle commande !',
+          message: `${listing.title} — paiement reçu, à préparer.`,
+          url: '/transactions',
+        },
+      }).catch(() => {});
+
       setSubmitted(true);
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });

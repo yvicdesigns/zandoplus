@@ -34,15 +34,25 @@ const MessageInput = ({ conversation, onMessageSent }) => {
       if(onMessageSent) {
           onMessageSent();
       }
-      // Notify receiver by email (fire-and-forget, non-blocking)
+      // Notify receiver by email + push (fire-and-forget, non-blocking)
       const receiverId = conversation.participant?.id;
+      const senderName = user.full_name || user.email?.split('@')[0] || 'Un utilisateur';
       if (receiverId && receiverId !== user.id) {
         supabase.functions.invoke('notify-new-message', {
           body: {
             receiver_id: receiverId,
-            sender_name: user.full_name || user.email?.split('@')[0] || 'Un utilisateur',
+            sender_name: senderName,
             conversation_id: conversation.id,
             message_preview: messageText.slice(0, 100),
+          },
+        }).catch(() => {});
+
+        supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: receiverId,
+            title: `💬 ${senderName}`,
+            message: messageText.slice(0, 80),
+            url: `/messages/${conversation.id}`,
           },
         }).catch(() => {});
       }
