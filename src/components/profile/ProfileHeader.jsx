@@ -112,10 +112,10 @@ const ProfileHeader = memo(({
   const displayInitials = displayName ? displayName.charAt(0).toUpperCase() : 'U';
 
   const statItems = [
-    { label: 'Annonces Actives', value: stats?.activeListingsCount || 0, icon: Eye, color: 'from-blue-400 to-blue-600' },
-    { label: 'Annonces Vendues', value: stats?.soldListingsCount || 0, icon: DollarSign, color: 'from-green-400 to-green-600' },
-    { label: 'Messages', value: stats?.messagesCount || 0, icon: MessageCircle, color: 'from-purple-400 to-purple-600' },
-    { label: 'Favoris', value: stats?.favoritesCount || 0, icon: Heart, color: 'from-pink-400 to-pink-600' }
+    { label: 'Annonces Actives', value: stats?.activeListingsCount || 0, icon: Eye, color: 'from-blue-400 to-blue-600', href: '/profile?tab=listings' },
+    { label: 'Annonces Vendues', value: stats?.soldListingsCount || 0, icon: DollarSign, color: 'from-green-400 to-green-600', href: '/transactions' },
+    { label: 'Messages', value: stats?.messagesCount || 0, icon: MessageCircle, color: 'from-purple-400 to-purple-600', href: '/messages' },
+    { label: 'Favoris', value: stats?.favoritesCount || 0, icon: Heart, color: 'from-pink-400 to-pink-600', href: '/profile?tab=favorites' },
   ];
 
   return (
@@ -228,16 +228,17 @@ const ProfileHeader = memo(({
         <div className="mt-8 border-y py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {statItems.map((stat, index) => (
-                <div
+                <Link
                   key={stat.label}
-                  className="flex flex-col items-center"
+                  to={stat.href}
+                  className="flex flex-col items-center group cursor-pointer"
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-sm bg-gradient-to-br ${stat.color} text-white`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-sm bg-gradient-to-br ${stat.color} text-white group-hover:scale-110 transition-transform`}>
                     <stat.icon className="w-6 h-6"/>
                   </div>
                   <p className="text-lg md:text-xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                </div>
+                  <p className="text-xs text-gray-500 group-hover:text-custom-green-600 transition-colors">{stat.label}</p>
+                </Link>
             ))}
             </div>
         </div>
