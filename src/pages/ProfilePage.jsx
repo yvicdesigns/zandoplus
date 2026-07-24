@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListings } from '@/contexts/ListingsContext';
 import { supabase } from '@/lib/customSupabaseClient';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileTabs from '@/components/profile/ProfileTabs';
@@ -18,7 +18,12 @@ const ProfilePage = () => {
   const { user, updateUser, isLoading: authLoading } = useAuth();
   const { listings, favorites, loading: listingsLoading } = useListings();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  const tabFromUrl = searchParams.get('tab') === 'favorites' ? 'favorites'
+    : searchParams.get('tab') === 'listings' ? 'active'
+    : null;
 
   const [messagesCount, setMessagesCount] = useState(0);
   const [pendingListings, setPendingListings] = useState([]);
@@ -267,6 +272,7 @@ const ProfilePage = () => {
             favoriteListings={favoriteListings}
             pendingListings={pendingListings}
             loading={listingsLoading}
+            defaultTab={tabFromUrl}
           />
         </div>
       </div>

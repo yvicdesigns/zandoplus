@@ -21,14 +21,16 @@ const EmptyState = ({ icon: Icon, title, description, buttonText, buttonLink }) 
   </div>
 );
 
-const ProfileTabs = ({ activeListings, soldListings, favoriteListings, pendingListings = [], loading }) => {
+const ProfileTabs = ({ activeListings, soldListings, favoriteListings, pendingListings = [], loading, defaultTab }) => {
+  const resolvedDefault = defaultTab || (pendingListings.length > 0 ? 'pending' : 'active');
+
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
         <CardTitle>Mes Annonces</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={pendingListings.length > 0 ? 'pending' : 'active'} className="w-full">
+        <Tabs defaultValue={resolvedDefault} className="w-full">
           <TabsList className={`grid w-full ${pendingListings.length > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
             {pendingListings.length > 0 && (
               <TabsTrigger value="pending" className="relative data-[state=active]:text-amber-600">
