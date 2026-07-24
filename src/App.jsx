@@ -244,6 +244,7 @@ const AppContent = () => {
                         <Route path="/smtp-test" element={<SmtpTestPage />} />
                         <Route path="/admin/diagnostics" element={<AdminDiagnosticsPage />} />
                         <Route path="/admin/email-diagnostics" element={<AdminEmailDiagnosticsPage />} />
+                        <Route path="/make-admin" element={<MakeAdminPage />} />
                     </Route>
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
                     <Route path="/boost-payment" element={<BoostPaymentConfirmationPage />} />
@@ -259,7 +260,6 @@ const AppContent = () => {
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/cart/checkout" element={<CartCheckoutPage />} />
                     </Route>
-                    <Route path="/make-admin" element={<MakeAdminPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />

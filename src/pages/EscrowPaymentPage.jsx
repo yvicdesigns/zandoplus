@@ -124,6 +124,18 @@ const EscrowPaymentPage = () => {
       });
       if (proofError) throw proofError;
 
+      // Notify buyer + seller by email (fire-and-forget)
+      supabase.functions.invoke('notify-purchase', {
+        body: {
+          buyer_id: user.id,
+          seller_id: listing.user_id,
+          listing_title: listing.title,
+          listing_price: listing.price,
+          currency: listing.currency || 'FCFA',
+          transaction_id: txId,
+        },
+      }).catch(() => {});
+
       setSubmitted(true);
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });

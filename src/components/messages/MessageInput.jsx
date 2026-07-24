@@ -17,7 +17,7 @@ const MessageInput = ({ conversation, onMessageSent }) => {
     if (!messageText.trim() || !user || !conversation || isSending) return;
 
     setIsSending(true);
-    
+
     const { error } = await supabase.rpc('create_conversation_and_message', {
       p_content: messageText,
       p_conversation_id: conversation.id,
@@ -33,6 +33,18 @@ const MessageInput = ({ conversation, onMessageSent }) => {
       setMessageText('');
       if(onMessageSent) {
           onMessageSent();
+      }
+      // Notify receiver by email (fire-and-forget, non-blocking)
+      const receiverId = conversation.participant?.id;
+      if (receiverId && receiverId !== user.id) {
+        supabase.functions.invoke('notify-new-message', {
+          body: {
+            receiver_id: receiverId,
+            sender_name: user.full_name || user.email?.split('@')[0] || 'Un utilisateur',
+            conversation_id: conversation.id,
+            message_preview: messageText.slice(0, 100),
+          },
+        }).catch(() => {});
       }
     }
   };
