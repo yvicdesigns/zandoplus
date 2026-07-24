@@ -76,7 +76,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           localStorage.setItem('verificationData', JSON.stringify(verificationData));
 
           await initiateMobilePayment(
-            5000,
+            10000,
             'Frais de vérification de compte',
             { type: 'verification' }
           );
@@ -221,7 +221,7 @@ import React, { useState, useEffect, useCallback } from 'react';
                         Préparation...
                       </>
                     ) : (
-                      "Payer 5000 FCFA pour vérifier"
+                      "Payer 10 000 FCFA pour vérifier"
                     )}
                   </Button>
               </div>

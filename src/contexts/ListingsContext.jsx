@@ -67,18 +67,26 @@ export const ListingsProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // Geo-prioritization: when no location filter and sort is "newest",
-      // float listings from the user's city to the top.
+      // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
       const userCity = user?.location?.trim().toLowerCase();
       const shouldGeoSort = userCity && !filters.location && filters.sortBy === 'newest';
+
+      let sorted = data;
 
       if (shouldGeoSort) {
         const local = data.filter(l => l.location?.toLowerCase().includes(userCity));
         const rest  = data.filter(l => !l.location?.toLowerCase().includes(userCity));
-        setListings([...local, ...rest]);
-      } else {
-        setListings(data);
+        sorted = [...local, ...rest];
       }
+
+      // Vendeurs vérifiés flottent en haut sur tri par défaut
+      if (filters.sortBy === 'newest' || filters.sortBy === 'popularity') {
+        const verified = sorted.filter(l => l.seller?.verified);
+        const others   = sorted.filter(l => !l.seller?.verified);
+        sorted = [...verified, ...others];
+      }
+
+      setListings(sorted);
     } catch (error) {
       console.error('Error fetching listings:', error.message);
       logError(error, { context: 'fetchListings' });
