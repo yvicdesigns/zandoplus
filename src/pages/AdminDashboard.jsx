@@ -30,7 +30,7 @@ import {
   Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity,
   FileText, ClipboardCheck, CreditCard, LayoutGrid, Menu, X,
   ChevronRight, BarChart3, Home, Wallet, AlertTriangle, MapPin,
-  TrendingUp, ArrowRight, RefreshCw, Bell
+  TrendingUp, ArrowRight, RefreshCw, Bell, Globe
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
