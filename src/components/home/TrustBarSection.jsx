@@ -16,7 +16,7 @@ const TrustBarSection = () => (
           <React.Fragment key={item.title}>
             <div className="flex items-center gap-3 flex-1">
               <div className="w-16 h-16 bg-custom-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <img src={item.icon} alt="" className="w-28 h-28 object-contain" style={{ mixBlendMode: 'screen' }} />
+                <img src={item.icon} alt="" className="w-[200px] h-[200px] object-contain" style={{ mixBlendMode: 'screen' }} />
               </div>
               <div>
                 <p className="text-[12px] font-bold text-gray-900 leading-tight">{item.title}</p>
