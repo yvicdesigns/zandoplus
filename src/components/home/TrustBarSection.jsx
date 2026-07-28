@@ -15,8 +15,8 @@ const TrustBarSection = () => (
         {items.map((item, i) => (
           <React.Fragment key={item.title}>
             <div className="flex items-center gap-3 flex-1">
-              <div className="w-14 h-14 bg-custom-green-500 rounded-full flex items-center justify-center flex-shrink-0 isolate">
-                <img src={item.icon} alt="" className="w-40 h-40 object-contain" style={{ mixBlendMode: 'screen' }} />
+              <div className="w-14 h-14 bg-custom-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <img src={item.icon} alt="" className="w-9 h-9 object-contain" />
               </div>
               <div>
                 <p className="text-[12px] font-bold text-gray-900 leading-tight">{item.title}</p>
