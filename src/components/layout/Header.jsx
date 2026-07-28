@@ -1,12 +1,13 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut, ShoppingBag, LogIn, LayoutDashboard, ChevronDown, KeyRound, ShieldCheck, Wallet, ShoppingCart } from 'lucide-react';
+import {
+  Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut,
+  ShoppingBag, LogIn, LayoutDashboard, Heart, ShoppingCart,
+  ShieldCheck, Wallet, KeyRound, ChevronDown, Facebook, Instagram, Music,
+} from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import NotificationsPopover from '@/components/notifications/NotificationsPopover';
@@ -15,36 +16,53 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useUnreadMessages from '@/hooks/useUnreadMessages';
 import { getCategoryEmoji } from '@/components/post-ad/categoryIcons';
 
-// Isolated SearchForm component to prevent parent re-renders on keystroke
-const SearchForm = memo(({ className, onSearchSubmit, initialValue = '' }) => {
-  const [searchQuery, setSearchQuery] = useState(initialValue);
+/* ── Barre de recherche isolée ── */
+const SearchBar = memo(({ onSubmit }) => {
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('');
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/listings?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-      if (onSearchSubmit) onSearchSubmit();
+    if (q.trim()) {
+      const params = new URLSearchParams({ search: q.trim() });
+      if (cat) params.set('category', cat);
+      navigate(`/listings?${params}`);
+      setQ('');
+      onSubmit?.();
     }
   };
 
   return (
-    <form onSubmit={handleSearch} className={className}>
-      <div className="relative w-full">
-        <Input 
-          type="text" 
-          placeholder="Rechercher des produits..." 
-          value={searchQuery} 
-          onChange={e => setSearchQuery(e.target.value)} 
-          className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-custom-green-200 focus:border-custom-green-400 bg-white shadow-sm transition-colors duration-200" 
-          autoComplete="off"
-        />
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-custom-green-400 w-5 h-5 pointer-events-none" />
-        <Button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-6 gradient-bg hover:opacity-90">
-          Rechercher
-        </Button>
-      </div>
+    <form onSubmit={handleSubmit} className="flex flex-1 max-w-[640px]">
+      <select
+        value={cat}
+        onChange={e => setCat(e.target.value)}
+        className="border-2 border-custom-green-500 border-r-0 rounded-l-lg px-3 text-[13px] text-gray-600 bg-white h-[44px] cursor-pointer outline-none shrink-0 hidden md:block"
+      >
+        <option value="">Toutes les catégories</option>
+        <option value="electronics">Électronique</option>
+        <option value="phones-tablets">Téléphones</option>
+        <option value="fashion">Mode</option>
+        <option value="maison-meubles">Maison</option>
+        <option value="vehicles">Véhicules</option>
+        <option value="real-estate">Immobilier</option>
+        <option value="beaute-soins">Beauté</option>
+        <option value="jobs">Emplois</option>
+      </select>
+      <input
+        type="text"
+        placeholder="Rechercher un produit, une marque..."
+        value={q}
+        onChange={e => setQ(e.target.value)}
+        className="flex-1 border-2 border-custom-green-500 border-l-0 md:border-l-0 border-r-0 px-4 text-[13px] outline-none h-[44px] bg-white min-w-0 rounded-l-lg md:rounded-l-none"
+      />
+      <button
+        type="submit"
+        className="w-[50px] h-[44px] bg-custom-green-500 text-white flex items-center justify-center rounded-r-lg hover:bg-custom-green-600 transition-colors shrink-0"
+      >
+        <Search className="w-5 h-5" />
+      </button>
     </form>
   );
 });
@@ -56,237 +74,285 @@ const Header = memo(({ onLoginClick }) => {
   const unreadCount = useUnreadMessages();
   const { siteSettings, loading: siteSettingsLoading } = useSiteSettings();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  // Directly derive display values to avoid useEffect flickering
   const { totalItems: cartCount } = useCart();
+
   const userName = user?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
   const userEmail = user?.email || '';
   const userAvatar = user?.avatar_url || user?.user_metadata?.avatar_url || '';
   const isAdmin = user?.user_metadata?.is_admin || user?.role === 'admin' || false;
-  const UserAvatarFallback = userName ? userName.charAt(0).toUpperCase() : 'U';
-  const logoUrl = siteSettings?.logo_url;
-
-  // Optimized scroll handler with throttling and hysteresis
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          setIsScrolled(prev => {
-            // Hysteresis buffer to prevent rapid toggling
-            if (scrollY > 20 && !prev) return true;
-            if (scrollY < 10 && prev) return false;
-            return prev;
-          });
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const initials = userName.charAt(0).toUpperCase();
 
   const handleLoginClick = useCallback(() => {
-    if (onLoginClick) onLoginClick();
-    if (isMenuOpen) setIsMenuOpen(false);
-  }, [onLoginClick, isMenuOpen]);
+    onLoginClick?.();
+    setIsMenuOpen(false);
+  }, [onLoginClick]);
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast({
-        title: "Déconnexion réussie",
-        description: "À bientôt !"
-      });
+      toast({ title: 'Déconnexion réussie', description: 'À bientôt !' });
       navigate('/');
-    } catch (error) {
-      toast({
-        title: "Erreur de déconnexion",
-        description: error.message || "Une erreur s'est produite.",
-        variant: "destructive"
-      });
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     }
-    if (isMenuOpen) setIsMenuOpen(false);
+    setIsMenuOpen(false);
   };
 
-  const handleSearchSubmit = useCallback(() => {
-    setIsMenuOpen(false);
-  }, []);
-
-  const mainCategories = [
-    { slug: 'electronics',    name: 'Électronique',  path: '/listings?category=electronics' },
-    { slug: 'phones-tablets', name: 'Téléphones',    path: '/listings?category=phones-tablets' },
-    { slug: 'vehicles',       name: 'Véhicules',     path: '/listings?category=vehicles' },
-    { slug: 'real-estate',    name: 'Immobilier',    path: '/listings?category=real-estate' },
-    { slug: 'fashion',        name: 'Mode',          path: '/listings?category=fashion' },
-    { slug: 'jobs',           name: 'Emplois',       path: '/listings?category=jobs' },
+  const navLinks = [
+    { label: 'Accueil',                href: '/' },
+    { label: 'Offres du jour 🔥',      href: '/listings?sort=views' },
+    { label: 'Nouveautés',             href: '/listings?sort=newest' },
+    { label: 'Meilleures ventes',      href: '/listings?sort=popular' },
+    { label: 'Boutiques officielles',  href: '/shops' },
+    { label: 'Aide & Support',         href: '/help' },
   ];
 
-  const moreCategories = [
-    { slug: 'maison-meubles',          name: 'Maison & Meubles',         path: '/listings?category=maison-meubles' },
-    { slug: 'beaute-soins',            name: 'Beauté & Soins',           path: '/listings?category=beaute-soins' },
-    { slug: 'services',                name: 'Services',                 path: '/listings?category=services' },
-    { slug: 'reparation-construction', name: 'Réparation',               path: '/listings?category=reparation-construction' },
-    { slug: 'equipement-commercial',   name: 'Équipement Commercial',    path: '/listings?category=equipement-commercial' },
-    { slug: 'loisirs-sports',          name: 'Loisirs & Sports',         path: '/listings?category=loisirs-sports' },
-    { slug: 'bebes-enfants',           name: 'Bébés & Enfants',          path: '/listings?category=bebes-enfants' },
-    { slug: 'animaux',                 name: 'Animaux',                  path: '/listings?category=animaux' },
-    { slug: 'agro-alimentaire',        name: 'Agroalimentaire',          path: '/listings?category=agro-alimentaire' },
-    { slug: 'traditional-medicine',    name: 'Médecine Traditionnelle',  path: '/listings?category=traditional-medicine' },
+  const allCategories = [
+    { slug: 'electronics',            name: 'Électronique' },
+    { slug: 'phones-tablets',         name: 'Téléphones' },
+    { slug: 'vehicles',               name: 'Véhicules' },
+    { slug: 'real-estate',            name: 'Immobilier' },
+    { slug: 'fashion',                name: 'Mode' },
+    { slug: 'jobs',                   name: 'Emplois' },
+    { slug: 'maison-meubles',         name: 'Maison & Meubles' },
+    { slug: 'beaute-soins',           name: 'Beauté & Soins' },
+    { slug: 'services',               name: 'Services' },
+    { slug: 'loisirs-sports',         name: 'Loisirs & Sports' },
+    { slug: 'bebes-enfants',          name: 'Bébés & Enfants' },
+    { slug: 'animaux',                name: 'Animaux' },
+    { slug: 'agro-alimentaire',       name: 'Agroalimentaire' },
+    { slug: 'traditional-medicine',   name: 'Médecine Traditionnelle' },
+    { slug: 'equipement-commercial',  name: 'Équipement Commercial' },
+    { slug: 'reparation-construction',name: 'Réparation' },
   ];
 
   return (
-    <header 
-      className={`sticky top-0 left-0 right-0 z-50 transition-colors duration-200 ${
-        isScrolled || isMenuOpen ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-      } pt-[env(safe-area-inset-top)]`}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="/" className="flex items-center space-x-2 shrink-0">
+    <header className="sticky top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)]">
+
+      {/* ── 1. Barre d'annonces verte ── */}
+      <div className="bg-custom-green-500 text-white text-[12px] font-medium hidden md:block">
+        <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <span>🚚 Livraison rapide à Brazzaville et partout au Congo</span>
+            <div className="w-px h-3.5 bg-white/25" />
+            <span>🔒 Paiements 100% sécurisés</span>
+            <div className="w-px h-3.5 bg-white/25" />
+            <span>🎧 Service client à votre écoute</span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-white/70 text-[11px]">Suivez-nous</span>
+            <a href="https://www.facebook.com/profile.php?id=61577391354742" target="_blank" rel="noopener noreferrer"
+              className="w-[22px] h-[22px] bg-white/15 rounded flex items-center justify-center hover:bg-white/25 transition-colors">
+              <Facebook className="w-3 h-3 text-white" />
+            </a>
+            <a href="https://www.instagram.com/zandopluscongo/" target="_blank" rel="noopener noreferrer"
+              className="w-[22px] h-[22px] bg-white/15 rounded flex items-center justify-center hover:bg-white/25 transition-colors">
+              <Instagram className="w-3 h-3 text-white" />
+            </a>
+            <a href="https://www.tiktok.com/@zandopluscongo" target="_blank" rel="noopener noreferrer"
+              className="w-[22px] h-[22px] bg-white/15 rounded flex items-center justify-center hover:bg-white/25 transition-colors">
+              <Music className="w-3 h-3 text-white" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 2. Header principal blanc ── */}
+      <div className="bg-card-bg border-b border-gray-200">
+        <div className="max-w-[1280px] mx-auto px-6 py-3 flex items-center gap-5">
+
+          {/* Logo */}
+          <Link to="/" className="flex flex-col shrink-0 text-decoration-none">
             {siteSettingsLoading ? (
-              <Skeleton className="h-8 md:h-10 lg:h-12 w-24" />
-            ) : logoUrl ? (
-                <img src={logoUrl} alt="Logo Zando+" className="h-8 md:h-10 lg:h-12 w-auto object-contain" />
+              <Skeleton className="h-8 w-24" />
+            ) : siteSettings?.logo_url ? (
+              <img src={siteSettings.logo_url} alt="Zando+" className="h-10 w-auto object-contain" />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-custom-green-500 to-custom-green-600 rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-white" />
-              </div>
+              <>
+                <span className="text-[28px] font-black text-custom-green-500 leading-none tracking-tight">
+                  Zando<span className="text-accent-yellow">+</span>
+                </span>
+                <span className="text-[10px] text-gray-400 mt-0.5 leading-none">Plus de ventes, moins de tracas</span>
+              </>
             )}
           </Link>
 
-          <div className="hidden md:block flex-1 max-w-2xl mx-8">
-            <SearchForm />
+          {/* Barre de recherche */}
+          <div className="flex-1 hidden md:flex justify-center">
+            <SearchBar onSubmit={() => setIsMenuOpen(false)} />
           </div>
 
-          <nav className="hidden lg:flex items-center space-x-4 shrink-0">
-            {!authPending && user ? (
+          {/* Actions droite */}
+          <div className="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
+            {authPending ? (
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+            ) : user ? (
               <>
-                <Link to="/post-ad">
-                  <Button className="gradient-bg hover:opacity-90 rounded-full px-6 transition-opacity">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Publier
-                  </Button>
-                </Link>
-                <Link to="/cart" className="relative group">
-                  <div className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <ShoppingCart className="w-6 h-6 text-gray-600 group-hover:text-custom-green-600 transition-colors" />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-custom-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                        {cartCount > 9 ? '9+' : cartCount}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-                <Link to="/messages" className="relative group">
-                  <div className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <MessageCircle className="w-6 h-6 text-gray-600 group-hover:text-custom-green-600 transition-colors" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </div>
-                </Link>
+                {/* Notifications */}
                 <NotificationsPopover />
-                <div className="relative group">
-                  <Avatar className="cursor-pointer w-10 h-10 border-2 border-transparent group-hover:border-custom-green-200 transition-all">
-                    <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
-                    <AvatarFallback>{UserAvatarFallback}</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
-                    <div className="p-3 border-b">
-                      <p className="font-semibold text-sm truncate">{userName}</p>
-                      <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+
+                {/* Messages */}
+                <Link to="/messages" className="relative hidden md:block">
+                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="text-[10px] mt-0.5">Messages</span>
+                  </div>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Panier */}
+                <Link to="/cart" className="relative hidden md:block">
+                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="text-[10px] mt-0.5">Panier</span>
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Avatar + dropdown */}
+                <div className="relative group hidden md:block">
+                  <div className="flex flex-col items-center cursor-pointer">
+                    <Avatar className="w-8 h-8 border-2 border-gray-200 group-hover:border-custom-green-400 transition-colors">
+                      <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
+                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[10px] text-gray-600 mt-0.5 max-w-[70px] truncate">{userName.split(' ')[0]}</span>
+                  </div>
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <p className="font-bold text-sm truncate">{userName}</p>
+                      <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
                     </div>
-                    <div className="py-2">
-                      <Link to="/profile" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                        <User className="w-4 h-4 mr-2" />
-                        Mon Profil
-                      </Link>
-                      <Link to="/messages" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Mes Messages
-                      </Link>
-                      <Link to="/transactions" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                        <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
-                        Mes Transactions
-                      </Link>
-                      <Link to="/wallet" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                        <Wallet className="w-4 h-4 mr-2 text-emerald-600" />
-                        Mon Portefeuille
-                      </Link>
-                      <Link to="/settings" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Paramètres
-                      </Link>
-                      {isAdmin && (
-                        <Link to="/admin" className="flex items-center px-3 py-2 text-sm hover:bg-gray-50">
-                          <LayoutDashboard className="w-4 h-4 mr-2" />
-                          Tableau de Bord Admin
+                    <div className="py-1.5">
+                      {[
+                        { to: '/profile',      icon: User,          label: 'Mon Profil' },
+                        { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
+                        { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
+                        { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
+                        { to: '/settings',     icon: Settings,      label: 'Paramètres' },
+                        ...(isAdmin ? [{ to: '/admin', icon: LayoutDashboard, label: 'Dashboard Admin' }] : []),
+                      ].map(({ to, icon: Icon, label }) => (
+                        <Link key={to} to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors">
+                          <Icon className="w-4 h-4 mr-2.5 opacity-60" />
+                          {label}
                         </Link>
-                      )}
-                      <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-50 text-red-600">
-                        <LogOut className="w-4 h-4 mr-2" />
+                      ))}
+                      <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors mt-1 border-t border-gray-100">
+                        <LogOut className="w-4 h-4 mr-2.5" />
                         Déconnexion
                       </button>
                     </div>
                   </div>
                 </div>
-              </>
-            ) : !authPending && !user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/reset-password" className="text-sm font-medium text-gray-500 hover:text-custom-green-600 transition-colors">
-                  Mot de passe oublié ?
-                </Link>
-                <Button onClick={handleLoginClick} className="gradient-bg hover:opacity-90 rounded-full px-6 transition-opacity">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Connexion / Inscription
-                </Button>
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
-            )}
-          </nav>
 
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </Button>
+                {/* Publier */}
+                <Link to="/post-ad" className="hidden md:block shrink-0">
+                  <button className="h-[38px] px-5 bg-custom-green-500 text-white text-[13px] font-bold rounded-lg flex items-center gap-1.5 hover:bg-custom-green-600 transition-colors">
+                    <Plus className="w-4 h-4" />
+                    Publier
+                  </button>
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Favoris (visiteur) */}
+                <div className="hidden md:flex flex-col items-center text-gray-500 cursor-pointer hover:text-custom-green-500 transition-colors" onClick={handleLoginClick}>
+                  <Heart className="w-5 h-5" />
+                  <span className="text-[10px] mt-0.5">Favoris</span>
+                </div>
+
+                {/* Panier (visiteur) */}
+                <Link to="/cart" className="relative hidden md:block">
+                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="text-[10px] mt-0.5">Panier</span>
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Compte (visiteur) */}
+                <button onClick={handleLoginClick} className="hidden md:flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <User className="w-5 h-5" />
+                  <span className="text-[10px] mt-0.5">Se connecter</span>
+                </button>
+              </>
+            )}
+
+            {/* Burger mobile */}
+            <button className="md:hidden p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
+            </button>
+          </div>
         </div>
 
-        <div className="hidden md:flex items-center justify-center space-x-6 py-3 border-t border-green-100">
-          {mainCategories.map(category => (
-            <Link key={category.slug} to={category.path} className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-custom-green-600 transition-colors">
-              <span>{getCategoryEmoji(category.slug)}</span>
-              {category.name}
-            </Link>
-          ))}
-          {moreCategories.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center text-sm font-medium text-gray-600 hover:text-custom-green-600 transition-colors outline-none focus:outline-none">
-                Plus
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {moreCategories.map(category => (
-                  <DropdownMenuItem key={category.slug} asChild>
-                    <Link to={category.path} className="flex items-center gap-2">
-                      <span>{getCategoryEmoji(category.slug)}</span>
-                      {category.name}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+        {/* Barre de recherche mobile */}
+        <div className="md:hidden px-4 pb-3">
+          <SearchBar onSubmit={() => setIsMenuOpen(false)} />
         </div>
       </div>
 
+      {/* ── 3. Navbar verte ── */}
+      <div className="bg-card-bg border-b border-gray-200 hidden md:block">
+        <div className="max-w-[1280px] mx-auto px-6 flex items-center">
+
+          {/* Bouton toutes catégories */}
+          <div className="relative group shrink-0 mr-1">
+            <button className="flex items-center gap-2 bg-custom-green-500 text-white text-[13px] font-semibold px-4 py-3 rounded-md hover:bg-custom-green-600 transition-colors">
+              <Menu className="w-4 h-4" />
+              Toutes les catégories
+            </button>
+            {/* Dropdown catégories */}
+            <div className="absolute left-0 top-full w-64 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+              {allCategories.map(({ slug, name }) => (
+                <Link
+                  key={slug}
+                  to={`/listings?category=${slug}`}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors"
+                >
+                  <span className="text-base">{getCategoryEmoji(slug)}</span>
+                  {name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Liens de navigation */}
+          <nav className="flex items-center">
+            {navLinks.map(({ label, href }) => {
+              const isActive = location.pathname === href || (href !== '/' && location.pathname + location.search === href);
+              return (
+                <Link
+                  key={href}
+                  to={href}
+                  className={`px-3.5 py-3 text-[13px] border-b-2 transition-colors whitespace-nowrap ${
+                    isActive
+                      ? 'text-custom-green-500 border-custom-green-500 font-bold'
+                      : 'text-gray-500 border-transparent hover:text-custom-green-500 hover:border-custom-green-200'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* ── Menu mobile ── */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -294,96 +360,72 @@ const Header = memo(({ onLoginClick }) => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden bg-white border-t border-green-100 shadow-lg overflow-hidden"
+            className="md:hidden bg-white border-t border-gray-100 shadow-lg overflow-hidden"
           >
-            <div className="container mx-auto px-4 py-4 max-h-[calc(100vh-5rem)] overflow-y-auto">
-              <div className="mb-4">
-                <SearchForm onSearchSubmit={handleSearchSubmit} />
+            <div className="px-4 py-4 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              {/* Catégories */}
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Catégories</p>
+              <div className="grid grid-cols-4 gap-1.5 mb-4">
+                {allCategories.slice(0, 12).map(({ slug, name }) => (
+                  <Link
+                    key={slug}
+                    to={`/listings?category=${slug}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl hover:bg-gray-50 text-center"
+                  >
+                    <span className="text-2xl">{getCategoryEmoji(slug)}</span>
+                    <span className="text-[10px] text-gray-500 leading-tight">{name}</span>
+                  </Link>
+                ))}
               </div>
 
-              <div className="mb-4">
-                <p className="px-1 pt-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Catégories</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {[...mainCategories, ...moreCategories].map(category => (
-                    <Link
-                      key={category.slug}
-                      to={category.path}
-                      className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl hover:bg-custom-green-50 transition-colors text-center"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <span className="text-2xl">{getCategoryEmoji(category.slug)}</span>
-                      <span className="text-[10px] font-medium text-gray-600 leading-tight">{category.name}</span>
+              {/* Navigation */}
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Navigation</p>
+              <div className="flex flex-col gap-1 mb-4">
+                {navLinks.map(({ label, href }) => (
+                  <Link key={href} to={href} onClick={() => setIsMenuOpen(false)}
+                    className="py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Compte */}
+              {!authPending && user ? (
+                <div className="border-t border-gray-100 pt-4 space-y-1">
+                  {[
+                    { to: '/profile',      icon: User,          label: 'Mon Profil' },
+                    { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
+                    { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier' },
+                    { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
+                    { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
+                    { to: '/settings',     icon: Settings,      label: 'Paramètres' },
+                    ...(isAdmin ? [{ to: '/admin', icon: LayoutDashboard, label: 'Dashboard Admin' }] : []),
+                  ].map(({ to, icon: Icon, label }) => (
+                    <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg">
+                      <Icon className="w-4 h-4 mr-2.5 opacity-60" />
+                      {label}
                     </Link>
                   ))}
-                </div>
-              </div>
-
-              {!authPending && user ? (
-                <div className="space-y-2">
                   <Link to="/post-ad" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full gradient-bg hover:opacity-90 rounded-full">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Publier Annonce
-                    </Button>
+                    <button className="w-full mt-2 h-[42px] bg-custom-green-500 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-2">
+                      <Plus className="w-4 h-4" /> Publier une annonce
+                    </button>
                   </Link>
-                  <Link to="/profile" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <User className="w-4 h-4 mr-2" />
-                    Mon Profil
-                  </Link>
-                  <Link to="/messages" className="flex items-center justify-between py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <span className="flex items-center">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Mes Messages
-                    </span>
-                    {unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                  <Link to="/transactions" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <ShieldCheck className="w-4 h-4 mr-2 text-green-600" />
-                    Mes Transactions
-                  </Link>
-                  <Link to="/wallet" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <Wallet className="w-4 h-4 mr-2 text-emerald-600" />
-                    Mon Portefeuille
-                  </Link>
-                  <Link to="/settings" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Paramètres
-                  </Link>
-                  {isAdmin && (
-                    <Link to="/admin" className="flex items-center py-2 px-3 text-sm hover:bg-gray-50 rounded-lg" onClick={() => setIsMenuOpen(false)}>
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      Tableau de Bord Admin
-                    </Link>
-                  )}
-                  <button onClick={handleLogout} className="flex items-center w-full py-2 px-3 text-sm hover:bg-gray-50 rounded-lg text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" />
+                  <button onClick={handleLogout} className="flex items-center w-full py-2.5 px-3 text-[13px] text-red-500 hover:bg-red-50 rounded-lg mt-1">
+                    <LogOut className="w-4 h-4 mr-2.5" />
                     Déconnexion
                   </button>
                 </div>
-              ) : !authPending && !user ? (
-                <div className="space-y-3">
-                  <Button onClick={handleLoginClick} className="w-full gradient-bg hover:opacity-90 rounded-full">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Connexion / Inscription
-                  </Button>
-                  <Link 
-                    to="/reset-password" 
-                    className="flex items-center justify-center py-2 px-3 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <KeyRound className="w-4 h-4 mr-2" />
-                    Mot de passe oublié ?
-                  </Link>
+              ) : !authPending ? (
+                <div className="border-t border-gray-100 pt-4">
+                  <button onClick={handleLoginClick}
+                    className="w-full h-[42px] bg-custom-green-500 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-2">
+                    <LogIn className="w-4 h-4" /> Connexion / Inscription
+                  </button>
                 </div>
-              ) : (
-                <div className="flex justify-center items-center p-4">
-                  <div className="w-8 h-8 border-4 border-custom-green-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
+              ) : null}
             </div>
           </motion.div>
         )}
