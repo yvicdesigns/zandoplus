@@ -242,21 +242,42 @@ const ListingDetailPage = () => {
             <div className="lg:col-span-5 space-y-4">
 
               {/* Badges */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {listing.negotiable && (
-                  <span className="bg-accent-yellow text-gray-900 text-[11px] font-black px-3 py-1 rounded-full">
-                    Négociable
-                  </span>
-                )}
-                {listing.seller?.verified && (
-                  <span className="flex items-center gap-1 bg-green-50 text-custom-green-600 text-[11px] font-bold px-2.5 py-1 rounded-full border border-custom-green-200">
-                    <BadgeCheck className="w-3.5 h-3.5" /> Produit certifié
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const discountPct = listing.original_price > listing.price
+                  ? Math.round((1 - listing.price / listing.original_price) * 100)
+                  : null;
+                const isBestSeller = (listing.views_count || 0) >= 100;
+                return (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {discountPct && (
+                      <span className="bg-red-500 text-white text-[11px] font-black px-2.5 py-1 rounded-full">
+                        -{discountPct}%
+                      </span>
+                    )}
+                    {isBestSeller && (
+                      <span className="bg-accent-yellow text-gray-900 text-[11px] font-black px-2.5 py-1 rounded-full">
+                        Meilleure vente
+                      </span>
+                    )}
+                    {listing.negotiable && (
+                      <span className="bg-gray-100 text-gray-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                        Négociable
+                      </span>
+                    )}
+                    {listing.seller?.verified && (
+                      <span className="flex items-center gap-1 bg-green-50 text-custom-green-600 text-[11px] font-bold px-2.5 py-1 rounded-full border border-custom-green-200">
+                        <BadgeCheck className="w-3.5 h-3.5" /> Produit certifié
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Titre */}
               <h1 className="text-[22px] font-black text-gray-900 leading-tight">{listing.title}</h1>
+
+              {/* Étoiles */}
+              {reviews.length > 0 && <Stars rating={averageRating} count={reviews.length} />}
 
               {/* Localisation + vues */}
               <div className="flex items-center gap-3 text-[12px] text-gray-500">
@@ -267,15 +288,23 @@ const ListingDetailPage = () => {
                 <span>{formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: fr })}</span>
               </div>
 
-              {/* Étoiles */}
-              {reviews.length > 0 && <Stars rating={averageRating} count={reviews.length} />}
-
               {/* Prix */}
               <div className="py-1">
-                <span className="text-[36px] font-black text-custom-green-500 leading-none tabular-nums">
-                  {(listing.price || 0).toLocaleString('fr-FR')}
-                </span>
-                <span className="text-[20px] font-bold text-custom-green-500 ml-2">{listing.currency || 'FCFA'}</span>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span className="text-[36px] font-black text-custom-green-500 leading-none tabular-nums">
+                    {(listing.price || 0).toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                  </span>
+                  {listing.original_price > listing.price && (
+                    <span className="text-[16px] text-gray-400 line-through tabular-nums">
+                      {listing.original_price.toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                    </span>
+                  )}
+                </div>
+                {listing.original_price > listing.price && (
+                  <p className="text-[12px] text-custom-green-500 font-semibold mt-0.5">
+                    Économisez {(listing.original_price - listing.price).toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                  </p>
+                )}
               </div>
 
               {/* Mini badges de confiance */}
@@ -294,6 +323,34 @@ const ListingDetailPage = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Couleurs */}
+              {listing.colors?.length > 0 && (() => {
+                const COLOR_MAP = {
+                  'Noir': '#1a1a1a', 'Gris': '#6b7280', 'Blanc': '#f5f5f5',
+                  'Rose': '#f9a8d4', 'Rouge': '#ef4444', 'Beige': '#d4b896',
+                  'Bleu': '#3b82f6', 'Vert': '#22c55e', 'Jaune': '#eab308',
+                  'Orange': '#f97316', 'Violet': '#a855f7', 'Marron': '#92400e',
+                  'Or': '#d97706', 'Argent': '#9ca3af',
+                };
+                return (
+                  <div>
+                    <p className="text-[12px] font-semibold text-gray-700 mb-2">
+                      Couleur : <span className="font-bold">{listing.colors[0]}</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {listing.colors.map(color => (
+                        <button
+                          key={color}
+                          title={color}
+                          className="w-8 h-8 rounded-full border-2 border-white ring-2 ring-transparent hover:ring-custom-green-500 transition-all"
+                          style={{ backgroundColor: COLOR_MAP[color] || '#ccc', boxShadow: '0 0 0 1px #e5e7eb' }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Quantité */}
               {isProduct && !isOwner && (
