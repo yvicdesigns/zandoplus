@@ -10,30 +10,23 @@ const features = [
 const AppBannerSection = () => (
   <section className="py-6 bg-page-bg">
     <div className="max-w-[1280px] mx-auto px-6">
-      <div className="bg-category-card rounded-2xl px-10 py-8 flex items-center gap-10">
+      <div className="bg-category-card rounded-2xl overflow-hidden flex items-stretch gap-8 pr-10">
 
-        {/* Mockup téléphone */}
-        <div className="flex-shrink-0 w-[110px] h-[190px] bg-custom-green-500 rounded-[22px] flex flex-col items-center justify-center relative overflow-hidden shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-br from-custom-green-400 to-custom-green-600 opacity-60" />
-          <div className="relative z-10 text-center px-3">
-            <p className="text-white font-black text-[22px] leading-none">
-              Zando<span className="text-accent-yellow">+</span>
-            </p>
-            <span className="mt-2 inline-block bg-accent-yellow text-[#1a1200] text-[8px] font-black px-2 py-0.5 rounded">
-              BONS PLANS
-            </span>
-            <p className="text-white/60 text-[8px] mt-2 leading-tight">
-              Catégories populaires
-            </p>
-          </div>
+        {/* Téléphone — dépasse en bas (coupé par overflow-hidden) */}
+        <div className="flex-shrink-0 flex items-end pl-8 pt-4">
+          <img
+            src="/telephone2.png"
+            alt="Zando+ App"
+            className="h-[260px] w-auto object-contain object-bottom drop-shadow-xl"
+          />
         </div>
 
         {/* Texte + features */}
-        <div className="flex-1">
-          <h2 className="text-[24px] font-black text-gray-900 leading-tight mb-1">
+        <div className="flex-1 py-8">
+          <h2 className="text-[22px] font-black text-gray-900 leading-tight">
             Téléchargez l'application
           </h2>
-          <h2 className="text-[24px] font-black text-custom-green-500 leading-tight mb-2">
+          <h2 className="text-[22px] font-black text-custom-green-500 leading-tight mb-2">
             ZANDO+
           </h2>
           <p className="text-[13px] text-gray-500 mb-5">
@@ -52,7 +45,7 @@ const AppBannerSection = () => (
         </div>
 
         {/* Boutons stores + QR */}
-        <div className="flex-shrink-0 flex flex-col items-center gap-3">
+        <div className="flex-shrink-0 flex flex-col justify-center gap-3">
           <a
             href="https://play.google.com/store"
             target="_blank"
