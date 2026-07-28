@@ -12,12 +12,12 @@ const AppBannerSection = () => (
     <div className="max-w-[1280px] mx-auto px-6">
       <div className="bg-category-card rounded-2xl overflow-hidden flex items-stretch gap-8 pr-10">
 
-        {/* Téléphone — dépasse en bas (coupé par overflow-hidden) */}
-        <div className="flex-shrink-0 flex items-end pl-8 pt-4">
+        {/* Téléphone coupé */}
+        <div className="flex-shrink-0 flex items-end pl-4">
           <img
-            src="/telephone2.png"
+            src="/phone-coupe.png"
             alt="Zando+ App"
-            className="h-[260px] w-auto object-contain object-bottom drop-shadow-xl"
+            className="h-[260px] w-auto object-contain object-bottom"
           />
         </div>
 
