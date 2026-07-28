@@ -194,31 +194,35 @@ const Header = memo(({ onLoginClick }) => {
                 <NotificationsPopover />
 
                 {/* Messages */}
-                <Link to="/messages" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
-                  <MessageCircle className="w-[22px] h-[22px] shrink-0" />
+                <Link to="/messages" className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
+                  <div className="relative shrink-0">
+                    <MessageCircle className="w-[22px] h-[22px]" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-[6px] -right-[8px] min-w-[17px] h-[17px] px-[3px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-card-bg">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </div>
                   <div>
                     <p className="text-[10px] text-gray-400 leading-none">Non lus</p>
                     <p className="text-[13px] font-bold leading-snug">Messages</p>
                   </div>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 left-3 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
                 </Link>
 
                 {/* Panier */}
                 <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
-                  <ShoppingCart className="w-[22px] h-[22px] shrink-0" />
+                  <div className="relative shrink-0">
+                    <ShoppingCart className="w-[22px] h-[22px]" />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-[6px] -right-[8px] min-w-[17px] h-[17px] px-[3px] bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-card-bg">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </div>
                   <div>
                     <p className="text-[10px] text-gray-400 leading-none">Mon</p>
                     <p className="text-[13px] font-bold leading-snug">Panier</p>
                   </div>
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 left-3 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {cartCount > 9 ? '9+' : cartCount}
-                    </span>
-                  )}
                 </Link>
 
                 {/* Avatar + dropdown */}
@@ -289,17 +293,19 @@ const Header = memo(({ onLoginClick }) => {
                 </button>
 
                 {/* Panier (visiteur) */}
-                <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
-                  <ShoppingCart className="w-[22px] h-[22px] shrink-0" />
+                <Link to="/cart" className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <div className="relative shrink-0">
+                    <ShoppingCart className="w-[22px] h-[22px]" />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-[6px] -right-[8px] min-w-[17px] h-[17px] px-[3px] bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-card-bg">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-left">
                     <p className="text-[10px] text-gray-400 leading-none">Mon</p>
                     <p className="text-[13px] font-bold leading-snug">Panier</p>
                   </div>
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 left-3 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                      {cartCount}
-                    </span>
-                  )}
                 </Link>
               </>
             )}
