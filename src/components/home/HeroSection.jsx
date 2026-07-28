@@ -1,47 +1,28 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Search, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselDots } from '@/components/ui/carousel';
-import Autoplay from "embla-carousel-autoplay";
-import { cn } from '@/lib/utils';
-
-const hexToRgba = (hex, alpha) => {
-  if (!hex || typeof hex !== 'string' || hex.length < 4) hex = '#000000';
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
-const textAlignClasses = {
-  left:   'items-start text-left',
-  center: 'items-center text-center',
-  right:  'items-end text-right',
-};
 
 const HeroSection = () => {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [api, setApi] = useState(null);
-  const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+  const [current, setCurrent] = useState(0);
+  const timerRef = useRef(null);
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchSlides = async () => {
-      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('hero_slides')
           .select('*')
           .eq('is_active', true)
           .order('order', { ascending: true });
-        if (error) throw error;
-        setSlides(data);
+        if (!error && data) setSlides(data);
       } catch (err) {
-        console.error('Error fetching hero slides:', err);
+        console.error('Hero slides error:', err);
       } finally {
         setLoading(false);
       }
@@ -49,208 +30,197 @@ const HeroSection = () => {
     fetchSlides();
   }, []);
 
-  const handleFocus = useCallback(() => {
-    api?.plugins()?.autoplay?.stop();
-  }, [api]);
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCurrent(c => (c + 1) % Math.max(slides.length, 1));
+    }, 5000);
+  }, [slides.length]);
 
-  const handleBlur = useCallback(() => {
-    api?.plugins()?.autoplay?.play();
-  }, [api]);
+  useEffect(() => {
+    if (slides.length > 1) startTimer();
+    return () => clearInterval(timerRef.current);
+  }, [slides.length, startTimer]);
 
-  const handleSearchSubmit = (e) => {
+  const goTo = (idx) => {
+    setCurrent(idx);
+    startTimer();
+  };
+  const prev = () => goTo((current - 1 + slides.length) % slides.length);
+  const next = () => goTo((current + 1) % slides.length);
+
+  const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/listings?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    if (searchQuery.trim()) navigate(`/listings?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const getSpanStyle = (span) => ({
-    color:      span.color      || '#FFFFFF',
-    fontSize:   span.size       || '1rem',
-    fontWeight: span.weight === 'bold' ? '700' : '400',
-    fontStyle:  span.style  === 'italic' ? 'italic' : 'normal',
-  });
+  /* ── helpers pour extraire titre / sous-titre depuis text_content ── */
+  const getTitle = (slide) => {
+    const lines = slide?.text_content;
+    if (!lines?.length) return null;
+    return lines[0]?.spans?.map(s => s.text).join('') || null;
+  };
+  const getSubtitle = (slide) => {
+    const lines = slide?.text_content;
+    if (!lines || lines.length < 2) return null;
+    return lines[1]?.spans?.map(s => s.text).join('') || null;
+  };
 
-  /* ── Loading ── */
-  if (loading) {
-    return (
-      <section className="bg-page-bg py-4">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="h-[460px] rounded-2xl bg-card-bg border border-gray-100 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 animate-spin text-custom-green-500" />
-          </div>
-        </div>
-      </section>
-    );
-  }
+  /* ── Fallback static (pas de slides) ── */
+  const slide = slides[current] ?? null;
+  const bgColor = slide?.background_color || '#005023';
+  const title = slide ? getTitle(slide) : null;
+  const subtitle = slide ? getSubtitle(slide) : null;
 
-  /* ── Fallback (aucun slide) ── */
-  if (slides.length === 0) {
-    return (
-      <section className="bg-page-bg py-4">
-        <div className="max-w-[1280px] mx-auto px-6">
-          <div className="h-[460px] rounded-2xl bg-custom-green-500 flex flex-col items-center justify-center gap-4 px-8 text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl md:text-5xl font-black text-white leading-tight"
-            >
-              Bienvenue sur Zando<span className="text-accent-yellow">+</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="text-[15px] text-white/80 max-w-lg"
-            >
-              La première place de marché en ligne du Congo Brazzaville.
-            </motion.p>
-            <motion.form
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              onSubmit={handleSearchSubmit}
-              className="flex w-full max-w-xl mt-2"
-            >
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Que recherchez-vous ?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 h-[50px] text-[14px] bg-white rounded-l-xl border-0 outline-none text-gray-800 placeholder:text-gray-400"
-                />
-              </div>
-              <button
-                type="submit"
-                className="h-[50px] px-7 bg-accent-yellow text-gray-900 font-bold text-[14px] rounded-r-xl hover:opacity-90 transition-opacity whitespace-nowrap"
-              >
-                Rechercher
-              </button>
-            </motion.form>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  /* ── Carousel slides ── */
   return (
-    <section className="bg-page-bg py-4">
+    <section className="bg-page-bg pt-4 pb-2">
       <div className="max-w-[1280px] mx-auto px-6">
-        <Carousel
-          setApi={setApi}
-          className="w-full rounded-2xl overflow-hidden"
-          plugins={[plugin.current]}
-          opts={{ loop: true }}
+        <div
+          className="relative rounded-2xl overflow-hidden"
+          style={{ backgroundColor: bgColor, minHeight: 340 }}
         >
-          <CarouselContent>
-            {slides.map((slide) => (
-              <CarouselItem key={slide.id}>
-                <div
-                  className="relative h-[460px] w-full"
-                  style={{ backgroundColor: slide.image_url ? 'transparent' : (slide.background_color || '#005023') }}
+          {/* ── Fond image du slide ── */}
+          {slide?.image_url && (
+            <img
+              src={slide.image_url}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          {slide?.overlay_enabled && (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundColor: slide.overlay_color
+                  ? `${slide.overlay_color}${Math.round((slide.overlay_opacity ?? 0.4) * 255).toString(16).padStart(2,'0')}`
+                  : 'rgba(0,0,0,0.4)',
+              }}
+            />
+          )}
+
+          {/* ── Layout split : gauche + droite ── */}
+          <div className="relative z-10 flex items-center min-h-[340px] px-10 py-10">
+
+            {/* ── GAUCHE ── */}
+            <div className="flex-1 max-w-[480px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current}
+                  initial={{ opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.45 }}
                 >
-                  {slide.image_url && (
-                    <img
-                      src={slide.image_url}
-                      alt={slide.text_content?.[0]?.spans?.[0]?.text || 'Slide hero'}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  )}
-                  {slide.overlay_enabled && (
-                    <div
-                      className="absolute inset-0"
-                      style={{ backgroundColor: hexToRgba(slide.overlay_color, slide.overlay_opacity) }}
-                    />
-                  )}
+                  {/* Badge */}
+                  <span className="inline-block bg-accent-yellow text-gray-900 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">
+                    Offres du mois
+                  </span>
 
-                  <div className={cn(
-                    'relative z-10 h-full flex flex-col justify-center px-10 pb-8',
-                    textAlignClasses[slide.text_align] || 'items-center text-center'
-                  )}>
-                    {/* Texte dynamique */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.7 }}
-                      className="max-w-2xl w-full"
-                    >
-                      {slide.text_content?.map((line, lineIndex) => (
-                        <p key={lineIndex} className="mb-1 md:mb-2 leading-tight">
-                          {line.spans?.map((span, spanIndex) => (
-                            <span key={spanIndex} className="break-words" style={getSpanStyle(span)}>
-                              {span.text}
-                            </span>
-                          ))}
-                        </p>
-                      ))}
-                    </motion.div>
+                  {/* Titre */}
+                  <h1 className="text-[38px] font-black leading-[1.08] text-white mb-3">
+                    {title
+                      ? <span dangerouslySetInnerHTML={{ __html: title }} />
+                      : <>Achetez malin,<br /><span className="text-accent-yellow">économisez plus !</span></>
+                    }
+                  </h1>
 
-                    {/* Boutons CTA */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.7, delay: 0.2 }}
-                      className="flex flex-wrap gap-3 mt-5"
-                    >
-                      {slide.cta_text && slide.cta_link && (
-                        <Link to={slide.cta_link}>
-                          <button className="h-[46px] px-7 bg-accent-yellow text-gray-900 font-bold text-[14px] rounded-xl hover:opacity-90 transition-opacity">
-                            {slide.cta_text}
-                          </button>
-                        </Link>
-                      )}
-                      {slide.secondary_cta_text && slide.secondary_cta_link && (
-                        <Link to={slide.secondary_cta_link}>
-                          <button className="h-[46px] px-7 bg-white/20 text-white font-semibold text-[14px] rounded-xl border border-white/40 hover:bg-white/30 transition-colors">
-                            {slide.secondary_cta_text}
-                          </button>
-                        </Link>
-                      )}
-                    </motion.div>
+                  {/* Sous-titre */}
+                  <p className="text-[14px] text-white/75 leading-relaxed mb-7">
+                    {subtitle || 'Des milliers de produits de qualité à des prix imbattables.'}
+                  </p>
 
-                    {/* Barre de recherche */}
-                    {slide.show_search_bar && (
-                      <motion.form
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, delay: 0.35 }}
-                        onSubmit={handleSearchSubmit}
-                        className="flex w-full max-w-xl mt-6"
-                      >
-                        <div className="relative flex-1">
-                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <input
-                            type="text"
-                            placeholder="Que recherchez-vous ?"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full pl-12 pr-4 h-[50px] text-[14px] bg-white rounded-l-xl border-0 outline-none text-gray-800 placeholder:text-gray-400"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="h-[50px] px-7 bg-accent-yellow text-gray-900 font-bold text-[14px] rounded-r-xl hover:opacity-90 transition-opacity whitespace-nowrap"
-                        >
-                          Rechercher
+                  {/* CTAs */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {slide?.cta_text && slide?.cta_link ? (
+                      <Link to={slide.cta_link}>
+                        <button className="h-[46px] px-6 bg-accent-yellow text-gray-900 font-bold text-[14px] rounded-xl hover:opacity-90 transition-opacity">
+                          {slide.cta_text} &nbsp;→
                         </button>
-                      </motion.form>
+                      </Link>
+                    ) : (
+                      <Link to="/listings">
+                        <button className="h-[46px] px-6 bg-accent-yellow text-gray-900 font-bold text-[14px] rounded-xl hover:opacity-90 transition-opacity">
+                          Découvrir les offres &nbsp;→
+                        </button>
+                      </Link>
+                    )}
+                    {slide?.secondary_cta_text && slide?.secondary_cta_link ? (
+                      <Link to={slide.secondary_cta_link}>
+                        <button className="h-[46px] px-6 bg-white/15 text-white font-semibold text-[14px] rounded-xl border border-white/30 hover:bg-white/25 transition-colors">
+                          {slide.secondary_cta_text}
+                        </button>
+                      </Link>
+                    ) : (
+                      <Link to="/listings?sort=newest">
+                        <button className="h-[46px] px-6 bg-white/15 text-white font-semibold text-[14px] rounded-xl border border-white/30 hover:bg-white/25 transition-colors">
+                          Voir les nouveautés
+                        </button>
+                      </Link>
                     )}
                   </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-          <CarouselPrevious className="bg-white/20 hover:bg-white/40 border-none text-white left-4 backdrop-blur-sm" />
-          <CarouselNext className="bg-white/20 hover:bg-white/40 border-none text-white right-4 backdrop-blur-sm" />
-          <CarouselDots />
-        </Carousel>
+            {/* ── DROITE ── */}
+            <div className="hidden lg:flex w-[360px] flex-shrink-0 items-end justify-center relative self-stretch">
+              {/* Cercle décoratif jaune */}
+              <div
+                className="absolute bottom-[-20px] right-[-20px] w-[300px] h-[300px] rounded-full"
+                style={{ background: '#fbc401', opacity: 0.18 }}
+              />
+
+              {/* Produits flottants */}
+              <div className="absolute top-5 right-12 w-[86px] h-[86px] bg-card-bg rounded-2xl shadow-lg flex items-center justify-center text-[38px]">🎧</div>
+              <div className="absolute bottom-12 right-2 w-[76px] h-[76px] bg-card-bg rounded-2xl shadow-lg flex items-center justify-center text-[34px]">👟</div>
+              <div className="absolute top-[110px] right-2 w-[72px] h-[72px] bg-card-bg rounded-2xl shadow-lg flex items-center justify-center text-[32px]">⌚</div>
+
+              {/* Cercle promo */}
+              <div className="relative z-10 mb-8 w-[190px] h-[190px] bg-custom-green-500/90 rounded-full flex flex-col items-center justify-center text-center px-5 border-4 border-white/20">
+                <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Bons plans</span>
+                <span className="text-[11px] font-bold text-white uppercase mt-0.5">du mois</span>
+                <span className="text-[10px] text-white/70 mt-1">Jusqu'à</span>
+                <span className="text-[44px] font-black text-accent-yellow leading-none">-50%</span>
+                <span className="text-[9px] text-white/70 uppercase tracking-wider mt-1 leading-tight">Sur une sélection<br/>de produits</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Flèches navigation ── */}
+          {slides.length > 1 && (
+            <>
+              <button
+                onClick={prev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/20 hover:bg-white/35 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={next}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white/20 hover:bg-white/35 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+            </>
+          )}
+
+          {/* ── Points de navigation ── */}
+          {slides.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === current
+                      ? 'w-6 bg-white'
+                      : 'w-2 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
