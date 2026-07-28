@@ -36,9 +36,9 @@ const HeroSection = () => {
 
   const slide = slides[current] ?? null;
 
-  /* titre et sous-titre depuis text_content Supabase */
-  const titleLine = slide?.text_content?.[0]?.spans?.map(s => s.text).join('') ?? null;
-  const subtitleLine = slide?.text_content?.[1]?.spans?.map(s => s.text).join('') ?? null;
+  /* On utilise le slide uniquement pour les liens et l'image — textes toujours ceux de l'artifact */
+  const ctaLink          = slide?.cta_link            || '/listings';
+  const secondaryLink    = slide?.secondary_cta_link  || '/listings?sort=newest';
 
   /* Côté droit : image du slide OU décor */
   const hasImage = !!slide?.image_url;
@@ -73,47 +73,29 @@ const HeroSection = () => {
                   Offres du mois
                 </span>
 
-                {/* Titre */}
+                {/* Titre — toujours celui de l'artifact */}
                 <h1 className="text-[40px] font-black leading-[1.08] text-gray-900 mb-3">
-                  {titleLine
-                    ? titleLine
-                    : <>Achetez malin,<br /><span className="text-custom-green-500">économisez plus !</span></>
-                  }
+                  Achetez malin,<br />
+                  <span className="text-custom-green-500">économisez plus !</span>
                 </h1>
 
                 {/* Sous-titre */}
                 <p className="text-[14px] text-gray-500 leading-relaxed mb-7">
-                  {subtitleLine || 'Des milliers de produits de qualité\nà des prix imbattables.'}
+                  Des milliers de produits de qualité<br />à des prix imbattables.
                 </p>
 
-                {/* CTAs */}
+                {/* CTAs — textes de l'artifact, liens depuis les slides */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  {slide?.cta_text && slide?.cta_link ? (
-                    <Link to={slide.cta_link}>
-                      <button className="h-[46px] px-6 bg-custom-green-500 text-white font-bold text-[14px] rounded-xl hover:bg-custom-green-600 transition-colors flex items-center gap-2">
-                        {slide.cta_text} &nbsp;→
-                      </button>
-                    </Link>
-                  ) : (
-                    <Link to="/listings">
-                      <button className="h-[46px] px-6 bg-custom-green-500 text-white font-bold text-[14px] rounded-xl hover:bg-custom-green-600 transition-colors flex items-center gap-2">
-                        Découvrir les offres &nbsp;→
-                      </button>
-                    </Link>
-                  )}
-                  {slide?.secondary_cta_text && slide?.secondary_cta_link ? (
-                    <Link to={slide.secondary_cta_link}>
-                      <button className="h-[46px] px-6 bg-card-bg text-custom-green-500 font-bold text-[14px] rounded-xl border-2 border-custom-green-500 hover:bg-custom-green-50 transition-colors">
-                        {slide.secondary_cta_text}
-                      </button>
-                    </Link>
-                  ) : (
-                    <Link to="/listings?sort=newest">
-                      <button className="h-[46px] px-6 bg-card-bg text-custom-green-500 font-bold text-[14px] rounded-xl border-2 border-custom-green-500 hover:bg-custom-green-50 transition-colors">
-                        Voir les nouveautés
-                      </button>
-                    </Link>
-                  )}
+                  <Link to={ctaLink}>
+                    <button className="h-[46px] px-6 bg-custom-green-500 text-white font-bold text-[14px] rounded-xl hover:bg-custom-green-600 transition-colors">
+                      Découvrir les offres &nbsp;→
+                    </button>
+                  </Link>
+                  <Link to={secondaryLink}>
+                    <button className="h-[46px] px-6 bg-card-bg text-custom-green-500 font-bold text-[14px] rounded-xl border-2 border-custom-green-500 hover:bg-custom-green-50 transition-colors">
+                      Voir les nouveautés
+                    </button>
+                  </Link>
                 </div>
               </motion.div>
             </AnimatePresence>
