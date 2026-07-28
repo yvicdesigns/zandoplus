@@ -15,8 +15,8 @@ const TrustBarSection = () => (
         {items.map((item, i) => (
           <React.Fragment key={item.title}>
             <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 bg-custom-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <img src={item.icon} alt="" className="w-5 h-5 object-contain" />
+              <div className="w-12 h-12 bg-custom-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <img src={item.icon} alt="" className="w-7 h-7 object-contain" />
               </div>
               <div>
                 <p className="text-[12px] font-bold text-gray-900 leading-tight">{item.title}</p>
