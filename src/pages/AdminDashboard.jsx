@@ -20,6 +20,7 @@ import AdminChangeRequestsTab from '@/components/admin/AdminChangeRequestsTab';
 import AdminEmailTestTab from '@/components/admin/AdminEmailTestTab';
 import AdminPaymentsTab from '@/components/admin/AdminPaymentsTab';
 import AdminCategoriesTab from '@/components/admin/AdminCategoriesTab';
+import AdminSiteTab from '@/components/admin/AdminSiteTab';
 import AdminBetaTab from '@/components/admin/AdminBetaTab';
 import AdminWithdrawalsTab from '@/components/admin/AdminWithdrawalsTab';
 import AdminDeliveryConfigTab from '@/components/admin/AdminDeliveryConfigTab';
@@ -63,10 +64,10 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Contenu',
+    label: 'Site & Contenu',
     items: [
-      { id: 'categories', icon: LayoutGrid, label: 'Catégories',  color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
-      { id: 'hero',       icon: Image,      label: 'Hero Slider', color: 'text-pink-400',   bg: 'bg-pink-500/20' },
+      { id: 'site',       icon: Globe,      label: 'Gestion du site', color: 'text-custom-green-400', bg: 'bg-green-500/20' },
+      { id: 'categories', icon: LayoutGrid, label: 'Catégories',      color: 'text-indigo-400',       bg: 'bg-indigo-500/20' },
     ],
   },
   {
@@ -92,7 +93,7 @@ const TAB_LABELS = {
   deliveries: 'Livraisons', reports: 'Signalements', verifications: 'Vérifications',
   boosts: 'Boosts', escrow: 'Escrow', withdrawals: 'Retraits',
   beta: 'Testeurs Beta', ads: 'Publicités', payments: 'Paiements',
-  categories: 'Catégories', hero: 'Hero Slider', approvals: 'Approbations',
+  site: 'Gestion du site', categories: 'Catégories', approvals: 'Approbations',
   audit: 'Audit Logs', 'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
 };
 
@@ -117,6 +118,7 @@ const renderTabContent = (activeTab) => {
     case 'withdrawals':   return <AdminWithdrawalsTab />;
     case 'ads':           return <AdminAdsTab />;
     case 'payments':      return <AdminPaymentsTab />;
+    case 'site':          return <AdminSiteTab />;
     case 'categories':    return <AdminCategoriesTab />;
     case 'hero':          return <AdminHeroTab />;
     case 'approvals':     return <AdminChangeRequestsTab />;

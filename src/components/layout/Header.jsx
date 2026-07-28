@@ -135,11 +135,11 @@ const Header = memo(({ onLoginClick }) => {
       <div className="bg-custom-green-500 text-white text-[12px] font-medium hidden md:block">
         <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <span>🚚 Livraison rapide à Brazzaville et partout au Congo</span>
+            <span>{siteSettings?.ann_msg1 || '🚚 Livraison rapide à Brazzaville et partout au Congo'}</span>
             <div className="w-px h-3.5 bg-white/25" />
-            <span>🔒 Paiements 100% sécurisés</span>
+            <span>{siteSettings?.ann_msg2 || '🔒 Paiements 100% sécurisés'}</span>
             <div className="w-px h-3.5 bg-white/25" />
-            <span>🎧 Service client à votre écoute</span>
+            <span>{siteSettings?.ann_msg3 || '🎧 Service client à votre écoute'}</span>
           </div>
           <div className="flex items-center gap-2.5">
             <span className="text-white/70 text-[11px]">Suivez-nous</span>
@@ -174,7 +174,7 @@ const Header = memo(({ onLoginClick }) => {
                 <span className="text-[28px] font-black text-custom-green-500 leading-none tracking-tight">
                   Zando<span className="text-accent-yellow">+</span>
                 </span>
-                <span className="text-[10px] text-gray-400 mt-0.5 leading-none">Plus de ventes, moins de tracas</span>
+                <span className="text-[10px] text-gray-400 mt-0.5 leading-none">{siteSettings?.site_tagline || 'Plus de ventes, moins de tracas'}</span>
               </>
             )}
           </Link>

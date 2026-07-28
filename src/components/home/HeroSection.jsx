@@ -36,9 +36,13 @@ const HeroSection = () => {
 
   const slide = slides[current] ?? null;
 
-  /* On utilise le slide uniquement pour les liens et l'image — textes toujours ceux de l'artifact */
-  const ctaLink          = slide?.cta_link            || '/listings';
-  const secondaryLink    = slide?.secondary_cta_link  || '/listings?sort=newest';
+  /* Textes depuis le slide Supabase, fallback = artifact */
+  const ctaLabel      = slide?.cta_text           || 'Découvrir les offres';
+  const ctaLink       = slide?.cta_link           || '/listings';
+  const secLabel      = slide?.secondary_cta_text || 'Voir les nouveautés';
+  const secondaryLink = slide?.secondary_cta_link || '/listings?sort=newest';
+  const titleLine     = slide?.text_content?.[0]?.spans?.map(s => s.text).join('') || null;
+  const subtitleLine  = slide?.text_content?.[1]?.spans?.map(s => s.text).join('') || null;
 
   /* Côté droit : image du slide OU décor */
   const hasImage = !!slide?.image_url;
@@ -73,27 +77,29 @@ const HeroSection = () => {
                   Offres du mois
                 </span>
 
-                {/* Titre — toujours celui de l'artifact */}
+                {/* Titre depuis Supabase ou fallback artifact */}
                 <h1 className="text-[40px] font-black leading-[1.08] text-gray-900 mb-3">
-                  Achetez malin,<br />
-                  <span className="text-custom-green-500">économisez plus !</span>
+                  {titleLine
+                    ? <span dangerouslySetInnerHTML={{ __html: titleLine }} />
+                    : <>Achetez malin,<br /><span className="text-custom-green-500">économisez plus !</span></>
+                  }
                 </h1>
 
                 {/* Sous-titre */}
                 <p className="text-[14px] text-gray-500 leading-relaxed mb-7">
-                  Des milliers de produits de qualité<br />à des prix imbattables.
+                  {subtitleLine || <>Des milliers de produits de qualité<br />à des prix imbattables.</>}
                 </p>
 
-                {/* CTAs — textes de l'artifact, liens depuis les slides */}
+                {/* CTAs — textes + liens depuis Supabase */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <Link to={ctaLink}>
                     <button className="h-[46px] px-6 bg-custom-green-500 text-white font-bold text-[14px] rounded-xl hover:bg-custom-green-600 transition-colors">
-                      Découvrir les offres &nbsp;→
+                      {ctaLabel} &nbsp;→
                     </button>
                   </Link>
                   <Link to={secondaryLink}>
                     <button className="h-[46px] px-6 bg-card-bg text-custom-green-500 font-bold text-[14px] rounded-xl border-2 border-custom-green-500 hover:bg-custom-green-50 transition-colors">
-                      Voir les nouveautés
+                      {secLabel}
                     </button>
                   </Link>
                 </div>
