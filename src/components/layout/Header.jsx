@@ -194,26 +194,28 @@ const Header = memo(({ onLoginClick }) => {
                 <NotificationsPopover />
 
                 {/* Messages */}
-                <Link to="/messages" className="relative hidden md:block">
-                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
-                    <MessageCircle className="w-5 h-5" />
-                    <span className="text-[10px] mt-0.5">Messages</span>
+                <Link to="/messages" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
+                  <MessageCircle className="w-[22px] h-[22px] shrink-0" />
+                  <div>
+                    <p className="text-[10px] text-gray-400 leading-none">Non lus</p>
+                    <p className="text-[13px] font-bold leading-snug">Messages</p>
                   </div>
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 left-3 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </Link>
 
                 {/* Panier */}
-                <Link to="/cart" className="relative hidden md:block">
-                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
-                    <ShoppingCart className="w-5 h-5" />
-                    <span className="text-[10px] mt-0.5">Panier</span>
+                <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <ShoppingCart className="w-[22px] h-[22px] shrink-0" />
+                  <div>
+                    <p className="text-[10px] text-gray-400 leading-none">Mon</p>
+                    <p className="text-[13px] font-bold leading-snug">Panier</p>
                   </div>
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 left-3 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                       {cartCount > 9 ? '9+' : cartCount}
                     </span>
                   )}
@@ -221,12 +223,15 @@ const Header = memo(({ onLoginClick }) => {
 
                 {/* Avatar + dropdown */}
                 <div className="relative group hidden md:block">
-                  <div className="flex flex-col items-center cursor-pointer">
-                    <Avatar className="w-8 h-8 border-2 border-gray-200 group-hover:border-custom-green-400 transition-colors">
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <Avatar className="w-8 h-8 border-2 border-gray-200 group-hover:border-custom-green-400 transition-colors shrink-0">
                       <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
                       <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                     </Avatar>
-                    <span className="text-[10px] text-gray-600 mt-0.5 max-w-[70px] truncate">{userName.split(' ')[0]}</span>
+                    <div>
+                      <p className="text-[10px] text-gray-400 leading-none">Mon compte</p>
+                      <p className="text-[13px] font-bold leading-snug max-w-[80px] truncate">{userName.split(' ')[0]}</p>
+                    </div>
                   </div>
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
                     <div className="p-3 border-b border-gray-100">
@@ -265,30 +270,37 @@ const Header = memo(({ onLoginClick }) => {
               </>
             ) : (
               <>
+                {/* Compte (visiteur) */}
+                <button onClick={handleLoginClick} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <User className="w-[22px] h-[22px] shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-gray-400 leading-none">Se connecter</p>
+                    <p className="text-[13px] font-bold leading-snug">Mon compte</p>
+                  </div>
+                </button>
+
                 {/* Favoris (visiteur) */}
-                <div className="hidden md:flex flex-col items-center text-gray-500 cursor-pointer hover:text-custom-green-500 transition-colors" onClick={handleLoginClick}>
-                  <Heart className="w-5 h-5" />
-                  <span className="text-[10px] mt-0.5">Favoris</span>
-                </div>
+                <button onClick={handleLoginClick} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <Heart className="w-[22px] h-[22px] shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-gray-400 leading-none">Mes</p>
+                    <p className="text-[13px] font-bold leading-snug">Favoris</p>
+                  </div>
+                </button>
 
                 {/* Panier (visiteur) */}
-                <Link to="/cart" className="relative hidden md:block">
-                  <div className="flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
-                    <ShoppingCart className="w-5 h-5" />
-                    <span className="text-[10px] mt-0.5">Panier</span>
+                <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                  <ShoppingCart className="w-[22px] h-[22px] shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-gray-400 leading-none">Mon</p>
+                    <p className="text-[13px] font-bold leading-snug">Panier</p>
                   </div>
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-2 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 left-3 w-4 h-4 bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
                 </Link>
-
-                {/* Compte (visiteur) */}
-                <button onClick={handleLoginClick} className="hidden md:flex flex-col items-center text-gray-600 hover:text-custom-green-500 transition-colors">
-                  <User className="w-5 h-5" />
-                  <span className="text-[10px] mt-0.5">Se connecter</span>
-                </button>
               </>
             )}
 
