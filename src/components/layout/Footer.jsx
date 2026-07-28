@@ -1,181 +1,132 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Send, Music } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Facebook, Instagram, Music } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 const Footer = () => {
-  const { toast } = useToast();
   const { user, openAuthModal } = useAuth();
   const { siteSettings, loading: siteSettingsLoading } = useSiteSettings();
 
-  const handleNewsletterSubmit = async (e) => {
-    e.preventDefault();
-    const email = e.target.elements.email.value;
-
-    if (!email) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer une adresse e-mail.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { error } = await supabase.from('subscribers').insert({ email });
-
-    if (error) {
-      if (error.code === '23505') {
-        toast({
-          title: "Déjà abonné",
-          description: "Cette adresse e-mail est déjà dans notre liste.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erreur",
-          description: "Une erreur s'est produite. Veuillez réessayer.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "Inscription réussie !",
-        description: "Merci de vous être abonné à notre newsletter.",
-        className: "bg-green-500 text-white"
-      });
-      e.target.reset();
-    }
-  };
-  
-  const socialLinks = [
-    { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61577391354742', label: 'Facebook' },
-    { icon: Instagram, href: 'https://www.instagram.com/zandopluscongo/', label: 'Instagram' },
-    { icon: Music, href: 'https://www.tiktok.com/@zandopluscongo', label: 'TikTok' },
+  const categories = [
+    { label: 'Électronique',      href: '/listings?category=electronics' },
+    { label: 'Mode',              href: '/listings?category=fashion' },
+    { label: 'Maison & Meubles',  href: '/listings?category=maison-meubles' },
+    { label: 'Beauté',            href: '/listings?category=services' },
+    { label: 'Accessoires',       href: '/listings?category=fashion' },
+    { label: 'Chaussures',        href: '/listings?category=fashion' },
+    { label: 'Santé & bien-être', href: '/listings?category=traditional-medicine' },
   ];
-  
-  const footerLinks = [
-    { 
-      title: 'Navigation',
-      links: [
-        { label: 'Accueil', href: '/' },
-        { label: 'Annonces', href: '/listings' },
-        { label: 'À propos', href: '/about' },
-        { label: 'Contact', href: '/contact' },
-      ]
-    },
-    {
-      title: 'Support & Informations',
-      links: [
-        { label: 'Centre d\'aide', href: '/help' },
-        { label: 'Conditions d\'utilisation', href: '/terms' },
-        { label: 'Politique de confidentialité', href: '/privacy' },
-        { label: 'Rapport d\'Audit de Sécurité', href: '/audit-report' },
-      ]
-    },
-    {
-      title: 'Compte',
-      links: user 
-        ? [
-            { label: 'Mon profil', href: '/profile' },
-            { label: 'Mes messages', href: '/messages' },
-            { label: 'Paramètres', href: '/settings' },
-            { label: 'Publier une annonce', href: '/post-ad' },
-          ]
-        : [
-            { label: 'Se connecter', action: openAuthModal },
-            { label: 'S\'inscrire', action: openAuthModal },
-            { label: 'Publier une annonce', href: '/post-ad' },
-          ]
-    }
+
+  const about = [
+    { label: 'Qui sommes-nous ?', href: '/about' },
+    { label: 'Devenir vendeur',   href: '/post-ad' },
+    { label: 'Changelog',         href: '/changelog' },
+    { label: 'Contact',           href: '/contact' },
   ];
+
+  const support = [
+    { label: 'Centre d\'aide',          href: '/help' },
+    { label: 'Livraison & Retours',     href: '/help' },
+    { label: 'Paiement',                href: '/help' },
+    { label: 'FAQ',                     href: '/help' },
+    { label: 'Contactez-nous',          href: '/contact' },
+  ];
+
+  const legal = [
+    { label: 'Conditions générales',          href: '/terms' },
+    { label: 'Politique de confidentialité',  href: '/privacy' },
+    { label: 'Mentions légales',              href: '/terms' },
+    { label: 'Rapport d\'audit',              href: '/audit-report' },
+  ];
+
+  const socials = [
+    { icon: Facebook,  href: 'https://www.facebook.com/profile.php?id=61577391354742', label: 'Facebook' },
+    { icon: Instagram, href: 'https://www.instagram.com/zandopluscongo/',               label: 'Instagram' },
+    { icon: Music,     href: 'https://www.tiktok.com/@zandopluscongo',                  label: 'TikTok' },
+  ];
+
+  const Col = ({ title, links }) => (
+    <div>
+      <h4 className="text-[13px] font-extrabold text-gray-900 mb-3">{title}</h4>
+      <ul className="space-y-2">
+        {links.map(({ label, href, action }) => (
+          <li key={label}>
+            {href ? (
+              <Link to={href} className="text-[12px] text-gray-500 hover:text-custom-green-500 transition-colors">
+                {label}
+              </Link>
+            ) : (
+              <button onClick={action} className="text-[12px] text-gray-500 hover:text-custom-green-500 transition-colors text-left">
+                {label}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 
   return (
-    <footer className="bg-gray-800 text-white pt-20 pb-10">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Logo and Newsletter */}
-          <div className="md:col-span-2 lg:col-span-1">
-            <Link to="/" className="mb-6 inline-block">
+    <footer className="bg-card-bg border-t border-gray-200">
+      <div className="max-w-[1280px] mx-auto px-6">
+
+        {/* ── Colonnes ── */}
+        <div className="py-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+
+          {/* Colonne logo */}
+          <div className="col-span-2 md:col-span-3 lg:col-span-1">
+            <Link to="/" className="inline-block mb-3">
               {!siteSettingsLoading && siteSettings?.footer_logo_url ? (
-                <img src={siteSettings.footer_logo_url} alt="Zando+ Congo" className="h-10" />
+                <img src={siteSettings.footer_logo_url} alt="Zando+" className="h-9" />
               ) : (
-                <span className="text-2xl font-bold">Zando+</span>
+                <span className="text-[26px] font-black text-custom-green-500 leading-none">
+                  Zando<span className="text-accent-yellow">+</span>
+                </span>
               )}
             </Link>
-            <p className="text-gray-400 mb-4 text-sm leading-relaxed">
-              La plus grande marketplace au Congo. Achetez, vendez, et trouvez tout ce dont vous avez besoin, près de chez vous.
+            <p className="text-[12px] text-gray-500 leading-relaxed mb-4 max-w-[200px]">
+              Votre marketplace de confiance au Congo. Des milliers de produits de qualité à prix imbattables.
             </p>
-            <form onSubmit={handleNewsletterSubmit} className="mt-4">
-              <label htmlFor="newsletter-email" className="font-semibold text-gray-200 mb-2 block">Newsletter</label>
-              <div className="relative">
-                <Input
-                  type="email"
-                  name="email"
-                  id="newsletter-email"
-                  placeholder="Votre adresse e-mail"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 pr-12"
-                  required
-                />
-                <Button type="submit" size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 bg-transparent hover:bg-gray-600">
-                  <Send className="w-5 h-5" />
-                </Button>
-              </div>
-            </form>
-          </div>
-          
-          {/* Footer Links */}
-          {footerLinks.map((section, index) => (
-            <div key={index}>
-              <h3 className="text-lg font-semibold mb-4 text-gray-100">{section.title}</h3>
-              <ul className="space-y-3">
-                {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    {link.href ? (
-                      <Link 
-                        to={link.href} 
-                        className="text-gray-400 hover:text-white transition-colors duration-300"
-                      >
-                        {link.label}
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={link.action}
-                        className="text-gray-400 hover:text-white transition-colors duration-300 text-left"
-                      >
-                        {link.label}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
+            <div className="flex gap-2">
+              {socials.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 bg-custom-green-500 rounded-lg flex items-center justify-center hover:bg-custom-green-600 transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-white" />
+                </a>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <Col title="Catégories"         links={categories} />
+          <Col title="À propos"           links={about} />
+          <Col title="Aide & Support"     links={support} />
+          <Col title="Informations légales" links={legal} />
         </div>
-        
-        <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} Zando+ Congo. Tous droits réservés.
+
+        {/* ── Bas de page ── */}
+        <div className="border-t border-gray-200 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="text-[11px] text-gray-400">
+            © {new Date().getFullYear()} Zando+. Tous droits réservés.
           </p>
-          <div className="flex space-x-4">
-            {socialLinks.map((social, index) => (
-              <a
-                key={index}
-                href={social.href}
-                aria-label={social.label}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors duration-300"
-              >
-                <social.icon className="w-6 h-6" />
-              </a>
-            ))}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold px-2 py-1 rounded border border-gray-200 text-[#1a1f71]">VISA</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded border border-gray-200 text-[#eb001b]">MC</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-gray-800 text-[#ffcc00] border-gray-800">MTN</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#e8001a] text-white border-[#e8001a]">Airtel</span>
+            <span className="text-[11px] text-gray-400 ml-1">🔒 Paiements 100% sécurisés</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-gray-600 font-semibold">
+            🇨🇬 Congo (CG)
           </div>
         </div>
+
       </div>
     </footer>
   );

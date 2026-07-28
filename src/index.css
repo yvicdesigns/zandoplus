@@ -2,6 +2,16 @@
     @tailwind components;
     @tailwind utilities;
 
+    @layer utilities {
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
     @layer base {
       :root {
         --background: 0 0% 100%;
@@ -24,20 +34,27 @@
         --input: 0 0% 89.8%;
         --ring: 0 0% 3.9%;
 
-        --custom-green-50: 210 40% 98%;
-        --custom-green-100: 148 50% 90%;
-        --custom-green-200: 148 50% 80%;
-        --custom-green-300: 148 55% 70%;
-        --custom-green-400: 148 58% 55%;
-        --custom-green-500: 148 58% 45%;
-        --custom-green-600: 148 58% 40%;
-        --custom-green-700: 148 58% 35%;
-        --custom-green-800: 148 58% 30%;
-        --custom-green-900: 148 58% 25%;
+        --custom-green-50:  146 80% 97%;
+        --custom-green-100: 146 75% 90%;
+        --custom-green-200: 146 70% 80%;
+        --custom-green-300: 146 75% 65%;
+        --custom-green-400: 146 85% 40%;
+        --custom-green-500: 146 100% 16%;
+        --custom-green-600: 146 100% 12%;
+        --custom-green-700: 146 100% 9%;
+        --custom-green-800: 146 100% 7%;
+        --custom-green-900: 146 100% 5%;
 
-        --custom-green-400-rgb: 91, 189, 137;
-        --custom-green-500-rgb: 46, 181, 101;
-        --custom-green-600-rgb: 41, 162, 90;
+        --custom-green-400-rgb: 16, 206, 106;
+        --custom-green-500-rgb: 0, 80, 35;
+        --custom-green-600-rgb: 0, 61, 26;
+
+        --accent-yellow: 47 99% 49%;
+        --accent-yellow-rgb: 251, 196, 1;
+
+        --page-bg: 0 0% 98.8%;
+        --card-bg: 0 0% 99.2%;
+        --category-card: 38 44% 95%;
         --chart-1: 12 76% 61%;
         --chart-2: 173 58% 39%;
         --chart-3: 197 37% 24%;
@@ -67,16 +84,16 @@
         --input: 0 0% 14.9%;
         --ring: 0 0% 83.1%;
 
-        --custom-green-50: 217.2 32.6% 10%;
-        --custom-green-100: 148 58% 20%;
-        --custom-green-200: 148 58% 25%;
-        --custom-green-300: 148 58% 30%;
-        --custom-green-400: 148 58% 35%;
-        --custom-green-500: 148 58% 45%;
-        --custom-green-600: 148 58% 50%;
-        --custom-green-700: 148 58% 55%;
-        --custom-green-800: 148 58% 60%;
-        --custom-green-900: 148 58% 65%;
+        --custom-green-50:  148 30% 10%;
+        --custom-green-100: 148 40% 16%;
+        --custom-green-200: 148 50% 22%;
+        --custom-green-300: 148 60% 30%;
+        --custom-green-400: 148 70% 38%;
+        --custom-green-500: 148 100% 40%;
+        --custom-green-600: 148 100% 50%;
+        --custom-green-700: 148 100% 60%;
+        --custom-green-800: 148 100% 70%;
+        --custom-green-900: 148 100% 80%;
         
         --custom-green-900-rgb: 126, 216, 168;
         

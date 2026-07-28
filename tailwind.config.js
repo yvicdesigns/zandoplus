@@ -69,6 +69,10 @@ module.exports = {
     				'800': 'hsl(var(--custom-green-800))',
     				'900': 'hsl(var(--custom-green-900))'
     			},
+    			'accent-yellow': 'hsl(var(--accent-yellow))',
+    			'page-bg': 'hsl(var(--page-bg))',
+    			'card-bg': 'hsl(var(--card-bg))',
+    			'category-card': 'hsl(var(--category-card))',
     			chart: {
     				'1': 'hsl(var(--chart-1))',
     				'2': 'hsl(var(--chart-2))',

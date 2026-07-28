@@ -1,81 +1,73 @@
 import React from 'react';
-    import { Link } from 'react-router-dom';
-    import { motion } from 'framer-motion';
-    import { useCategories } from '@/hooks/useCategories';
-    import { getCategoryEmoji, getCategoryColor, getCategoryImage } from '@/components/post-ad/categoryIcons';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
+import { getCategoryEmoji, getCategoryImage } from '@/components/post-ad/categoryIcons';
 
-    const CategoriesSection = ({ categoryCounts, loading }) => {
-      const { categories: dbCategories } = useCategories();
-      const categories = dbCategories.map(cat => ({
-        slug: cat.slug,
-        name: cat.name,
-        emoji: getCategoryEmoji(cat.slug),
-        color: getCategoryColor(cat.slug),
-        image: getCategoryImage(cat.slug),
-        count: categoryCounts?.[cat.slug] || 0,
-      }));
+const CategoriesSection = ({ categoryCounts, loading }) => {
+  const { categories: dbCategories } = useCategories();
+  const categories = dbCategories.map(cat => ({
+    slug: cat.slug,
+    name: cat.name,
+    emoji: getCategoryEmoji(cat.slug),
+    image: getCategoryImage(cat.slug),
+    count: categoryCounts?.[cat.slug] || 0,
+  }));
 
-      return (
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
+  return (
+    <section className="py-6 bg-page-bg">
+      <div className="max-w-[1280px] mx-auto px-6">
+
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[19px] font-extrabold text-gray-900">Catégories populaires</h2>
+          <Link
+            to="/listings"
+            className="flex items-center gap-1 text-[13px] font-semibold text-custom-green-500 hover:underline"
+          >
+            Voir toutes les catégories <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Scroll horizontal */}
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {categories.map((category) => (
+            <Link
+              key={category.slug}
+              to={`/listings?category=${category.slug}`}
+              className="flex-shrink-0 w-[140px] bg-category-card rounded-xl overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Explorer les <span className="gradient-text">Catégories</span>
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Trouvez exactement ce que vous cherchez dans nos diverses catégories de marché
-              </p>
-            </motion.div>
+              {/* Image / emoji */}
+              <div className="w-full h-[108px] bg-category-card flex items-center justify-center overflow-hidden">
+                {category.image ? (
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-5xl" role="img">{category.emoji}</span>
+                )}
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  viewport={{ once: true }}
-                >
-                  <Link to={`/listings?category=${category.slug}`} className="block group">
-                    <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                      <div className="relative aspect-square overflow-hidden">
-                        {category.image ? (
-                          <img
-                            src={category.image}
-                            alt={category.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className={`w-full h-full bg-gradient-to-br ${category.color} flex items-center justify-center`}>
-                            <span className="text-4xl" role="img">{category.emoji}</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      </div>
-                      <div className="p-2 bg-white text-center">
-                        <h3 className="text-xs font-bold text-gray-800 leading-tight truncate">{category.name}</h3>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          {loading ? (
-                            <span className="inline-block h-3 w-12 bg-gray-200 rounded animate-pulse" />
-                          ) : (
-                            `${(category.count || 0).toLocaleString()} annonces`
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      );
-    };
+              {/* Texte */}
+              <div className="px-2 py-3 text-center">
+                <p className="text-[13px] font-bold text-gray-900 leading-tight">{category.name}</p>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  {loading ? (
+                    <span className="inline-block h-3 w-12 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    `${(category.count || 0).toLocaleString()}+ produits`
+                  )}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-    export default CategoriesSection;
+      </div>
+    </section>
+  );
+};
+
+export default CategoriesSection;

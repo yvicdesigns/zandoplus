@@ -1,42 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { PlusCircle, ShoppingBag } from 'lucide-react';
 
-const CtaSection = () => {
-  return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center max-w-4xl mx-auto"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Prêt à Commencer à <span className="gradient-text">Vendre ?</span>
+const CtaSection = () => (
+  <section className="py-6 bg-page-bg">
+    <div className="max-w-[1280px] mx-auto px-6">
+      <div className="bg-custom-green-500 rounded-2xl px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h2 className="text-[22px] font-black text-white leading-tight mb-2">
+            Prêt à commencer à vendre ?
           </h2>
-          <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed">
-            Rejoignez des milliers de vendeurs prospères sur Le Marché Congo.
-            Publiez votre première annonce gratuitement et atteignez des millions d'acheteurs potentiels !
+          <p className="text-[13px] text-white/75 max-w-lg leading-relaxed">
+            Rejoignez des milliers de vendeurs sur Zando+. Publiez votre première annonce
+            gratuitement et atteignez des acheteurs partout au Congo.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/post-ad">
-              <Button size="lg" className="gradient-bg hover:opacity-90 rounded-full px-8 py-4 text-base font-semibold">
-                Publier Votre Première Annonce
-              </Button>
-            </Link>
-            <Link to="/listings">
-              <Button size="lg" variant="outline" className="rounded-full px-8 py-4 text-base font-semibold border-2 border-custom-green-300 hover:bg-custom-green-50 text-custom-green-600 hover:text-custom-green-700">
-                Parcourir les Annonces
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
+        </div>
+        <div className="flex gap-3 flex-shrink-0">
+          <Link
+            to="/post-ad"
+            className="flex items-center gap-2 bg-accent-yellow text-[#1a1200] font-bold text-[13px] px-5 py-3 rounded-xl hover:brightness-95 transition-all"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Publier une annonce
+          </Link>
+          <Link
+            to="/listings"
+            className="flex items-center gap-2 bg-white/15 text-white font-semibold text-[13px] px-5 py-3 rounded-xl hover:bg-white/25 transition-all border border-white/20"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Parcourir les annonces
+          </Link>
+        </div>
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 export default CtaSection;

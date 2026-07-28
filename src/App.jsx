@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Suspense, lazy, memo } from 'react';
 import { SplashScreen } from '@capacitor/splash-screen';
-import SplashAnimationOverlay from '@/components/common/SplashAnimationOverlay';
+
+const SplashAnimationOverlay = lazy(() => import('@/components/common/SplashAnimationOverlay'));
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -10,13 +11,10 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileNavBar from '@/components/layout/MobileNavBar';
 import { Loader2 } from 'lucide-react';
-import AuthModal from '@/components/auth/AuthModal';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import DynamicFavicon from '@/components/common/DynamicFavicon';
 import { isMobile } from 'react-device-detect';
-import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import { useVisitor } from '@/hooks/useVisitor';
-import PwaInstallModal from '@/components/common/PwaInstallModal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { PaymentProvider } from '@/contexts/PaymentContext';
@@ -24,8 +22,12 @@ import { CartProvider } from '@/hooks/useCart';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { supabase } from '@/lib/customSupabaseClient';
-import BugReportButton from '@/components/beta/BugReportButton';
-import ChatWidget from '@/components/ai/ChatWidget';
+
+const GoogleAnalytics  = lazy(() => import('@/components/analytics/GoogleAnalytics'));
+const PwaInstallModal  = lazy(() => import('@/components/common/PwaInstallModal'));
+const BugReportButton  = lazy(() => import('@/components/beta/BugReportButton'));
+const ChatWidget       = lazy(() => import('@/components/ai/ChatWidget'));
+const AuthModal        = lazy(() => import('@/components/auth/AuthModal'));
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const ListingsPage = lazy(() => import('@/pages/ListingsPage'));
@@ -196,7 +198,7 @@ const AppLayout = memo(() => {
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+        <div className="min-h-screen flex flex-col bg-page-bg">
             <Header onLoginClick={openAuthModal} />
             <main className={`flex-grow ${isMobile ? 'pb-24' : ''}`}>
                 <ScrollToTop />
@@ -208,10 +210,12 @@ const AppLayout = memo(() => {
             </main>
             <Footer />
             <MobileNavBar />
-            <BugReportButton />
-            <ChatWidget />
+            <Suspense fallback={null}><BugReportButton /></Suspense>
+            <Suspense fallback={null}><ChatWidget /></Suspense>
             <Toaster />
-            <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+            <Suspense fallback={null}>
+              <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+            </Suspense>
         </div>
     );
 });
@@ -220,9 +224,9 @@ const AppContent = () => {
     usePushNotifications();
     return (
         <>
-            <PwaInstallModal />
+            <Suspense fallback={null}><PwaInstallModal /></Suspense>
             <DynamicFavicon />
-            <GoogleAnalytics />
+            <Suspense fallback={null}><GoogleAnalytics /></Suspense>
             <Routes>
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<HomePage />} />
@@ -295,7 +299,9 @@ function App() {
               <NotificationsProvider>
                 <PaymentProvider>
                   <CartProvider>
-                    <SplashAnimationOverlay onComplete={() => setSplashDone(true)} />
+                    <Suspense fallback={null}>
+                      <SplashAnimationOverlay onComplete={() => setSplashDone(true)} />
+                    </Suspense>
                     {splashDone && <AppContent />}
                   </CartProvider>
                 </PaymentProvider>

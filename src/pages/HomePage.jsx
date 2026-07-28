@@ -5,9 +5,14 @@ import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Loader2 } from 'lucide-react';
 
 const HeroSection = lazy(() => import('@/components/home/HeroSection'));
-const ListingsSection = lazy(() => import('@/components/home/ListingsSection'));
+const TrustBarSection = lazy(() => import('@/components/home/TrustBarSection'));
 const CategoriesSection = lazy(() => import('@/components/home/CategoriesSection'));
+const ListingsSection = lazy(() => import('@/components/home/ListingsSection'));
+const OffresSection = lazy(() => import('@/components/home/OffresSection'));
+const AppBannerSection = lazy(() => import('@/components/home/AppBannerSection'));
 const StatsSection = lazy(() => import('@/components/home/StatsSection'));
+const GreenBarSection = lazy(() => import('@/components/home/GreenBarSection'));
+const NewsletterSection = lazy(() => import('@/components/home/NewsletterSection'));
 const CtaSection = lazy(() => import('@/components/home/CtaSection'));
 const FeaturedShopsSection = lazy(() => import('@/components/shop/FeaturedShopsSection'));
 
@@ -111,10 +116,15 @@ const HomePage = () => {
       <div className="min-h-screen">
         <Suspense fallback={<FullPageLoader />}>
           <HeroSection />
-          <ListingsSection />
-          <FeaturedShopsSection />
+          <TrustBarSection />
           <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
+          <ListingsSection />
+          <OffresSection />
+          <AppBannerSection />
+          <FeaturedShopsSection />
           <StatsSection />
+          <GreenBarSection />
+          <NewsletterSection />
           <CtaSection />
         </Suspense>
       </div>
