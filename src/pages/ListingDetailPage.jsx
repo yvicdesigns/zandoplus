@@ -385,24 +385,26 @@ const ListingDetailPage = () => {
                 </div>
               ) : isProduct ? (
                 <div className="space-y-3">
-                  <button
-                    onClick={handleAddToCart}
-                    className={`w-full h-[52px] rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition-colors ${
-                      inCart
-                        ? 'bg-green-50 text-custom-green-600 border-2 border-custom-green-500'
-                        : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                    }`}
-                  >
-                    {inCart ? <CheckCircle className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-                    {inCart ? 'Dans le panier' : 'Ajouter au panier'}
-                  </button>
-                  <button
-                    onClick={handleEscrow}
-                    className="w-full h-[52px] rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 border-2 border-custom-green-500 text-custom-green-500 hover:bg-green-50 transition-colors"
-                  >
-                    <Lock className="w-5 h-5" />
-                    Acheter maintenant
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddToCart}
+                      className={`flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-colors ${
+                        inCart
+                          ? 'bg-green-50 text-custom-green-600 border-2 border-custom-green-500'
+                          : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
+                      }`}
+                    >
+                      {inCart ? <CheckCircle className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+                      {inCart ? 'Dans le panier' : 'Ajouter au panier'}
+                    </button>
+                    <button
+                      onClick={handleEscrow}
+                      className="flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 border-2 border-custom-green-500 text-custom-green-500 hover:bg-green-50 transition-colors"
+                    >
+                      <Lock className="w-5 h-5" />
+                      Acheter maintenant
+                    </button>
+                  </div>
                   {listing.accepts_cash_on_delivery && (
                     <button
                       onClick={handleCod}
