@@ -5,10 +5,10 @@ import { supabase } from '@/lib/customSupabaseClient';
 
 const reasons = [
   { icon: Truck,       title: 'Livraison à domicile',       desc: 'Recevez vos commandes directement chez vous à Brazzaville et dans les grandes villes' },
-  { icon: Shield,      title: 'Paiements sécurisés',        desc: 'MTN Money, Airtel Money ou paiement à la livraison — à vous de choisir' },
+  { icon: Shield,      title: 'Paiements sécurisés',        desc: 'MTN Money, Airtel Money ou paiement à la livraison, à vous de choisir' },
   { icon: Star,        title: 'Vendeurs certifiés',          desc: 'Des vendeurs vérifiés par Zando+, notés par de vrais acheteurs' },
   { icon: Headphones,  title: 'Support 7j/7',               desc: 'Notre équipe est disponible par messagerie pour vous accompagner à chaque étape' },
-  { icon: RefreshCw,   title: 'Achat protégé',              desc: 'Vos fonds sont bloqués jusqu\'à confirmation de réception — remboursé en cas de litige' },
+  { icon: RefreshCw,   title: 'Achat protégé',              desc: 'Vos fonds sont bloqués jusqu\'à confirmation de réception, remboursé en cas de litige' },
 ];
 
 /* Compteur animé */
