@@ -10,7 +10,7 @@ const CategoriesSection = ({ categoryCounts, loading }) => {
     slug: cat.slug,
     name: cat.name,
     emoji: getCategoryEmoji(cat.slug),
-    image: getCategoryImage(cat.slug),
+    image: cat.image_url || getCategoryImage(cat.slug),
     count: categoryCounts?.[cat.slug] || 0,
   }));
 
