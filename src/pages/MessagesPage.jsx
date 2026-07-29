@@ -3,19 +3,19 @@ import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import ConversationList from '@/components/messages/ConversationList';
 import ChatWindow from '@/components/messages/ChatWindow';
-import EmptyChat from '@/components/messages/EmptyChat';
+import ConversationDetails from '@/components/messages/ConversationDetails';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Inbox } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 
 const MessagesPage = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
-  const [conversations, setConversations] = useState([]);
+
+  const [conversations, setConversations]       = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState(null);
 
@@ -25,132 +25,91 @@ const MessagesPage = () => {
     try {
       const { data, error } = await supabase.rpc('get_user_conversations');
       if (error) throw error;
-      const sortedConversations = data.sort((a, b) => {
-        const dateA = a.last_message?.created_at ? new Date(a.last_message.created_at) : new Date(0);
-        const dateB = b.last_message?.created_at ? new Date(b.last_message.created_at) : new Date(0);
-        return dateB - dateA;
+      const sorted = (data || []).sort((a, b) => {
+        const da = a.last_message?.created_at ? new Date(a.last_message.created_at) : new Date(0);
+        const db = b.last_message?.created_at ? new Date(b.last_message.created_at) : new Date(0);
+        return db - da;
       });
-      setConversations(sortedConversations || []);
-      
-      if (conversationId && sortedConversations) {
-          const found = sortedConversations.find(c => c.id === conversationId);
-          setSelectedConversation(found || null);
-      } else if (!conversationId) {
-          setSelectedConversation(null);
+      setConversations(sorted);
+      if (conversationId) {
+        const found = sorted.find(c => c.id === conversationId);
+        setSelectedConversation(found || null);
+      } else {
+        setSelectedConversation(null);
       }
-      
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger vos conversations.',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de charger vos conversations.', variant: 'destructive' });
     } finally {
       setLoadingConversations(false);
     }
   }, [user, toast, conversationId]);
 
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+  useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
   useEffect(() => {
     if (!user) return;
-
-    const channel = supabase
-      .channel('messages-page-realtime')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `receiver_id=eq.${user.id}`
-      }, (payload) => {
-        fetchConversations();
-        // Browser push notification for new message
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const senderName = payload.new?.sender_name || 'Nouveau message';
-          const preview = payload.new?.content?.substring(0, 60) || '';
-          const notif = new Notification(`Zando+ — ${senderName}`, {
-            body: preview,
-            icon: '/android-chrome-192x192.png',
-          });
-          notif.onclick = () => {
-            window.focus();
-            window.location.href = `/messages/${payload.new.conversation_id}`;
-          };
-        }
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'conversations',
-        filter: `buyer_id=eq.${user.id}`
-      }, (payload) => {
-        fetchConversations();
-      })
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'conversations',
-        filter: `seller_id=eq.${user.id}`
-      }, (payload) => {
-        fetchConversations();
-      })
+    const channel = supabase.channel('messages-page-rt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, fetchConversations)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `buyer_id=eq.${user.id}` }, fetchConversations)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `seller_id=eq.${user.id}` }, fetchConversations)
       .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user, fetchConversations]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-  
-  const handleSelectConversation = (conversation) => {
-    setSelectedConversation(conversation);
-    navigate(`/messages/${conversation.id}`);
-  };
-  
-  const handleConversationUpdate = () => {
-    fetchConversations();
+  const handleSelect = (conv) => {
+    setSelectedConversation(conv);
+    navigate(`/messages/${conv.id}`);
   };
 
   return (
     <>
       <Helmet>
-        <title>Mes Messages - Zando+ Congo</title>
-        <meta name="description" content="Gérez vos conversations et messages sur Zando+ Congo." />
+        <title>Messages — Zando+</title>
       </Helmet>
-      <div className="h-[calc(100vh-140px)] flex bg-white border-t">
-        <div className={`w-full md:w-1/3 lg:w-1/4 border-r overflow-y-auto custom-scrollbar ${conversationId ? 'hidden md:block' : 'block'}`}>
+
+      <div className="h-[calc(100vh-130px)] flex bg-page-bg">
+
+        {/* ── Liste des conversations ── */}
+        <div className={`w-full md:w-[300px] flex-shrink-0 bg-white border-r border-gray-100 flex flex-col ${conversationId ? 'hidden md:flex' : 'flex'}`}>
           {loadingConversations ? (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-custom-green-500" />
+            <div className="flex-1 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-custom-green-500" />
             </div>
-          ) : conversations.length > 0 ? (
+          ) : (
             <ConversationList
               conversations={conversations}
-              loading={loadingConversations}
               selectedConversation={selectedConversation}
-              onSelect={handleSelectConversation}
+              onSelect={handleSelect}
             />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <Inbox className="h-16 w-16 text-gray-300 mb-4"/>
-              <h3 className="text-lg font-semibold">Boîte de réception vide</h3>
-              <p className="text-gray-500 text-sm">Les messages de vos acheteurs et vendeurs apparaîtront ici.</p>
-            </div>
           )}
         </div>
-        <div className={`w-full md:w-2/3 lg:w-3/4 ${conversationId ? 'block' : 'hidden md:block'}`}>
+
+        {/* ── Chat ── */}
+        <div className={`flex-1 flex flex-col min-w-0 ${conversationId ? 'flex' : 'hidden md:flex'}`}>
           {selectedConversation ? (
             <ChatWindow
               key={selectedConversation.id}
               conversation={selectedConversation}
-              onMessageSent={handleConversationUpdate}
+              onMessageSent={fetchConversations}
+              onBack={() => navigate('/messages')}
             />
           ) : (
-            <EmptyChat />
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-10 h-10 text-gray-300" />
+              </div>
+              <p className="text-[15px] font-bold text-gray-700">Sélectionnez une conversation</p>
+              <p className="text-[13px] text-gray-400">Vos échanges avec les vendeurs et acheteurs apparaissent ici.</p>
+            </div>
           )}
         </div>
+
+        {/* ── Détails ── */}
+        {selectedConversation && (
+          <div className="hidden xl:block w-[280px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
+            <ConversationDetails conversation={selectedConversation} />
+          </div>
+        )}
       </div>
     </>
   );

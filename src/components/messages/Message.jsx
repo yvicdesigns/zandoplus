@@ -1,31 +1,28 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { Check, CheckCheck } from 'lucide-react';
 
 const Message = ({ message, isOwnMessage }) => {
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (ts) =>
+    new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-    >
-      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+      <div className={`max-w-[72%] px-4 py-2.5 rounded-2xl ${
         isOwnMessage
-          ? 'bg-purple-600 text-white'
-          : 'bg-gray-100 text-gray-900'
+          ? 'bg-custom-green-500 text-white rounded-tr-sm'
+          : 'bg-gray-100 text-gray-900 rounded-tl-sm'
       }`}>
-        <p className="text-sm">{message.content}</p>
-        <p className={`text-xs mt-1 text-right ${
-          isOwnMessage ? 'text-purple-200' : 'text-gray-500'
-        }`}>
-          {formatTime(message.created_at)}
-        </p>
+        <p className="text-[13px] leading-relaxed">{message.content}</p>
+        <div className={`flex items-center justify-end gap-1 mt-1 ${isOwnMessage ? 'text-green-200' : 'text-gray-400'}`}>
+          <span className="text-[10px]">{formatTime(message.created_at)}</span>
+          {isOwnMessage && (
+            message.is_read
+              ? <CheckCheck className="w-3 h-3" />
+              : <Check className="w-3 h-3" />
+          )}
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

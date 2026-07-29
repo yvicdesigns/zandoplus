@@ -1,47 +1,86 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Search, SlidersHorizontal, Inbox } from 'lucide-react';
 import ConversationItem from './ConversationItem';
 
-const ConversationList = ({ conversations, loading, selectedConversation, onSelect }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const TABS = ['Toutes', 'Non lus', 'Favoris'];
 
-  const filteredConversations = conversations.filter(chat =>
-    (chat.participant?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (chat.listing?.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const ConversationList = ({ conversations, selectedConversation, onSelect }) => {
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState('Toutes');
+
+  const unreadCount = conversations.filter(c => c.unread_count > 0).length;
+
+  const filtered = conversations.filter(c => {
+    const matchSearch =
+      (c.participant?.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (c.listing?.title || '').toLowerCase().includes(search.toLowerCase());
+    if (tab === 'Non lus') return matchSearch && c.unread_count > 0;
+    return matchSearch;
+  });
 
   return (
-    <>
-      <div className="p-4 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Rechercher des conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+    <div className="flex flex-col h-full">
+      {/* En-tête */}
+      <div className="px-4 pt-5 pb-3 border-b border-gray-100">
+        <h2 className="text-[18px] font-black text-gray-900 mb-3">Messages</h2>
+        {/* Search */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher une conversation..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 border border-gray-200 rounded-xl text-[12px] focus:outline-none focus:border-custom-green-500 bg-gray-50"
+            />
+          </div>
+          <button className="w-9 h-9 border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0">
+            <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+        {/* Tabs */}
+        <div className="flex gap-1 mt-3">
+          {TABS.map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex items-center gap-1.5 px-3 h-7 rounded-full text-[12px] font-semibold transition-colors ${
+                tab === t
+                  ? 'bg-custom-green-500 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              {t}
+              {t === 'Non lus' && unreadCount > 0 && (
+                <span className={`w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center ${tab === t ? 'bg-white text-custom-green-600' : 'bg-custom-green-500 text-white'}`}>
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Liste */}
       <div className="flex-1 overflow-y-auto">
-        {loading ? (
-          <div className="p-4 text-center text-gray-500">Chargement des conversations...</div>
-        ) : filteredConversations.length > 0 ? (
-          filteredConversations.map((chat) => (
+        {filtered.length > 0 ? (
+          filtered.map(c => (
             <ConversationItem
-              key={chat.id}
-              chat={chat}
-              isSelected={selectedConversation?.id === chat.id}
+              key={c.id}
+              chat={c}
+              isSelected={selectedConversation?.id === c.id}
               onSelect={onSelect}
             />
           ))
         ) : (
-          <div className="p-4 text-center text-gray-500">Aucune conversation trouvée.</div>
+          <div className="flex flex-col items-center justify-center h-full py-16 text-gray-300">
+            <Inbox className="w-12 h-12 mb-3" />
+            <p className="text-[13px]">Aucune conversation</p>
+          </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

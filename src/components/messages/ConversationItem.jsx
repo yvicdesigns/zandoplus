@@ -1,120 +1,78 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Shield, Send, User, Annoyed, Megaphone } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Send, Megaphone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
 
 const ConversationItem = ({ chat, isSelected, onSelect }) => {
   const { user } = useAuth();
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
+  const formatTime = (ts) => {
+    if (!ts) return '';
+    const d = new Date(ts);
     const now = new Date();
-    const diffInDays = (now.setHours(0,0,0,0) - date.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24);
-
-    if (diffInDays < 1) {
-      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInDays < 7) {
-      return date.toLocaleDateString('fr-FR', { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    }
+    const diffDays = Math.floor((now - d) / 86400000);
+    if (diffDays < 1) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    if (diffDays < 7) return d.toLocaleDateString('fr-FR', { weekday: 'short' });
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  const lastMessageContent = chat.last_message?.content || 'Début de la conversation...';
-  const lastMessageTime = chat.last_message?.created_at;
-  const isOnline = chat.participant?.last_seen && new Date() - new Date(chat.participant.last_seen) < 300000;
-  
-  const isSystemConversation = chat.listing?.id === null;
-  const isAdminSentItems = isSystemConversation && chat.participant?.full_name === "Messages Envoyés";
-  const isSellerAnnouncement = isSystemConversation && chat.participant?.full_name === "Annonces de Zando+";
+  const isSystem = chat.listing?.id === null;
+  const isSentItems = isSystem && chat.participant?.full_name === 'Messages Envoyés';
+  const isAnnouncement = isSystem && chat.participant?.full_name === 'Annonces de Zando+';
+  const isOnline = chat.participant?.last_seen && Date.now() - new Date(chat.participant.last_seen) < 300000;
 
-  let participantName = chat.participant?.full_name;
-  let listingTitle = chat.listing?.title;
-  let avatarFallbackContent;
-  let avatarImageSrc = chat.participant?.avatar_url;
+  const name = isSentItems ? 'Messages Envoyés' : isAnnouncement ? 'Annonces Zando+' : chat.participant?.full_name;
+  const preview = chat.last_message?.content || 'Début de la conversation...';
+  const time = formatTime(chat.last_message?.created_at);
+  const unread = chat.unread_count || 0;
 
-  if (isAdminSentItems) {
-    participantName = "Messages Envoyés";
-    listingTitle = "Historique des messages en masse";
-    avatarFallbackContent = <Send className="w-6 h-6 text-gray-600" />;
-    avatarImageSrc = null;
-  } else if (isSellerAnnouncement) {
-    participantName = "Annonces de Zando+";
-    listingTitle = "Communications importantes";
-    avatarFallbackContent = <Megaphone className="w-6 h-6 text-purple-600" />;
-    avatarImageSrc = null; // Maybe use a logo here in the future
-  } else {
-    avatarFallbackContent = chat.participant?.full_name?.charAt(0).toUpperCase() || <User />;
-  }
+  const initials = name?.charAt(0).toUpperCase();
+  const avatarUrl = !isSystem ? chat.participant?.avatar_url : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-        isSelected ? 'bg-purple-50 border-r-4 border-r-purple-500' : ''
-      } ${isSellerAnnouncement ? 'bg-purple-50/50' : ''}`}
+    <button
       onClick={() => onSelect(chat)}
+      className={`w-full text-left flex items-start gap-3 px-4 py-3.5 border-b border-gray-50 transition-colors ${
+        isSelected ? 'bg-green-50 border-l-[3px] border-l-custom-green-500' : 'hover:bg-gray-50 border-l-[3px] border-l-transparent'
+      }`}
     >
-      <div className="flex items-start space-x-3">
-        <div className="relative">
-          <Avatar className={`w-12 h-12 flex items-center justify-center ${isSystemConversation ? 'bg-gray-100' : ''}`}>
-            {avatarImageSrc ? (
-              <AvatarImage src={avatarImageSrc} alt={participantName} />
-            ) : (
-              <AvatarFallback className={`${isSystemConversation ? 'bg-transparent' : ''}`}>{avatarFallbackContent}</AvatarFallback>
-            )}
-          </Avatar>
-          {isOnline && !isSystemConversation && (
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+      {/* Avatar */}
+      <div className="relative flex-shrink-0">
+        <div className="w-11 h-11 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-[15px] font-black text-gray-600">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          ) : isSentItems ? (
+            <Send className="w-5 h-5 text-gray-500" />
+          ) : isAnnouncement ? (
+            <Megaphone className="w-5 h-5 text-purple-500" />
+          ) : (
+            initials
           )}
         </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-sm truncate">{participantName}</h3>
-              {chat.participant?.verified && !isSystemConversation && (
-                <Shield className="w-4 h-4 text-custom-green-500" />
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">
-                {formatTime(lastMessageTime)}
-              </span>
-              {chat.unread_count > 0 && (
-                <Badge className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
-                  {chat.unread_count}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 mb-2">
-            {!isSystemConversation && chat.listing?.images?.[0] && (
-                <img
-                    src={chat.listing.images[0]}
-                    alt={listingTitle}
-                    className="w-8 h-8 rounded object-cover"
-                />
-            )}
-            <span className="text-xs text-gray-600 truncate">
-              {listingTitle}
-            </span>
-          </div>
-
-          <p className={`text-sm truncate ${
-            chat.unread_count > 0 ? 'font-medium text-gray-900' : 'text-gray-600'
-          }`}>
-            {lastMessageContent}
-          </p>
-        </div>
+        {isOnline && !isSystem && (
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-custom-green-500 rounded-full border-2 border-white" />
+        )}
       </div>
-    </motion.div>
+
+      {/* Contenu */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-0.5">
+          <p className={`text-[13px] truncate ${unread > 0 ? 'font-black text-gray-900' : 'font-semibold text-gray-800'}`}>
+            {name}
+          </p>
+          <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+            <span className="text-[10px] text-gray-400">{time}</span>
+            {unread > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 bg-custom-green-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                {unread}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className={`text-[12px] truncate ${unread > 0 ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+          {preview}
+        </p>
+      </div>
+    </button>
   );
 };
 
