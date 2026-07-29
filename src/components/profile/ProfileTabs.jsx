@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Star, Heart, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, Star, Heart, Clock, AlertTriangle, MapPin } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import UserListingCard from '@/components/profile/UserListingCard';
+import AddressesTab from '@/components/profile/AddressesTab';
 
 const EmptyState = ({ icon: Icon, title, description, buttonText, buttonLink }) => (
   <div className="text-center py-12">
@@ -31,7 +32,7 @@ const ProfileTabs = ({ activeListings, soldListings, favoriteListings, pendingLi
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={resolvedDefault} className="w-full">
-          <TabsList className={`grid w-full ${pendingListings.length > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <TabsList className={`grid w-full ${pendingListings.length > 0 ? 'grid-cols-5' : 'grid-cols-4'}`}>
             {pendingListings.length > 0 && (
               <TabsTrigger value="pending" className="relative data-[state=active]:text-amber-600">
                 En attente
@@ -41,6 +42,7 @@ const ProfileTabs = ({ activeListings, soldListings, favoriteListings, pendingLi
             <TabsTrigger value="active">Actives ({activeListings.length})</TabsTrigger>
             <TabsTrigger value="sold">Vendues ({soldListings.length})</TabsTrigger>
             <TabsTrigger value="favorites">Favoris ({favoriteListings.length})</TabsTrigger>
+            <TabsTrigger value="addresses">Adresses</TabsTrigger>
           </TabsList>
 
           {pendingListings.length > 0 && (
@@ -127,6 +129,10 @@ const ProfileTabs = ({ activeListings, soldListings, favoriteListings, pendingLi
                 buttonLink="/listings"
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="addresses" className="mt-6">
+            <AddressesTab />
           </TabsContent>
         </Tabs>
       </CardContent>
