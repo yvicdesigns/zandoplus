@@ -29,7 +29,7 @@ const CardGroup = ({ listings, startIndex, onClose }) => {
             animate={{ opacity: 1, scale: s.scale, rotateY: s.rotateY, x: s.x, z: s.z, filter: `brightness(${s.brightness})` }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ type: 'spring', stiffness: 260, damping: 28, delay: pos * 0.04 }}
-            style={{ transformStyle: 'preserve-3d', zIndex: isCenter ? 10 : 5, flexShrink: 0, width: '38%' }}
+            style={{ transformStyle: 'preserve-3d', zIndex: isCenter ? 10 : 5, flexShrink: 0, width: '42%' }}
             className="rounded-2xl overflow-hidden shadow-2xl bg-white"
           >
             {/* Image */}
@@ -164,7 +164,7 @@ const UrgentPopup = () => {
           </motion.div>
 
           {/* Cover flow */}
-          <div className="relative z-10 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+          <div className="relative z-10 w-full max-w-xl" onClick={e => e.stopPropagation()}>
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={key}
