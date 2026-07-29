@@ -22,6 +22,8 @@ import { CartProvider } from '@/hooks/useCart';
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { supabase } from '@/lib/customSupabaseClient';
+import { MessagesDrawerProvider } from '@/contexts/MessagesDrawerContext';
+import MessagesDrawer from '@/components/messages/MessagesDrawer';
 
 const GoogleAnalytics  = lazy(() => import('@/components/analytics/GoogleAnalytics'));
 const PwaInstallModal  = lazy(() => import('@/components/common/PwaInstallModal'));
@@ -213,6 +215,7 @@ const AppLayout = memo(() => {
             <MobileNavBar />
             <Suspense fallback={null}><BugReportButton /></Suspense>
             <Suspense fallback={null}><ChatWidget /></Suspense>
+            <MessagesDrawer />
             <Toaster />
             <Suspense fallback={null}>
               <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
@@ -301,10 +304,12 @@ function App() {
               <NotificationsProvider>
                 <PaymentProvider>
                   <CartProvider>
-                    <Suspense fallback={null}>
-                      <SplashAnimationOverlay onComplete={() => setSplashDone(true)} />
-                    </Suspense>
-                    {splashDone && <AppContent />}
+                    <MessagesDrawerProvider>
+                      <Suspense fallback={null}>
+                        <SplashAnimationOverlay onComplete={() => setSplashDone(true)} />
+                      </Suspense>
+                      {splashDone && <AppContent />}
+                    </MessagesDrawerProvider>
                   </CartProvider>
                 </PaymentProvider>
               </NotificationsProvider>

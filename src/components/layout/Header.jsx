@@ -10,6 +10,7 @@ import { useCart } from '@/hooks/useCart';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useMessagesDrawer } from '@/contexts/MessagesDrawerContext';
 import NotificationsPopover from '@/components/notifications/NotificationsPopover';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -77,6 +78,7 @@ const Header = memo(({ onLoginClick }) => {
   const location = useLocation();
   const { toast } = useToast();
   const { totalItems: cartCount } = useCart();
+  const { openMessages } = useMessagesDrawer();
 
   const userName = user?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
   const userEmail = user?.email || '';
@@ -193,8 +195,8 @@ const Header = memo(({ onLoginClick }) => {
                 {/* Notifications */}
                 <NotificationsPopover />
 
-                {/* Messages */}
-                <Link to="/messages" className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
+                {/* Messages — ouvre le drawer */}
+                <button onClick={() => user ? openMessages() : onLoginClick()} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
                   <div className="relative shrink-0">
                     <MessageCircle className="w-[22px] h-[22px]" />
                     {unreadCount > 0 && (
@@ -207,7 +209,7 @@ const Header = memo(({ onLoginClick }) => {
                     <p className="text-[10px] text-gray-400 leading-none">Non lus</p>
                     <p className="text-[13px] font-bold leading-snug">Messages</p>
                   </div>
-                </Link>
+                </button>
 
                 {/* Panier */}
                 <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
@@ -253,14 +255,21 @@ const Header = memo(({ onLoginClick }) => {
                       {/* Bloc compte */}
                       {[
                         { to: '/profile',      icon: User,          label: 'Mon Profil'       },
-                        { to: '/messages',     icon: MessageCircle, label: 'Mes Messages'     },
+                        { to: null, icon: MessageCircle, label: 'Mes Messages', action: openMessages },
                         { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
                         { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
-                      ].map(({ to, icon: Icon, label }) => (
-                        <Link key={to} to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors">
-                          <Icon className="w-4 h-4 mr-2.5 opacity-60" />
-                          {label}
-                        </Link>
+                      ].map(({ to, icon: Icon, label, action }) => (
+                        action ? (
+                          <button key={label} onClick={action} className="flex items-center w-full px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors text-left">
+                            <Icon className="w-4 h-4 mr-2.5 opacity-60" />
+                            {label}
+                          </button>
+                        ) : (
+                          <Link key={to} to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors">
+                            <Icon className="w-4 h-4 mr-2.5 opacity-60" />
+                            {label}
+                          </Link>
+                        )
                       ))}
                       {/* Dashboard Admin séparé */}
                       {isAdmin && (
@@ -434,17 +443,23 @@ const Header = memo(({ onLoginClick }) => {
                   )}
                   {[
                     { to: '/profile',      icon: User,          label: 'Mon Profil'       },
-                    { to: '/messages',     icon: MessageCircle, label: 'Mes Messages'     },
+                    { to: null,            icon: MessageCircle, label: 'Mes Messages',     action: () => { setIsMenuOpen(false); openMessages(); } },
                     { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier'       },
                     { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
                     { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
-                  ].map(({ to, icon: Icon, label }) => (
+                  ].map(({ to, icon: Icon, label, action }) => action ? (
+                    <button key={label} onClick={action}
+                      className="flex items-center w-full py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg text-left">
+                      <Icon className="w-4 h-4 mr-2.5 opacity-60" />{label}
+                    </button>
+                  ) : (
                     <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
                       className="flex items-center py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg">
                       <Icon className="w-4 h-4 mr-2.5 opacity-60" />
                       {label}
                     </Link>
-                  ))}
+                  )
+                  )}
                   {isAdmin && (
                     <Link to="/admin" onClick={() => setIsMenuOpen(false)}
                       className="flex items-center py-2.5 px-3 text-[13px] text-gray-500 hover:bg-gray-50 rounded-lg border-t border-gray-100 mt-1">
