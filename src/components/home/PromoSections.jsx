@@ -10,10 +10,10 @@ import { useListings } from '@/contexts/ListingsContext';
 const UrgentCard = ({ listing }) => (
   <Link
     to={`/listings/${listing.listing_slug || listing.id}`}
-    className="flex-shrink-0 w-[260px] h-[130px] flex rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
+    className="flex-shrink-0 w-[260px] h-[130px] flex rounded-xl overflow-hidden bg-category-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
   >
     {/* Image carrée à gauche */}
-    <div className="relative w-[130px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
+    <div className="relative w-[130px] h-full flex-shrink-0 overflow-hidden bg-category-card">
       {listing.images?.[0]
         ? <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         : <div className="w-full h-full flex items-center justify-center"><Flame className="w-8 h-8 text-gray-200" /></div>}
