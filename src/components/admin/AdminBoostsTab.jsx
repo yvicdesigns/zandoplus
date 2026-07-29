@@ -2,7 +2,7 @@ import React, { memo, useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Search, Link as LinkIcon, Loader2, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Zap, Search, Link as LinkIcon, Loader2, Trash2, MessageCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,7 +42,7 @@ const AdminBoostsTab = memo(() => {
       .select(`
         id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at,
         annonce:annonce_id(id, title, images),
-        user:user_id(full_name)
+        user:user_id(full_name, whatsapp_number)
       `)
       .order('created_at', { ascending: false });
 
@@ -83,6 +83,39 @@ const AdminBoostsTab = memo(() => {
 
     toast({ title: 'Succès', description: `Boost ${isActivating ? 'activé' : 'désactivé'} avec succès.` });
     fetchBoosts();
+  };
+
+  const openWhatsApp = (boost, type) => {
+    const raw = boost.user?.whatsapp_number || '';
+    const phone = raw.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+    if (!phone) {
+      toast({ title: 'Pas de numéro WhatsApp', description: `${boost.user?.full_name || 'Ce vendeur'} n'a pas encore enregistré son numéro WhatsApp.`, variant: 'destructive' });
+      return;
+    }
+    const name    = boost.user?.full_name || 'Vendeur';
+    const titre   = boost.annonce?.title  || 'votre annonce';
+    const montant = boost.montant?.toLocaleString('fr-FR') || '—';
+    const debut   = boost.date_debut ? new Date(boost.date_debut).toLocaleDateString('fr-FR') : 'aujourd\'hui';
+    const fin     = boost.date_fin   ? new Date(boost.date_fin).toLocaleDateString('fr-FR')   : '—';
+
+    const msgConfirm =
+      `Bonjour ${name} ! 👋\n\n` +
+      `✅ Nous avons bien reçu votre boost pour l'annonce *${titre}*.\n\n` +
+      `💰 Montant reçu : ${montant} FCFA\n` +
+      `📅 Début : ${debut}\n` +
+      `📅 Fin estimée : ${fin}\n\n` +
+      `Votre annonce est maintenant mise en avant sur Zando+ ! Merci de votre confiance. 🙏\n\n` +
+      `— L'équipe Zando+`;
+
+    const msgDispute =
+      `Bonjour ${name} ! 👋\n\n` +
+      `⚠️ Nous avons bien reçu votre demande de boost pour l'annonce *${titre}* (montant : ${montant} FCFA).\n\n` +
+      `Cependant, nous n'avons pas encore reçu le paiement correspondant.\n\n` +
+      `Merci de nous envoyer votre preuve de paiement ou de nous contacter pour régulariser la situation.\n\n` +
+      `— L'équipe Zando+`;
+
+    const text = encodeURIComponent(type === 'confirm' ? msgConfirm : msgDispute);
+    window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
   };
 
   const handleDelete = async () => {
@@ -177,10 +210,35 @@ const AdminBoostsTab = memo(() => {
                           <LinkIcon className="w-3 h-3" /> Preuve de paiement
                         </a>
                       )}
+                      {boost.user?.whatsapp_number ? (
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3 text-green-500" />
+                          {boost.user.whatsapp_number}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-orange-400 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Pas de WhatsApp
+                        </p>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 justify-self-start md:justify-self-end">
+                    <div className="flex flex-wrap items-center gap-2 justify-self-start md:justify-self-end">
+                      {/* WhatsApp buttons */}
+                      <button
+                        onClick={() => openWhatsApp(boost, 'confirm')}
+                        title="Confirmer le paiement par WhatsApp"
+                        className="flex items-center gap-1.5 px-3 h-8 bg-[#25D366] hover:bg-[#1ebe5a] text-white text-[11px] font-bold rounded-lg transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> Confirmer
+                      </button>
+                      <button
+                        onClick={() => openWhatsApp(boost, 'dispute')}
+                        title="Signaler un problème de paiement par WhatsApp"
+                        className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold rounded-lg border border-orange-200 transition-colors"
+                      >
+                        <AlertCircle className="w-3.5 h-3.5" /> Dispute
+                      </button>
                       <div className="flex items-center gap-2 bg-slate-50 border rounded-lg px-3 py-2">
                         <Switch
                           checked={boost.statut === 'active'}

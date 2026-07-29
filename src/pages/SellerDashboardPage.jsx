@@ -62,7 +62,7 @@ const LineChart = ({ data }) => {
 };
 
 /* ─── Champ éditable ────────────────────────────────────────── */
-const EditableRow = ({ label, value, type = 'text', options, onSave }) => {
+const EditableRow = ({ label, value, type = 'text', options, onSave, placeholder }) => {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || '');
   const [saving, setSaving] = useState(false);
@@ -86,6 +86,7 @@ const EditableRow = ({ label, value, type = 'text', options, onSave }) => {
             </select>
           ) : (
             <input type={type} value={val} onChange={e => setVal(e.target.value)} autoFocus
+              placeholder={placeholder}
               className="flex-1 h-9 border border-gray-200 rounded-lg px-3 text-[13px] focus:outline-none focus:border-custom-green-500" />
           )}
           <button onClick={handleSave} disabled={saving}
@@ -248,11 +249,12 @@ const SellerDashboardPage = () => {
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h2 className="text-[17px] font-black text-gray-900 mb-4">Informations personnelles</h2>
         <div className="divide-y divide-gray-100">
-          <EditableRow label="Nom complet"        value={profile?.full_name}  onSave={v => updateField('full_name', v)} />
-          <EditableRow label="Email"              value={user?.email}         onSave={() => toast({ title: 'Contactez le support pour changer votre email.' })} />
-          <EditableRow label="Téléphone"          value={profile?.phone}      onSave={v => updateField('phone', v)} />
-          <EditableRow label="Bio / Description"  value={profile?.bio}        onSave={v => updateField('bio', v)} />
-          <EditableRow label="Pays / Ville"       value={profile?.location}   onSave={v => updateField('location', v)} />
+          <EditableRow label="Nom complet"          value={profile?.full_name}       onSave={v => updateField('full_name', v)} />
+          <EditableRow label="Email"                value={user?.email}              onSave={() => toast({ title: 'Contactez le support pour changer votre email.' })} />
+          <EditableRow label="Téléphone"            value={profile?.phone}           onSave={v => updateField('phone', v)} />
+          <EditableRow label="Numéro WhatsApp"      value={profile?.whatsapp_number} onSave={v => updateField('whatsapp_number', v)} placeholder="+242 06 000 0000" />
+          <EditableRow label="Bio / Description"    value={profile?.bio}             onSave={v => updateField('bio', v)} />
+          <EditableRow label="Pays / Ville"         value={profile?.location}        onSave={v => updateField('location', v)} />
         </div>
       </div>
     );
