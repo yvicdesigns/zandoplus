@@ -59,6 +59,7 @@ const ConfirmationRequiredPage = lazy(() => import('@/pages/ConfirmationRequired
 const SmtpTestPage = lazy(() => import('@/pages/SmtpTestPage'));
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const SellerShopPage = lazy(() => import('@/pages/SellerShopPage'));
+const SellerDashboardPage = lazy(() => import('@/pages/SellerDashboardPage'));
 const PwaInstallPage = lazy(() => import('@/pages/PwaInstallPage'));
 const TrackingPage = lazy(() => import('@/pages/TrackingPage'));
 const DataDeletionPage = lazy(() => import('@/pages/DataDeletionPage'));
@@ -260,6 +261,7 @@ const AppContent = () => {
                       <Route path="/messages" element={<MessagesPage />} />
                       <Route path="/messages/:conversationId" element={<MessagesPage />} />
                       <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/espace-vendeur" element={<SellerDashboardPage />} />
                       <Route path="/settings" element={<SettingsPage />} />
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/cart/checkout" element={<CartCheckoutPage />} />

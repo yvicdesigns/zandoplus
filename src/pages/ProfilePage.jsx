@@ -292,6 +292,25 @@ const ProfilePage = () => {
           ))}
         </div>
 
+        {/* Espace vendeur (si déjà vendeur) */}
+        {user.is_seller && (
+          <div className="bg-gradient-to-r from-[#0d1f12] to-custom-green-500 rounded-2xl p-5 flex items-center gap-5">
+            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Store className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-black text-[14px]">Votre espace vendeur</p>
+              <p className="text-green-200 text-[12px]">Gérez votre boutique, vos produits et vos commandes.</p>
+            </div>
+            <button
+              onClick={() => navigate('/espace-vendeur')}
+              className="flex-shrink-0 flex items-center gap-1.5 bg-accent-yellow text-gray-900 font-black text-[12px] px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Accéder <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Devenez vendeur */}
         {!user.is_seller && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
