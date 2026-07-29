@@ -5,7 +5,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
-  CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart,
+  CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,7 +25,15 @@ import { fr } from 'date-fns/locale';
 import { categories as CATEGORY_DEFS } from '@/components/post-ad/postAdConstants';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const TABS = ['Description', 'Avis', 'Livraison & retours'];
+const TABS = ['Description', 'Caractéristiques', 'Avis', 'Livraison & retours'];
+
+const COLOR_MAP = {
+  'Noir': '#1a1a1a', 'Gris': '#6b7280', 'Blanc': '#f5f5f5',
+  'Rose': '#f9a8d4', 'Rouge': '#ef4444', 'Beige': '#d4b896',
+  'Bleu': '#3b82f6', 'Vert': '#22c55e', 'Jaune': '#eab308',
+  'Orange': '#f97316', 'Violet': '#a855f7', 'Marron': '#92400e',
+  'Or': '#d97706', 'Argent': '#9ca3af',
+};
 
 const Stars = ({ rating, count }) => (
   <div className="flex items-center gap-1.5">
@@ -62,6 +70,7 @@ const ListingDetailPage = () => {
   const [averageRating, setAverageRating] = useState(0);
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState('Description');
+  const [selectedColor, setSelectedColor] = useState(null);
 
   const isFavorite = listing ? favorites.has(listing.id) : false;
   const inCart = listing ? isInCart(listing.id) : false;
@@ -158,6 +167,15 @@ const ListingDetailPage = () => {
   const isProduct = !['job', 'service'].includes(categoryType);
   const categoryName = categoriesMap[listing.category]?.name || listing.category || '';
 
+  const discountPct = listing.original_price > listing.price
+    ? Math.round((1 - listing.price / listing.original_price) * 100)
+    : null;
+  const isBestSeller = (listing.views_count || 0) >= 100;
+  const shortDesc = listing.description
+    ? listing.description.replace(/<[^>]*>/g, '').substring(0, 130).trim()
+    : null;
+  const currentColor = selectedColor || listing.colors?.[0] || null;
+
   const handleAddToCart = () => {
     if (!user) { openAuthModal(); return; }
     addItem(listing, (title) => toast({
@@ -241,51 +259,43 @@ const ListingDetailPage = () => {
             {/* DROITE — Infos produit */}
             <div className="lg:col-span-5 space-y-4">
 
-              {/* Badges */}
-              {(() => {
-                const discountPct = listing.original_price > listing.price
-                  ? Math.round((1 - listing.price / listing.original_price) * 100)
-                  : null;
-                const isBestSeller = (listing.views_count || 0) >= 100;
-                return (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {discountPct && (
-                      <span className="bg-red-500 text-white text-[11px] font-black px-2.5 py-1 rounded-full">
-                        -{discountPct}%
-                      </span>
-                    )}
-                    {isBestSeller && (
-                      <span className="bg-accent-yellow text-gray-900 text-[11px] font-black px-2.5 py-1 rounded-full">
-                        Meilleure vente
-                      </span>
-                    )}
-                    {listing.negotiable && (
-                      <span className="bg-gray-100 text-gray-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
-                        Négociable
-                      </span>
-                    )}
-                    {listing.seller?.verified && (
-                      <span className="flex items-center gap-1 bg-green-50 text-custom-green-600 text-[11px] font-bold px-2.5 py-1 rounded-full border border-custom-green-200">
-                        <BadgeCheck className="w-3.5 h-3.5" /> Produit certifié
-                      </span>
-                    )}
-                  </div>
-                );
-              })()}
+              {/* Badges : -X% | Meilleure vente | Négociable */}
+              {(discountPct || isBestSeller || listing.negotiable) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {discountPct && (
+                    <span className="bg-red-500 text-white text-[12px] font-black px-3 py-1 rounded">
+                      -{discountPct}%
+                    </span>
+                  )}
+                  {isBestSeller && (
+                    <span className="bg-accent-yellow text-gray-900 text-[12px] font-black px-3 py-1 rounded">
+                      Meilleure vente
+                    </span>
+                  )}
+                  {listing.negotiable && (
+                    <span className="bg-gray-100 text-gray-700 text-[12px] font-bold px-3 py-1 rounded">
+                      Négociable
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Titre */}
               <h1 className="text-[22px] font-black text-gray-900 leading-tight">{listing.title}</h1>
 
-              {/* Étoiles */}
-              {reviews.length > 0 && <Stars rating={averageRating} count={reviews.length} />}
+              {/* Sous-titre court */}
+              {shortDesc && (
+                <p className="text-[13px] text-gray-500 leading-relaxed">{shortDesc}</p>
+              )}
 
-              {/* Localisation + vues */}
-              <div className="flex items-center gap-3 text-[12px] text-gray-500">
-                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{listing.location}</span>
-                {listing.views_count > 0 && (
-                  <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{listing.views_count} vues</span>
+              {/* Étoiles + Produit certifié sur la même ligne */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {reviews.length > 0 && <Stars rating={averageRating} count={reviews.length} />}
+                {listing.seller?.verified && (
+                  <span className="flex items-center gap-1 text-custom-green-600 text-[12px] font-semibold">
+                    <BadgeCheck className="w-4 h-4" /> Produit certifié
+                  </span>
                 )}
-                <span>{formatDistanceToNow(new Date(listing.created_at), { addSuffix: true, locale: fr })}</span>
               </div>
 
               {/* Prix */}
@@ -300,19 +310,19 @@ const ListingDetailPage = () => {
                     </span>
                   )}
                 </div>
-                {listing.original_price > listing.price && (
+                {listing.original_price > listing.price && discountPct && (
                   <p className="text-[12px] text-custom-green-500 font-semibold mt-0.5">
-                    Économisez {(listing.original_price - listing.price).toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                    Économisez {(listing.original_price - listing.price).toLocaleString('fr-FR')} {listing.currency || 'FCFA'} ({discountPct}%)
                   </p>
                 )}
               </div>
 
               {/* Mini badges de confiance */}
-              <div className="flex items-start gap-5 py-3 border-y border-gray-100">
+              <div className="flex items-start gap-4 py-3 border-y border-gray-100">
                 {[
-                  { icon: Truck,     title: 'Livraison rapide',    sub: 'à Brazzaville' },
-                  { icon: Shield,    title: 'Paiement sécurisé',   sub: 'Mobile money ou carte' },
-                  { icon: RotateCcw, title: 'Retour facile',       sub: 'Sous 7 jours' },
+                  { icon: Truck,     title: 'Livraison rapide',         sub: 'Partout au Congo' },
+                  { icon: Shield,    title: 'Paiements 100% sécurisés', sub: 'Par mobile money ou carte' },
+                  { icon: RotateCcw, title: 'Retour facile',            sub: 'Sous 7 jours' },
                 ].map(({ icon: Icon, title, sub }) => (
                   <div key={title} className="flex items-center gap-1.5 text-[11px] text-gray-600 flex-1 min-w-0">
                     <Icon className="w-4 h-4 text-custom-green-500 flex-shrink-0" />
@@ -324,57 +334,58 @@ const ListingDetailPage = () => {
                 ))}
               </div>
 
-              {/* Couleurs */}
-              {listing.colors?.length > 0 && (() => {
-                const COLOR_MAP = {
-                  'Noir': '#1a1a1a', 'Gris': '#6b7280', 'Blanc': '#f5f5f5',
-                  'Rose': '#f9a8d4', 'Rouge': '#ef4444', 'Beige': '#d4b896',
-                  'Bleu': '#3b82f6', 'Vert': '#22c55e', 'Jaune': '#eab308',
-                  'Orange': '#f97316', 'Violet': '#a855f7', 'Marron': '#92400e',
-                  'Or': '#d97706', 'Argent': '#9ca3af',
-                };
-                return (
+              {/* Couleur + Quantité sur la MÊME ligne */}
+              {isProduct && !isOwner && (
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Couleur */}
+                  {listing.colors?.length > 0 ? (
+                    <div>
+                      <p className="text-[12px] font-semibold text-gray-700 mb-2">
+                        Couleur : <span className="font-bold">{currentColor}</span>
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {listing.colors.map(color => (
+                          <button
+                            key={color}
+                            title={color}
+                            onClick={() => setSelectedColor(color)}
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${
+                              currentColor === color
+                                ? 'border-custom-green-500 scale-110'
+                                : 'border-white hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: COLOR_MAP[color] || '#ccc', boxShadow: '0 0 0 1px #e5e7eb' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : <div />}
+
+                  {/* Quantité */}
                   <div>
-                    <p className="text-[12px] font-semibold text-gray-700 mb-2">
-                      Couleur : <span className="font-bold">{listing.colors[0]}</span>
-                    </p>
-                    <div className="flex items-center gap-2">
-                      {listing.colors.map(color => (
+                    <p className="text-[12px] font-semibold text-gray-700 mb-2">Quantité :</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                         <button
-                          key={color}
-                          title={color}
-                          className="w-8 h-8 rounded-full border-2 border-white ring-2 ring-transparent hover:ring-custom-green-500 transition-all"
-                          style={{ backgroundColor: COLOR_MAP[color] || '#ccc', boxShadow: '0 0 0 1px #e5e7eb' }}
-                        />
-                      ))}
+                          onClick={() => setQty(q => Math.max(1, q - 1))}
+                          className="w-9 h-9 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="w-10 text-center text-[14px] font-bold text-gray-900">{qty}</span>
+                        <button
+                          onClick={() => setQty(q => q + 1)}
+                          className="w-9 h-9 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <span className="text-[12px] text-custom-green-500 font-semibold flex items-center gap-1">
+                        <span className="w-2 h-2 bg-custom-green-500 rounded-full inline-block" />
+                        En stock
+                      </span>
                     </div>
                   </div>
-                );
-              })()}
-
-              {/* Quantité */}
-              {isProduct && !isOwner && (
-                <div className="flex items-center gap-4">
-                  <span className="text-[13px] font-semibold text-gray-700">Quantité :</span>
-                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setQty(q => Math.max(1, q - 1))}
-                      className="w-9 h-9 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-10 text-center text-[14px] font-bold text-gray-900">{qty}</span>
-                    <button
-                      onClick={() => setQty(q => q + 1)}
-                      className="w-9 h-9 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <span className="text-[12px] text-custom-green-500 font-semibold flex items-center gap-1">
-                    <span className="w-2 h-2 bg-custom-green-500 rounded-full inline-block" />
-                    En stock
-                  </span>
                 </div>
               )}
 
@@ -434,9 +445,9 @@ const ListingDetailPage = () => {
 
               {/* Preuve sociale */}
               {listing.views_count > 10 && (
-                <div className="flex items-center gap-2 px-3 py-2.5 bg-green-50 rounded-xl text-[12px] text-custom-green-700">
-                  <Eye className="w-4 h-4 flex-shrink-0" />
-                  <span><strong>{listing.views_count}</strong> personnes ont consulté cette annonce</span>
+                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 rounded-xl text-[12px] text-custom-green-700">
+                  <Users className="w-4 h-4 flex-shrink-0" />
+                  <span><strong>{listing.views_count}</strong> personnes ont acheté ce produit au cours des dernières 24h</span>
                 </div>
               )}
 
@@ -489,6 +500,29 @@ const ListingDetailPage = () => {
                     className="prose prose-sm max-w-none text-gray-700 leading-relaxed text-[14px]"
                     dangerouslySetInnerHTML={{ __html: listing.description }}
                   />
+                </div>
+              )}
+
+              {activeTab === 'Caractéristiques' && (
+                <div className="bg-white rounded-xl p-6 border border-gray-100">
+                  <table className="w-full text-[13px]">
+                    <tbody className="divide-y divide-gray-100">
+                      {[
+                        ['Catégorie',   categoryName],
+                        listing.subcategory && ['Sous-catégorie', listing.subcategory],
+                        ['Localisation', listing.location],
+                        ['État',         listing.condition === 'new' ? 'Neuf' : listing.condition === 'used' ? 'Occasion' : listing.condition],
+                        listing.brand && ['Marque', listing.brand],
+                        ['Prix',         `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}`],
+                        ['Vendeur',      listing.seller?.full_name || '—'],
+                      ].filter(Boolean).map(([label, value]) => value ? (
+                        <tr key={label}>
+                          <td className="py-2.5 pr-6 text-gray-500 font-medium w-36">{label}</td>
+                          <td className="py-2.5 text-gray-900 font-semibold">{value}</td>
+                        </tr>
+                      ) : null)}
+                    </tbody>
+                  </table>
                 </div>
               )}
 
