@@ -30,60 +30,58 @@ import {
   Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity,
   FileText, ClipboardCheck, CreditCard, LayoutGrid, Menu, X,
   ChevronRight, BarChart3, Home, Wallet, AlertTriangle, MapPin,
-  TrendingUp, ArrowRight, RefreshCw, Bell, Globe
+  TrendingUp, ArrowRight, RefreshCw, Bell, Globe, LogOut,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 
-// ─── Navigation config ───────────────────────────────────────────────────────
-
+/* ─── Nav config ────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
     label: 'Gestion',
     items: [
-      { id: 'users',         icon: Users,        label: 'Utilisateurs',   color: 'text-blue-400',   bg: 'bg-blue-500/20',    badge: 'total_users' },
-      { id: 'listings',      icon: ShoppingBag,  label: 'Annonces',       color: 'text-emerald-400',bg: 'bg-emerald-500/20', badge: 'total_listings' },
-      { id: 'deliveries',    icon: Truck,         label: 'Livraisons',     color: 'text-orange-400', bg: 'bg-orange-500/20' },
-      { id: 'delivery-config', icon: MapPin,      label: 'Config Livraison', color: 'text-cyan-400',   bg: 'bg-cyan-500/20' },
-      { id: 'reports',       icon: Flag,          label: 'Signalements',   color: 'text-red-400',    bg: 'bg-red-500/20',     badge: 'pending_reports',    badgeAlert: true },
-      { id: 'verifications', icon: ShieldCheck,   label: 'Vérifications',  color: 'text-teal-400',   bg: 'bg-teal-500/20' },
+      { id: 'users',          icon: Users,        label: 'Utilisateurs',     badge: 'total_users' },
+      { id: 'listings',       icon: ShoppingBag,  label: 'Annonces',         badge: 'total_listings' },
+      { id: 'deliveries',     icon: Truck,        label: 'Livraisons' },
+      { id: 'delivery-config',icon: MapPin,       label: 'Config Livraison' },
+      { id: 'reports',        icon: Flag,         label: 'Signalements',     badge: 'pending_reports', badgeAlert: true },
+      { id: 'verifications',  icon: ShieldCheck,  label: 'Vérifications' },
     ],
   },
   {
     label: 'Monétisation',
     items: [
-      { id: 'boosts',     icon: Zap,       label: 'Boosts',     color: 'text-amber-400',  bg: 'bg-amber-500/20' },
-      { id: 'escrow',     icon: ShieldCheck,label: 'Escrow',    color: 'text-green-400',  bg: 'bg-green-500/20',   badge: 'pending_escrow', badgeAlert: true },
-      { id: 'withdrawals',icon: Wallet,    label: 'Retraits',   color: 'text-violet-400', bg: 'bg-violet-500/20',  badge: 'pending_withdrawals', badgeAlert: true },
-      { id: 'ads',        icon: Megaphone, label: 'Publicités', color: 'text-purple-400', bg: 'bg-purple-500/20' },
-      { id: 'payments',   icon: CreditCard,label: 'Paiements',  color: 'text-green-400',  bg: 'bg-green-500/20',   adminOnly: true },
+      { id: 'boosts',      icon: Zap,        label: 'Boosts' },
+      { id: 'escrow',      icon: ShieldCheck, label: 'Escrow',    badge: 'pending_escrow',       badgeAlert: true },
+      { id: 'withdrawals', icon: Wallet,     label: 'Retraits',  badge: 'pending_withdrawals',  badgeAlert: true },
+      { id: 'ads',         icon: Megaphone,  label: 'Publicités' },
+      { id: 'payments',    icon: CreditCard, label: 'Paiements', adminOnly: true },
     ],
   },
   {
     label: 'Site & Contenu',
     items: [
-      { id: 'site',       icon: Globe,      label: 'Gestion du site', color: 'text-custom-green-400', bg: 'bg-green-500/20' },
-      { id: 'categories', icon: LayoutGrid, label: 'Catégories',      color: 'text-indigo-400',       bg: 'bg-indigo-500/20' },
+      { id: 'site',       icon: Globe,       label: 'Gestion du site' },
+      { id: 'categories', icon: LayoutGrid,  label: 'Catégories' },
     ],
   },
   {
     label: 'Programme',
     items: [
-      { id: 'beta', icon: Users, label: 'Testeurs Beta', color: 'text-purple-400', bg: 'bg-purple-500/20' },
+      { id: 'beta', icon: Users, label: 'Testeurs Beta' },
     ],
   },
   {
     label: 'Système',
     items: [
-      { id: 'approvals',   icon: ClipboardCheck, label: 'Approbations', color: 'text-blue-300',   bg: 'bg-blue-500/20',   adminOnly: true },
-      { id: 'audit',       icon: FileText,        label: 'Audit Logs',   color: 'text-violet-400', bg: 'bg-violet-500/20', adminOnly: true },
-      { id: 'email-test',  icon: Mail,            label: 'Test E-mail',  color: 'text-cyan-400',   bg: 'bg-cyan-500/20',   adminOnly: true },
-      { id: 'settings',    icon: Settings,        label: 'Paramètres',   color: 'text-gray-400',   bg: 'bg-gray-500/20' },
-      { id: 'qa',          icon: Activity,        label: 'QA & Tests',   color: 'text-sky-400',    bg: 'bg-sky-500/20' },
+      { id: 'approvals',  icon: ClipboardCheck, label: 'Approbations', adminOnly: true },
+      { id: 'audit',      icon: FileText,        label: 'Audit Logs',   adminOnly: true },
+      { id: 'email-test', icon: Mail,            label: 'Test E-mail',  adminOnly: true },
+      { id: 'settings',   icon: Settings,        label: 'Paramètres' },
+      { id: 'qa',         icon: Activity,        label: 'QA & Tests' },
     ],
   },
 ];
@@ -95,205 +93,233 @@ const TAB_LABELS = {
   beta: 'Testeurs Beta', ads: 'Publicités', payments: 'Paiements',
   site: 'Gestion du site', categories: 'Catégories', approvals: 'Approbations',
   audit: 'Audit Logs', 'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
+  'delivery-config': 'Config Livraison',
 };
 
-const ROLE_CONFIG = {
-  admin:  { label: 'Admin',    color: 'bg-red-500/20    text-red-300    border-red-500/30' },
-  editor: { label: 'Éditeur',  color: 'bg-blue-500/20   text-blue-300   border-blue-500/30' },
-  viewer: { label: 'Lecteur',  color: 'bg-gray-500/20   text-gray-300   border-gray-500/30' },
+const ROLE_CFG = {
+  admin:  { label: 'Admin',    cls: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  editor: { label: 'Éditeur',  cls: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+  viewer: { label: 'Lecteur',  cls: 'bg-white/10 text-white/50 border border-white/20' },
 };
 
-// ─── Tab renderer ─────────────────────────────────────────────────────────────
-
+/* ─── Tab renderer ──────────────────────────────────────────── */
 const renderTabContent = (activeTab) => {
   switch (activeTab) {
-    case 'users':         return <AdminUsersTab />;
-    case 'listings':      return <AdminListingsTab />;
+    case 'users':            return <AdminUsersTab />;
+    case 'listings':         return <AdminListingsTab />;
     case 'deliveries':       return <AdminDeliveriesTab />;
     case 'delivery-config':  return <AdminDeliveryConfigTab />;
-    case 'reports':       return <AdminReportsTab />;
-    case 'verifications': return <AdminVerificationsTab />;
-    case 'boosts':        return <AdminBoostsTab />;
-    case 'escrow':        return <AdminEscrowTab />;
-    case 'withdrawals':   return <AdminWithdrawalsTab />;
-    case 'ads':           return <AdminAdsTab />;
-    case 'payments':      return <AdminPaymentsTab />;
-    case 'site':          return <AdminSiteTab />;
-    case 'categories':    return <AdminCategoriesTab />;
-    case 'hero':          return <AdminHeroTab />;
-    case 'approvals':     return <AdminChangeRequestsTab />;
-    case 'audit':         return <AdminAuditLogTab />;
-    case 'email-test':    return <AdminEmailTestTab />;
-    case 'settings':      return <AdminSettingsTab />;
-    case 'qa':            return <AdminQATab />;
-    case 'beta':          return <AdminBetaTab />;
-    default:              return null;
+    case 'reports':          return <AdminReportsTab />;
+    case 'verifications':    return <AdminVerificationsTab />;
+    case 'boosts':           return <AdminBoostsTab />;
+    case 'escrow':           return <AdminEscrowTab />;
+    case 'withdrawals':      return <AdminWithdrawalsTab />;
+    case 'ads':              return <AdminAdsTab />;
+    case 'payments':         return <AdminPaymentsTab />;
+    case 'site':             return <AdminSiteTab />;
+    case 'categories':       return <AdminCategoriesTab />;
+    case 'hero':             return <AdminHeroTab />;
+    case 'approvals':        return <AdminChangeRequestsTab />;
+    case 'audit':            return <AdminAuditLogTab />;
+    case 'email-test':       return <AdminEmailTestTab />;
+    case 'settings':         return <AdminSettingsTab />;
+    case 'qa':               return <AdminQATab />;
+    case 'beta':             return <AdminBetaTab />;
+    default:                 return null;
   }
 };
 
-// ─── Overview page ────────────────────────────────────────────────────────────
-
+/* ─── Overview ──────────────────────────────────────────────── */
 const OverviewTab = ({ stats, counts, loading, setActiveTab }) => {
   const alerts = [
-    counts.pending_reports   > 0 && { id: 'reports',     label: 'Signalements en attente',    value: counts.pending_reports,    color: 'border-red-400    bg-red-50    text-red-700',    icon: Flag },
-    counts.pending_escrow    > 0 && { id: 'escrow',      label: 'Retraits escrow en attente', value: counts.pending_escrow,     color: 'border-orange-400 bg-orange-50 text-orange-700', icon: ShieldCheck },
-    counts.pending_withdrawals > 0 && { id: 'withdrawals', label: 'Retraits portefeuille',    value: counts.pending_withdrawals,color: 'border-violet-400 bg-violet-50 text-violet-700', icon: Wallet },
+    counts.pending_reports    > 0 && { id: 'reports',     label: 'Signalements',         value: counts.pending_reports,    icon: Flag,       cls: 'border-red-200 bg-red-50 text-red-700',         dot: 'bg-red-500' },
+    counts.pending_escrow     > 0 && { id: 'escrow',      label: 'Escrow en attente',    value: counts.pending_escrow,     icon: ShieldCheck,cls: 'border-orange-200 bg-orange-50 text-orange-700', dot: 'bg-orange-500' },
+    counts.pending_withdrawals> 0 && { id: 'withdrawals', label: 'Retraits portefeuille',value: counts.pending_withdrawals,icon: Wallet,     cls: 'border-violet-200 bg-violet-50 text-violet-700', dot: 'bg-violet-500' },
   ].filter(Boolean);
 
-  const quickLinks = [
-    { id: 'users',     label: 'Utilisateurs', icon: Users,       color: 'from-blue-500 to-blue-600' },
-    { id: 'listings',  label: 'Annonces',     icon: ShoppingBag, color: 'from-emerald-500 to-teal-600' },
-    { id: 'escrow',    label: 'Escrow',       icon: ShieldCheck, color: 'from-green-500 to-emerald-600' },
-    { id: 'boosts',    label: 'Boosts',       icon: Zap,         color: 'from-amber-400 to-orange-500' },
-    { id: 'deliveries',label: 'Livraisons',   icon: Truck,       color: 'from-orange-400 to-red-500' },
-    { id: 'settings',  label: 'Paramètres',   icon: Settings,    color: 'from-gray-500 to-slate-600' },
+  const QUICK = [
+    { id: 'users',       label: 'Utilisateurs', icon: Users,        bg: 'bg-blue-100',   ic: 'text-blue-600'   },
+    { id: 'listings',    label: 'Annonces',     icon: ShoppingBag,  bg: 'bg-emerald-100',ic: 'text-emerald-600'},
+    { id: 'escrow',      label: 'Escrow',       icon: ShieldCheck,  bg: 'bg-green-100',  ic: 'text-green-600'  },
+    { id: 'boosts',      label: 'Boosts',       icon: Zap,          bg: 'bg-amber-100',  ic: 'text-amber-600'  },
+    { id: 'deliveries',  label: 'Livraisons',   icon: Truck,        bg: 'bg-orange-100', ic: 'text-orange-600' },
+    { id: 'settings',    label: 'Paramètres',   icon: Settings,     bg: 'bg-gray-100',   ic: 'text-gray-600'   },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Stats */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Statistiques</h2>
-        <AdminStatsGrid stats={stats} loading={loading} />
-      </section>
+    <div className="space-y-6">
 
-      {/* Alerts */}
-      {alerts.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-red-500 animate-pulse" />
-            Actions requises
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {alerts.map((alert) => {
-              const Icon = alert.icon;
-              return (
-                <button
-                  key={alert.id}
-                  onClick={() => setActiveTab(alert.id)}
-                  className={`flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all hover:shadow-md ${alert.color}`}
-                >
-                  <div className="flex-shrink-0">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-2xl font-bold leading-none">{alert.value}</p>
-                    <p className="text-xs font-medium mt-1 opacity-80">{alert.label}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 opacity-60 flex-shrink-0" />
-                </button>
-              );
-            })}
+      {/* Hero KPI card */}
+      <div className="rounded-2xl overflow-hidden bg-[#0d1f12] relative">
+        {/* décos bg */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-custom-green-500 opacity-10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-20 w-48 h-48 bg-accent-yellow opacity-5 rounded-full blur-2xl" />
+        </div>
+
+        <div className="relative z-10 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-0.5">Tableau de bord</p>
+              <h2 className="text-white text-[20px] font-black">Vue d'ensemble</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-white/40 text-[11px] font-semibold">En direct</span>
+            </div>
           </div>
-        </section>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'Utilisateurs',     value: counts.total_users,    icon: Users,       color: 'text-blue-400',   section: 'users' },
+              { label: 'Annonces actives', value: counts.total_listings, icon: ShoppingBag, color: 'text-emerald-400',section: 'listings' },
+              { label: 'Signalements',     value: counts.pending_reports,icon: Flag,        color: 'text-red-400',    section: 'reports' },
+              { label: 'Retraits',         value: counts.pending_withdrawals, icon: Wallet, color: 'text-violet-400', section: 'withdrawals' },
+            ].map(({ label, value, icon: Icon, color, section }) => (
+              <button key={label} onClick={() => setActiveTab(section)}
+                className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-left transition-all group">
+                <Icon className={`w-5 h-5 ${color} mb-3`} />
+                <p className="text-white text-[26px] font-black leading-none">{loading ? '—' : (value ?? 0).toLocaleString('fr-FR')}</p>
+                <p className="text-white/40 text-[11px] mt-1 group-hover:text-white/60 transition-colors">{label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Alertes */}
+      {alerts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Bell className="w-4 h-4 text-red-500" />
+            <h3 className="text-[13px] font-black text-gray-900">Actions requises</h3>
+            <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse">{alerts.length}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {alerts.map(({ id, label, value, icon: Icon, cls, dot }) => (
+              <button key={id} onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left hover:shadow-md transition-all ${cls}`}>
+                <div className="relative flex-shrink-0">
+                  <Icon className="w-5 h-5" />
+                  <span className={`absolute -top-1 -right-1 w-2 h-2 ${dot} rounded-full animate-pulse`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[22px] font-black leading-none">{value}</p>
+                  <p className="text-[11px] font-semibold mt-0.5 opacity-80">{label}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 opacity-50 flex-shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Quick access */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Accès rapide</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {quickLinks.map((link) => {
-            const Icon = link.icon;
-            return (
-              <button
-                key={link.id}
-                onClick={() => setActiveTab(link.id)}
-                className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group"
-              >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">{link.label}</span>
-              </button>
-            );
-          })}
+      {/* Statistiques */}
+      <div>
+        <h3 className="text-[13px] font-black text-gray-900 mb-3">Statistiques</h3>
+        <AdminStatsGrid stats={stats} loading={loading} />
+      </div>
+
+      {/* Accès rapide */}
+      <div>
+        <h3 className="text-[13px] font-black text-gray-900 mb-3">Accès rapide</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {QUICK.map(({ id, label, icon: Icon, bg, ic }) => (
+            <button key={id} onClick={() => setActiveTab(id)}
+              className="flex flex-col items-center gap-2.5 p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all group">
+              <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center`}>
+                <Icon className={`w-5 h-5 ${ic}`} />
+              </div>
+              <span className="text-[11px] font-bold text-gray-700 group-hover:text-gray-900">{label}</span>
+            </button>
+          ))}
         </div>
-      </section>
+      </div>
+
     </div>
   );
 };
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+/* ─── Sidebar ───────────────────────────────────────────────── */
+const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, onNavigate, signOut }) => {
+  const navigate = useNavigate();
+  const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
+  const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const avatarUrl = user?.user_metadata?.avatar_url;
 
-const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, onNavigate }) => {
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.[0]?.toUpperCase() ?? 'A';
-
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
+  const go = (id) => { setActiveTab(id); onNavigate?.(); };
 
   return (
-    <nav className="flex flex-col h-full select-none">
+    <nav className="flex flex-col h-full select-none bg-[#0d1f12]">
+
       {/* Logo */}
       <div className="px-4 py-5 border-b border-white/8 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg flex-shrink-0">
-            <BarChart3 className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-accent-yellow flex items-center justify-center flex-shrink-0 shadow-lg">
+            <span className="text-[14px] font-black text-gray-900">Z+</span>
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight tracking-tight">Zando+</p>
-            <p className="text-white/40 text-[11px]">Administration</p>
+            <p className="text-white font-black text-[14px] leading-tight">Zando+</p>
+            <p className="text-white/35 text-[10px] font-semibold tracking-wider uppercase">Administration</p>
           </div>
         </div>
       </div>
 
-      {/* Overview button */}
+      {/* Overview */}
       <div className="px-3 pt-3 pb-1 flex-shrink-0">
         <button
-          onClick={() => { setActiveTab('overview'); onNavigate?.(); }}
+          onClick={() => go('overview')}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
             activeTab === 'overview'
-              ? 'bg-emerald-500/20 text-emerald-300'
-              : 'text-white/50 hover:text-white hover:bg-white/5'
+              ? 'bg-accent-yellow/15 text-accent-yellow'
+              : 'text-white/50 hover:text-white hover:bg-white/6'
           }`}
         >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === 'overview' ? 'bg-emerald-500/30' : 'bg-white/5'}`}>
-            <Home className={`w-4 h-4 ${activeTab === 'overview' ? 'text-emerald-400' : 'text-current'}`} />
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === 'overview' ? 'bg-accent-yellow/20' : 'bg-white/6'}`}>
+            <Home className="w-3.5 h-3.5" />
           </div>
-          <span className="text-sm font-semibold flex-1">Vue d'ensemble</span>
+          <span className="text-[13px] font-bold flex-1">Vue d'ensemble</span>
         </button>
       </div>
 
       {/* Groups */}
-      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1 scrollbar-thin scrollbar-thumb-white/10">
+      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-0.5 scrollbar-thin scrollbar-thumb-white/10">
         {NAV_GROUPS.map((group) => {
-          const visibleItems = group.items.filter(item => !item.adminOnly || isAdmin);
-          if (visibleItems.length === 0) return null;
+          const visible = group.items.filter(i => !i.adminOnly || isAdmin);
+          if (!visible.length) return null;
           return (
-            <div key={group.label} className="mb-3">
-              <p className="text-white/25 text-[10px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5">
+            <div key={group.label} className="mb-2">
+              <p className="text-white/25 text-[9px] font-black uppercase tracking-[0.15em] px-3 pt-3 pb-1.5">
                 {group.label}
               </p>
-              {visibleItems.map((item) => {
+              {visible.map((item) => {
                 const isActive = activeTab === item.id;
                 const count = item.badge ? counts[item.badge] : null;
                 const showBadge = count > 0;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => { setActiveTab(item.id); onNavigate?.(); }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all duration-150 relative ${
+                    onClick={() => go(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all relative group ${
                       isActive
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/55 hover:text-white hover:bg-white/5'
+                        ? 'bg-accent-yellow/15 text-accent-yellow'
+                        : 'text-white/45 hover:text-white hover:bg-white/6'
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="sidebar-indicator"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-emerald-400"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-accent-yellow"
                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                       />
                     )}
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? item.bg : ''}`}>
-                      <item.icon className={`w-3.5 h-3.5 ${isActive ? item.color : 'text-current'}`} />
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'bg-accent-yellow/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
+                      <item.icon className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-[13px] font-medium flex-1 leading-none">{item.label}</span>
+                    <span className="text-[12.5px] font-semibold flex-1 leading-none">{item.label}</span>
                     {showBadge && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        item.badgeAlert
-                          ? 'bg-red-500/90 text-white animate-pulse'
-                          : 'bg-white/15 text-white/70'
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                        item.badgeAlert ? 'bg-red-500 text-white animate-pulse' : 'bg-white/15 text-white/60'
                       }`}>
                         {count > 99 ? '99+' : count}
                       </span>
@@ -306,26 +332,33 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
         })}
       </div>
 
-      {/* User footer */}
-      <div className="flex-shrink-0 px-3 py-3 border-t border-white/8">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-md">
-            {initials}
+      {/* Footer */}
+      <div className="flex-shrink-0 px-3 py-3 border-t border-white/8 space-y-1">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-custom-green-500 flex items-center justify-center flex-shrink-0 shadow">
+            {avatarUrl
+              ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              : <span className="text-white text-[11px] font-black">{initials}</span>}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate leading-tight">{displayName}</p>
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${ROLE_CONFIG[userRole]?.color || ROLE_CONFIG.viewer.color}`}>
-              {ROLE_CONFIG[userRole]?.label || 'Accès limité'}
+            <p className="text-white text-[12px] font-bold truncate leading-tight">{name}</p>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ROLE_CFG[userRole]?.cls || ROLE_CFG.viewer.cls}`}>
+              {ROLE_CFG[userRole]?.label || 'Accès limité'}
             </span>
           </div>
         </div>
+        <button
+          onClick={() => { signOut?.(); navigate('/'); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors text-[12px] font-semibold"
+        >
+          <LogOut className="w-3.5 h-3.5" /> Se déconnecter
+        </button>
       </div>
     </nav>
   );
 };
 
-// ─── Main dashboard ───────────────────────────────────────────────────────────
-
+/* ─── Main ──────────────────────────────────────────────────── */
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const mainRef = React.useRef(null);
@@ -338,29 +371,26 @@ const AdminDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
-  const { userRole, isAdmin, user } = useAuth();
+  const { userRole, isAdmin, user, signOut } = useAuth();
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTab]);
 
   const fetchStats = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
-
+    if (!silent) setLoading(true); else setRefreshing(true);
     try {
       const [{ data }, escrowRes, withdrawalRes] = await Promise.all([
         supabase.rpc('get_admin_statistics'),
         supabase.from('transactions_escrow').select('id', { count: 'exact', head: true }).eq('statut', 'retrait_demande'),
         supabase.from('wallet_withdrawals').select('id', { count: 'exact', head: true }).eq('statut', 'pending'),
       ]);
-
       if (data) {
         setStats([
-          { label: 'Utilisateurs',    value: data.total_users,    icon: Users,       color: 'from-blue-500 to-blue-600' },
-          { label: 'Annonces actives',value: data.total_listings, icon: ShoppingBag, color: 'from-emerald-500 to-teal-600', change: `+${data.new_listings_last_24h} / 24h` },
-          { label: 'Boosts actifs',   value: data.active_boosts,  icon: Zap,         color: 'from-amber-400 to-orange-500' },
-          { label: 'Signalements',    value: data.pending_reports, icon: Flag,        color: 'from-red-500 to-pink-600' },
+          { label: 'Utilisateurs',     value: data.total_users,     icon: Users,       color: 'from-blue-500 to-blue-600' },
+          { label: 'Annonces actives', value: data.total_listings,  icon: ShoppingBag, color: 'from-emerald-500 to-teal-600', change: `+${data.new_listings_last_24h} / 24h` },
+          { label: 'Boosts actifs',    value: data.active_boosts,   icon: Zap,         color: 'from-amber-400 to-orange-500' },
+          { label: 'Signalements',     value: data.pending_reports, icon: Flag,        color: 'from-red-500 to-pink-600' },
         ]);
         setCounts({
           total_users:          data.total_users,
@@ -383,25 +413,20 @@ const AdminDashboard = () => {
 
   const totalAlerts = counts.pending_reports + counts.pending_escrow + counts.pending_withdrawals;
 
+  const sidebarProps = { activeTab, setActiveTab, isAdmin, userRole, user, counts, signOut };
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex bg-gray-50/80">
+    <div className="min-h-[calc(100vh-4rem)] flex bg-page-bg">
       <Helmet>
         <title>Administration — Zando+ Congo</title>
       </Helmet>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-slate-900 flex-shrink-0 sticky top-16 md:top-[7.75rem] h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)] overflow-hidden shadow-2xl shadow-slate-900/40">
-        <SidebarNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          isAdmin={isAdmin}
-          userRole={userRole}
-          user={user}
-          counts={counts}
-        />
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex flex-col w-[220px] flex-shrink-0 sticky top-16 md:top-[7.75rem] h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)] overflow-hidden shadow-2xl shadow-black/30">
+        <SidebarNav {...sidebarProps} />
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -411,25 +436,15 @@ const AdminDashboard = () => {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
             />
             <motion.aside
-              initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 h-full w-60 bg-slate-900 z-50 lg:hidden shadow-2xl flex flex-col"
+              initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="fixed top-0 left-0 h-full w-[220px] z-50 lg:hidden shadow-2xl flex flex-col"
             >
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-              >
+              <button onClick={() => setSidebarOpen(false)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors z-10">
                 <X className="w-4 h-4" />
               </button>
-              <SidebarNav
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                isAdmin={isAdmin}
-                userRole={userRole}
-                user={user}
-                counts={counts}
-                onNavigate={() => setSidebarOpen(false)}
-              />
+              <SidebarNav {...sidebarProps} onNavigate={() => setSidebarOpen(false)} />
             </motion.aside>
           </>
         )}
@@ -439,7 +454,7 @@ const AdminDashboard = () => {
       <main ref={mainRef} className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)]">
 
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-200/70 px-4 lg:px-6 h-14 flex items-center gap-3 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 lg:px-6 h-14 flex items-center gap-3 shadow-sm">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500"
@@ -448,17 +463,14 @@ const AdminDashboard = () => {
           </button>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 text-sm min-w-0">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className="text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0"
-            >
+          <div className="flex items-center gap-1.5 text-[13px] min-w-0">
+            <button onClick={() => setActiveTab('overview')} className="text-gray-400 hover:text-custom-green-500 transition-colors flex-shrink-0">
               <Home className="w-3.5 h-3.5" />
             </button>
             {activeTab !== 'overview' && (
               <>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                <span className="text-gray-900 font-semibold truncate">{TAB_LABELS[activeTab] || activeTab}</span>
+                <span className="text-gray-900 font-bold truncate">{TAB_LABELS[activeTab] || activeTab}</span>
               </>
             )}
           </div>
@@ -474,7 +486,7 @@ const AdminDashboard = () => {
                 className="relative p-2 rounded-xl hover:bg-red-50 text-red-500 transition-colors"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">
                   {totalAlerts > 9 ? '9+' : totalAlerts}
                 </span>
               </button>
@@ -489,8 +501,12 @@ const AdminDashboard = () => {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
 
-            <span className={`hidden sm:inline-flex text-[11px] font-semibold px-2.5 py-1 rounded-full border ${ROLE_CONFIG[userRole]?.color || ROLE_CONFIG.viewer.color}`}>
-              {ROLE_CONFIG[userRole]?.label || 'Accès limité'}
+            <span className={`hidden sm:inline-flex text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+              userRole === 'admin' ? 'bg-red-50 text-red-600 border-red-200'
+              : userRole === 'editor' ? 'bg-blue-50 text-blue-600 border-blue-200'
+              : 'bg-gray-50 text-gray-500 border-gray-200'
+            }`}>
+              {ROLE_CFG[userRole]?.label || 'Accès limité'}
             </span>
           </div>
         </div>
@@ -500,18 +516,13 @@ const AdminDashboard = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.18 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
             >
               {activeTab === 'overview' ? (
-                <OverviewTab
-                  stats={stats}
-                  counts={counts}
-                  loading={loading}
-                  setActiveTab={setActiveTab}
-                />
+                <OverviewTab stats={stats} counts={counts} loading={loading} setActiveTab={setActiveTab} />
               ) : (
                 renderTabContent(activeTab)
               )}
