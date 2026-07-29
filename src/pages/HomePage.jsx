@@ -16,6 +16,7 @@ const NewsletterSection = lazy(() => import('@/components/home/NewsletterSection
 const CtaSection = lazy(() => import('@/components/home/CtaSection'));
 const FeaturedShopsSection = lazy(() => import('@/components/shop/FeaturedShopsSection'));
 const UrgentPopup = lazy(() => import('@/components/home/UrgentPopup'));
+import { UrgentSection, BoostedSection } from '@/components/home/PromoSections';
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -120,6 +121,8 @@ const HomePage = () => {
         </Suspense>
         <Suspense fallback={<FullPageLoader />}>
           <HeroSection />
+          <UrgentSection />
+          <BoostedSection />
           <TrustBarSection />
           <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
           <ListingsSection />
