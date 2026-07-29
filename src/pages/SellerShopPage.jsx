@@ -1,124 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { ShoppingBag as LoadingIcon, ArrowLeft, Calendar, MapPin, Shield, Star, Phone, Loader2, Share2, Copy, Check, MessageSquare } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import ListingItem from '@/components/listings/ListingItem';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import ListingItem from '@/components/listings/ListingItem';
 import ReviewItem from '@/components/reviews/ReviewItem';
-import StarRating from '@/components/reviews/StarRating';
+import {
+  Loader2, Star, Heart, MessageSquare, MapPin, Calendar,
+  Package, Users, Clock, ThumbsUp, ChevronRight, BadgeCheck,
+  Truck, Shield, Headphones, CheckCircle, SlidersHorizontal,
+  ShoppingBag,
+} from 'lucide-react';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const ShareShopButton = ({ seller }) => {
-  const [open, setOpen]     = useState(false);
-  const [copied, setCopied] = useState(false);
-  const ref = useRef(null);
-
-  const shopUrl  = `${window.location.origin}/seller/${seller.shop_slug || seller.id}`;
-  const shopText = `Découvrez la boutique de ${seller.name} sur Zando+ Congo 🛍️`;
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const handleShare = async () => {
-    // Use native Web Share API on mobile if available
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: seller.name, text: shopText, url: shopUrl });
-      } catch {}
-      return;
-    }
-    setOpen(o => !o);
-  };
-
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(shopUrl);
-    setCopied(true);
-    setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
-  };
-
-  const PLATFORMS = [
-    {
-      label: 'WhatsApp',
-      color: 'text-custom-green-600',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.858L.054 23.423a.75.75 0 00.918.983l5.741-1.505A11.943 11.943 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.726 9.726 0 01-4.964-1.356l-.355-.212-3.686.967.984-3.595-.231-.371A9.725 9.725 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
-      ),
-      href: `https://wa.me/?text=${encodeURIComponent(shopText + '\n' + shopUrl)}`,
-    },
-    {
-      label: 'Facebook',
-      color: 'text-blue-600',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      ),
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shopUrl)}`,
-    },
-  ];
-
-  return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="outline"
-        size="lg"
-        onClick={handleShare}
-        className="border-custom-green-300 text-custom-green-700 hover:bg-custom-green-50"
-      >
-        <Share2 className="w-4 h-4 mr-2" />
-        Partager
-      </Button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-12 bg-white rounded-xl shadow-xl border border-gray-100 p-2 w-48 z-50"
-          >
-            {PLATFORMS.map(p => (
-              <a
-                key={p.label}
-                href={p.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className={p.color}>{p.icon}</span>
-                <span className="text-sm font-medium text-gray-700">{p.label}</span>
-              </a>
-            ))}
-            <button
-              onClick={copyLink}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              {copied
-                ? <Check className="w-4 h-4 text-custom-green-500" />
-                : <Copy className="w-4 h-4 text-gray-500" />
-              }
-              <span className="text-sm font-medium text-gray-700">
-                {copied ? 'Lien copié !' : 'Copier le lien'}
-              </span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+const Stars = ({ rating, small }) => (
+  <div className="flex items-center gap-0.5">
+    {[1,2,3,4,5].map(i => (
+      <svg key={i} width={small ? 12 : 14} height={small ? 12 : 14} viewBox="0 0 24 24"
+        className={i <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-200'} fill="currentColor">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ))}
+  </div>
+);
 
 const SellerShopPage = () => {
   const { sellerId } = useParams();
@@ -126,276 +34,515 @@ const SellerShopPage = () => {
   const { user, openAuthModal } = useAuth();
   const { toast } = useToast();
 
-  const [seller, setSeller] = useState(null);
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [ratingInfo, setRatingInfo] = useState({ average_rating: 0, review_count: 0 });
-  const [sellerReviews, setSellerReviews] = useState([]);
-  const [isCalling, setIsCalling] = useState(false);
+  const [seller, setSeller]           = useState(null);
+  const [listings, setListings]       = useState([]);
+  const [reviews, setReviews]         = useState([]);
+  const [ratingInfo, setRatingInfo]   = useState({ average: 0, count: 0 });
+  const [txCount, setTxCount]         = useState(0);
+  const [loading, setLoading]         = useState(true);
+  const [activeTab, setActiveTab]     = useState('boutique');
+  const [showAllCats, setShowAllCats] = useState(false);
+  const [sortBy, setSortBy]           = useState('recent');
 
   useEffect(() => {
-    const fetchSellerData = async () => {
+    const load = async () => {
       setLoading(true);
-
       const isUUID = UUID_REGEX.test(sellerId);
+      const q = supabase.from('profiles').select('*');
+      const { data: s, error } = await (isUUID ? q.eq('id', sellerId) : q.eq('shop_slug', sellerId)).single();
+      if (error || !s) { navigate('/'); return; }
+      if (isUUID && s.shop_slug) { navigate(`/seller/${s.shop_slug}`, { replace: true }); return; }
 
-      // Fetch by id (UUID) or by shop_slug
-      const sellerPromise = isUUID
-        ? supabase.from('profiles').select('*').eq('id', sellerId).single()
-        : supabase.from('profiles').select('*').eq('shop_slug', sellerId).single();
-
-      const { data: sellerData, error: sellerError } = await sellerPromise;
-
-      if (sellerError || !sellerData) {
-        console.error("Erreur de récupération du vendeur:", sellerError);
-        navigate('/');
-        return;
-      }
-
-      // Redirect UUID links to the canonical slug URL
-      if (isUUID && sellerData.shop_slug) {
-        navigate(`/seller/${sellerData.shop_slug}`, { replace: true });
-        return;
-      }
-
-      const profileId = sellerData.id;
-
-      const [{ data: listingsData, error: listingsError }, { data: ratingData }] = await Promise.all([
-        supabase
-          .from('listings')
-          .select('*', { count: 'exact' })
-          .eq('user_id', profileId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('reviews')
-          .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, avatar_url)')
-          .eq('seller_id', profileId)
-          .order('created_at', { ascending: false }),
+      const [{ data: listData }, { data: revData }, { count: tx }] = await Promise.all([
+        supabase.from('listings').select('*').eq('user_id', s.id).eq('status', 'active').order('created_at', { ascending: false }),
+        supabase.from('reviews').select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, avatar_url)').eq('seller_id', s.id).order('created_at', { ascending: false }),
+        supabase.from('transactions_escrow').select('id', { count: 'exact', head: true }).eq('vendeur_id', s.id).eq('statut', 'fonds_liberes'),
       ]);
 
-      const formattedSeller = {
-          ...sellerData,
-          name: sellerData.full_name || 'Vendeur Anonyme',
-          avatar: sellerData.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(sellerData.full_name || 'A')}&background=2EB565&color=fff&size=128`,
-          banner: sellerData.banner_url,
-      };
-      setSeller(formattedSeller);
-      
-      if (listingsError) {
-        console.error("Erreur de récupération des annonces:", listingsError);
-      } else {
-        setListings(listingsData);
-      }
+      setSeller({ ...s, name: s.full_name || 'Vendeur' });
+      setListings(listData || []);
 
-      if (ratingData && ratingData.length > 0) {
-        const avg = ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length;
-        setRatingInfo({ average_rating: avg, review_count: ratingData.length });
-        setSellerReviews(ratingData);
+      if (revData?.length) {
+        const avg = revData.reduce((sum, r) => sum + r.rating, 0) / revData.length;
+        setRatingInfo({ average: avg, count: revData.length });
+        setReviews(revData);
       }
-
+      setTxCount(tx || 0);
       setLoading(false);
     };
-
-    if (sellerId) {
-      fetchSellerData();
-    }
+    if (sellerId) load();
   }, [sellerId, navigate]);
 
-  const handleCallSeller = () => {
-    if (!user) {
-      openAuthModal();
-      return;
-    }
-    
-    if (user.id === sellerId) {
-      toast({
-        title: "Action impossible",
-        description: "Vous ne pouvez pas vous appeler vous-même.",
-        variant: "destructive",
-      });
-      return;
-    }
+  /* Catégories dérivées des annonces */
+  const categories = useMemo(() => {
+    const map = {};
+    listings.forEach(l => {
+      if (l.category) map[l.category] = (map[l.category] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [listings]);
 
-    if (!seller.phone) {
-      toast({
-        title: "Numéro non disponible",
-        description: "Le vendeur n'a pas fourni de numéro de téléphone.",
-        variant: "destructive",
-      });
-      return;
-    }
+  /* Produits phares (top 4 par vues) */
+  const featuredListings = useMemo(() =>
+    [...listings].sort((a, b) => (b.views_count || 0) - (a.views_count || 0)).slice(0, 4),
+  [listings]);
 
-    setIsCalling(true);
-    window.location.href = `tel:${seller.phone}`;
-    setTimeout(() => setIsCalling(false), 1000);
+  /* Meilleures ventes (top 3) */
+  const topListings = useMemo(() => featuredListings.slice(0, 3), [featuredListings]);
+
+  /* Tous produits triés */
+  const sortedListings = useMemo(() => {
+    if (sortBy === 'price_asc') return [...listings].sort((a, b) => a.price - b.price);
+    if (sortBy === 'price_desc') return [...listings].sort((a, b) => b.price - a.price);
+    if (sortBy === 'popular') return [...listings].sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
+    return listings;
+  }, [listings, sortBy]);
+
+  /* Taux de satisfaction */
+  const satisfactionRate = reviews.length
+    ? Math.round(reviews.filter(r => r.rating >= 4).length / reviews.length * 100)
+    : null;
+
+  const handleContact = () => {
+    if (!user) { openAuthModal(); return; }
+    navigate(`/messages?seller=${seller.id}`);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <LoadingIcon className="w-12 h-12 animate-spin text-custom-green-500" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-page-bg">
+      <Loader2 className="w-10 h-10 animate-spin text-custom-green-500" />
+    </div>
+  );
 
-  if (!seller) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-center p-4">
-         <Helmet>
-          <title>Vendeur non trouvé - Zando+ Congo</title>
-        </Helmet>
-        <h1 className="text-2xl font-bold mb-4">Vendeur non trouvé</h1>
-        <p className="text-gray-600 mb-6">Le vendeur que vous cherchez n'existe pas ou n'est plus disponible.</p>
-        <Button onClick={() => navigate('/')}><ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil</Button>
-      </div>
-    );
-  }
+  if (!seller) return null;
+
+  const memberSince = format(new Date(seller.created_at), 'MMM yyyy', { locale: fr });
+  const displayCats = showAllCats ? categories : categories.slice(0, 5);
+
+  const TRUST = [
+    { icon: CheckCircle, title: 'Produits authentiques',  sub: '100% garantis' },
+    { icon: Truck,       title: 'Livraison rapide',       sub: 'Partout au Congo' },
+    { icon: Shield,      title: 'Paiement sécurisé',      sub: 'Transactions protégées' },
+    { icon: Headphones,  title: 'Service client dédié',   sub: 'Réponse rapide' },
+  ];
+
+  const TABS = [
+    { id: 'boutique',  label: 'Boutique' },
+    { id: 'produits',  label: `Tous les produits` },
+    { id: 'avis',      label: `Avis (${ratingInfo.count})` },
+    { id: 'apropos',   label: 'À propos' },
+  ];
 
   return (
     <>
       <Helmet>
-        <title>Boutique de {seller.name} - Zando+ Congo</title>
-        <meta name="description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
-        <link rel="canonical" href={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`} />
-        <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`} />
-        <meta property="og:title" content={`Boutique de ${seller.name} - Zando+ Congo`} />
-        <meta property="og:description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
-        <meta property="og:image" content={seller.banner || seller.avatar || 'https://www.zandopluscg.com/og-image.jpg'} />
-        <meta property="og:site_name" content="Zando+ Congo" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`Boutique de ${seller.name} - Zando+ Congo`} />
-        <meta name="twitter:description" content={`Explorez la boutique et découvrez toutes les annonces de ${seller.name} sur Zando+ Congo.`} />
-        <meta name="twitter:image" content={seller.banner || seller.avatar || 'https://www.zandopluscg.com/og-image.jpg'} />
+        <title>Boutique {seller.name} — Zando+</title>
+        <meta name="description" content={`Explorez la boutique de ${seller.name} sur Zando+ Congo.`} />
       </Helmet>
-      <div className="min-h-screen bg-slate-50">
-        <motion.div 
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative h-48 md:h-64"
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-custom-green-600 to-custom-green-400"></div>
-          {seller.banner ? (
-             <img
-                src={seller.banner}
-                alt={`Bannière de la boutique de ${seller.name}`}
-                className="w-full h-full object-cover opacity-20"
-              />
-          ) : (
-             <div className="w-full h-full hero-pattern opacity-50"></div>
-          )}
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="absolute top-4 left-4 text-white hover:bg-white/10 hover:text-white">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
-            </Button>
-          </div>
-        </motion.div>
 
-        <div className="container mx-auto px-4 pb-16">
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative bg-white rounded-2xl shadow-xl p-4 md:p-6 -mt-20 md:-mt-24"
-          >
-            <div className="flex flex-col md:flex-row items-center md:items-start">
-              <Avatar className="w-28 h-28 md:w-36 md:h-36 border-4 border-white shadow-lg -mt-16 md:-mt-20 flex-shrink-0">
-                <AvatarImage src={seller.avatar} alt={seller.name} />
-                <AvatarFallback>{seller.name?.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="mt-4 md:mt-2 md:ml-6 flex-grow text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start space-x-2">
-                  <h1 className="text-2xl md:text-4xl font-bold text-gray-800">{seller.name}</h1>
-                  {seller.verified && <Shield className="w-7 h-7 text-custom-green-500" title="Vendeur vérifié" />}
+      <div className="bg-page-bg min-h-screen">
+
+        {/* ══ HERO ══ */}
+        <div className="relative bg-[#0d1f12] overflow-hidden">
+          {/* Background décoratif */}
+          {seller.banner_url ? (
+            <img src={seller.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+          ) : (
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-custom-green-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+              <div className="absolute bottom-0 right-24 w-64 h-64 bg-green-400 rounded-full blur-2xl translate-y-1/4" />
+            </div>
+          )}
+
+          {/* Images produits décoratives à droite */}
+          <div className="absolute right-0 top-0 bottom-16 w-[45%] overflow-hidden hidden lg:block">
+            <div className="grid grid-cols-2 gap-3 p-6 h-full content-center opacity-60">
+              {listings.slice(0, 4).map((l, i) => (
+                <div key={l.id} className={`rounded-2xl overflow-hidden ${i === 0 ? 'row-span-2' : ''}`}>
+                  {l.images?.[0] && (
+                    <img src={l.images[0]} alt="" className="w-full h-full object-cover" />
+                  )}
                 </div>
-                {seller.location && (
-                  <div className="flex items-center justify-center md:justify-start text-gray-500 mt-1">
-                    <MapPin className="w-4 h-4 mr-1.5" />
-                    <span>{seller.location}</span>
-                  </div>
-                )}
-                <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span>{ratingInfo.average_rating.toFixed(1)} ({ratingInfo.review_count} avis)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>Membre depuis {format(new Date(seller.created_at), 'MMMM yyyy', { locale: fr })}</span>
-                    </div>
-                </div>
-              </div>
-              <div className="mt-4 md:mt-2 md:ml-auto flex-shrink-0 flex items-center gap-2">
-                <ShareShopButton seller={seller} />
-                <Button size="lg" className="gradient-bg hover:opacity-90 shadow-lg" onClick={handleCallSeller} disabled={isCalling}>
-                    {isCalling ? (
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ))}
+            </div>
+          </div>
+
+          <div className="relative max-w-[1280px] mx-auto px-6 py-8">
+            <div className="flex gap-6 items-start">
+              {/* Carte vendeur */}
+              <div className="bg-white rounded-2xl p-6 w-72 flex-shrink-0 shadow-xl">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-custom-green-500 flex items-center justify-center shadow">
+                    {seller.avatar_url ? (
+                      <img src={seller.avatar_url} alt={seller.name} className="w-full h-full object-cover" />
                     ) : (
-                        <Phone className="w-5 h-5 mr-2" />
+                      <span className="text-white font-black text-[22px]">{seller.name.charAt(0).toUpperCase()}</span>
                     )}
-                    Appeler
-                </Button>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="text-[15px] font-black text-gray-900 truncate">{seller.name}</p>
+                      {seller.verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      {seller.verified ? 'Boutique officielle' : 'Vendeur particulier'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 mb-5">
+                  {seller.verified && (
+                    <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                      <BadgeCheck className="w-4 h-4 text-custom-green-500 flex-shrink-0" />
+                      <span className="font-medium">Entreprise vérifiée</span>
+                    </div>
+                  )}
+                  {ratingInfo.count > 0 && (
+                    <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      <span><strong>{ratingInfo.average.toFixed(1)}/5</strong> ({ratingInfo.count} avis)</span>
+                    </div>
+                  )}
+                  {seller.location && (
+                    <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span>{seller.location}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                    <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <span>Membre depuis {memberSince}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    className="w-full h-9 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                    onClick={() => toast({ title: 'Bientôt disponible !' })}
+                  >
+                    <Heart className="w-4 h-4" /> Suivre la boutique
+                  </button>
+                  <button
+                    onClick={handleContact}
+                    className="w-full h-9 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Contacter le vendeur
+                  </button>
+                </div>
               </div>
             </div>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <h2 className="text-2xl font-bold text-gray-800 my-8">Annonces de {seller.name} ({listings.length})</h2>
-            
-            {listings.length > 0 ? (
-               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                  {listings.map((listing, index) => (
-                    <motion.div
-                        key={listing.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.5 + index * 0.05 }}
-                    >
-                        <ListingItem listing={listing} viewMode="grid" />
-                    </motion.div>
-                  ))}
-                </div>
-            ) : (
-              <div className="text-center py-20 bg-white rounded-lg shadow-md border border-gray-100">
-                <LoadingIcon className="w-12 h-12 mx-auto text-gray-300 mb-4"/>
-                <h3 className="text-lg font-semibold text-gray-700">Aucune annonce pour le moment</h3>
-                <p className="text-gray-500 mt-1">Ce vendeur n'a pas encore publié d'annonce active.</p>
-              </div>
-            )}
-          </motion.div>
+          </div>
 
-          {sellerReviews.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-10"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <MessageSquare className="w-6 h-6 text-custom-green-600" />
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Avis clients ({ratingInfo.review_count})
-                </h2>
-                <div className="flex items-center gap-1.5 ml-2">
-                  <StarRating rating={ratingInfo.average_rating} size={18} />
-                  <span className="font-semibold text-gray-700">{ratingInfo.average_rating.toFixed(1)}</span>
+          {/* Trust bar */}
+          <div className="relative bg-white/95 backdrop-blur-sm border-t border-gray-100">
+            <div className="max-w-[1280px] mx-auto px-6 py-3 flex items-center justify-around gap-4">
+              {TRUST.map(({ icon: Icon, title, sub }) => (
+                <div key={title} className="flex items-center gap-2">
+                  <Icon className="w-5 h-5 text-custom-green-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-[12px] font-bold text-gray-900 leading-tight">{title}</p>
+                    <p className="text-[10px] text-gray-400 leading-tight">{sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ══ TABS ══ */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+          <div className="max-w-[1280px] mx-auto px-6">
+            <div className="flex">
+              {TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-4 text-[13px] font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-custom-green-500 text-custom-green-500'
+                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ══ CONTENU ══ */}
+        <div className="max-w-[1280px] mx-auto px-6 py-6">
+
+          {/* ── Boutique ── */}
+          {activeTab === 'boutique' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              {/* Sidebar */}
+              <div className="lg:col-span-3 space-y-5">
+
+                {/* Catégories */}
+                {categories.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <h3 className="text-[13px] font-black text-gray-900 mb-3">Catégories</h3>
+                    <div className="space-y-2">
+                      {displayCats.map(([cat, count]) => (
+                        <button
+                          key={cat}
+                          onClick={() => { setActiveTab('produits'); }}
+                          className="w-full flex items-center justify-between text-[12px] text-gray-600 hover:text-custom-green-600 py-1 transition-colors"
+                        >
+                          <span className="capitalize">{cat}</span>
+                          <span className="text-gray-400">({count})</span>
+                        </button>
+                      ))}
+                    </div>
+                    {categories.length > 5 && (
+                      <button onClick={() => setShowAllCats(v => !v)}
+                        className="mt-3 text-[12px] text-custom-green-500 font-semibold hover:underline">
+                        {showAllCats ? 'Voir moins' : 'Voir toutes les catégories'}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Infos boutique */}
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <h3 className="text-[13px] font-black text-gray-900 mb-4">Informations de la boutique</h3>
+                  <div className="space-y-3 text-[12px]">
+                    {[
+                      { label: 'Nom de la boutique', value: seller.name },
+                      { label: 'Type de vendeur', value: seller.verified ? 'Boutique officielle' : 'Vendeur particulier' },
+                      seller.location && { label: 'Adresse', value: seller.location },
+                      satisfactionRate != null && { label: 'Taux de satisfaction', value: `${satisfactionRate}%` },
+                    ].filter(Boolean).map(({ label, value }) => (
+                      <div key={label}>
+                        <p className="text-gray-400">{label}</p>
+                        <p className="font-semibold text-gray-900 mt-0.5">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('produits')}
+                    className="mt-4 w-full h-9 border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Voir la boutique
+                  </button>
+                </div>
+
+                {/* Meilleures ventes */}
+                {topListings.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <h3 className="text-[13px] font-black text-gray-900 mb-3">Meilleures ventes</h3>
+                    <div className="space-y-3">
+                      {topListings.map(l => (
+                        <Link key={l.id} to={`/listings/${l.listing_slug || l.id}`}
+                          className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-1.5 -mx-1.5 transition-colors">
+                          <img src={l.images?.[0]} alt={l.title}
+                            className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[12px] font-semibold text-gray-900 truncate">{l.title}</p>
+                            <p className="text-[12px] text-custom-green-500 font-bold">{(l.price || 0).toLocaleString('fr-FR')} FCFA</p>
+                            {l.views_count > 0 && (
+                              <Stars rating={Math.min(5, 3.5 + l.views_count / 100)} small />
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                    <button onClick={() => setActiveTab('produits')}
+                      className="mt-3 text-[12px] text-custom-green-500 font-semibold hover:underline">
+                      Voir plus
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Main */}
+              <div className="lg:col-span-9 space-y-6">
+
+                {/* À propos + stats */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2">
+                    <h3 className="text-[14px] font-black text-gray-900 mb-2">À propos de {seller.name}</h3>
+                    <p className="text-[13px] text-gray-600 leading-relaxed">
+                      {seller.bio || `Bienvenue sur la boutique de ${seller.name}. Retrouvez ici tous nos produits disponibles sur Zando+.`}
+                    </p>
+                    {seller.bio?.length > 150 && (
+                      <button className="mt-2 text-[12px] text-custom-green-500 font-semibold hover:underline">Voir plus</button>
+                    )}
+                  </div>
+                  <div className="border-l border-gray-100 pl-6">
+                    <div className="space-y-3">
+                      {[
+                        { icon: Package,   label: 'Produits',            value: listings.length },
+                        { icon: ShoppingBag, label: 'Commandes réussies', value: txCount },
+                        { icon: ThumbsUp,  label: 'Taux de satisfaction', value: satisfactionRate != null ? `${satisfactionRate}%` : 'N/A' },
+                        { icon: Calendar,  label: 'Membre depuis',        value: memberSince },
+                      ].map(({ icon: Icon, label, value }) => (
+                        <div key={label} className="flex items-center justify-between text-[12px]">
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Icon className="w-3.5 h-3.5" />
+                            <span>{label}</span>
+                          </div>
+                          <span className="font-bold text-gray-900">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Produits phares */}
+                {featuredListings.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[15px] font-black text-gray-900">Produits phares</h3>
+                      <button onClick={() => setActiveTab('produits')}
+                        className="text-[12px] text-custom-green-500 font-semibold flex items-center gap-1 hover:underline">
+                        Voir toute la boutique <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {featuredListings.map(l => (
+                        <Link key={l.id} to={`/listings/${l.listing_slug || l.id}`}
+                          className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                          <div className="aspect-square bg-gray-50 overflow-hidden">
+                            <img src={l.images?.[0]} alt={l.title}
+                              className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                          </div>
+                          <div className="p-3">
+                            <p className="text-[11px] font-semibold text-gray-900 truncate mb-1">{l.title}</p>
+                            <Stars rating={ratingInfo.average || 4} small />
+                            <p className="text-[13px] font-black text-gray-900 mt-1.5">{(l.price || 0).toLocaleString('fr-FR')} FCFA</p>
+                            <button className="mt-2 w-full h-7 bg-custom-green-500 text-white rounded-lg text-[11px] font-bold hover:bg-custom-green-600 transition-colors">
+                              Voir le produit
+                            </button>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tous les produits */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[15px] font-black text-gray-900">Tous les produits</h3>
+                    <div className="flex items-center gap-3">
+                      <button className="flex items-center gap-1.5 h-9 px-3 border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                        <SlidersHorizontal className="w-3.5 h-3.5" /> Filtrer
+                      </button>
+                      <div className="flex items-center gap-2 text-[12px] text-gray-500">
+                        <span>Trier par :</span>
+                        <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                          className="border border-gray-200 rounded-lg px-2 h-9 text-[12px] font-semibold text-gray-700 focus:outline-none focus:border-custom-green-500">
+                          <option value="recent">Récent</option>
+                          <option value="popular">Popularité</option>
+                          <option value="price_asc">Prix croissant</option>
+                          <option value="price_desc">Prix décroissant</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  {sortedListings.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {sortedListings.map(l => <ListingItem key={l.id} listing={l} viewMode="grid" />)}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-400">
+                      <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-[14px]">Aucun produit disponible</p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                {sellerReviews.map(review => (
-                  <ReviewItem key={review.id} review={review} />
+            </div>
+          )}
+
+          {/* ── Tous les produits ── */}
+          {activeTab === 'produits' && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[16px] font-black text-gray-900">
+                  Tous les produits ({listings.length})
+                </h3>
+                <div className="flex items-center gap-2 text-[12px] text-gray-500">
+                  <span>Trier par :</span>
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 h-9 text-[12px] font-semibold text-gray-700 focus:outline-none focus:border-custom-green-500">
+                    <option value="recent">Récent</option>
+                    <option value="popular">Popularité</option>
+                    <option value="price_asc">Prix croissant</option>
+                    <option value="price_desc">Prix décroissant</option>
+                  </select>
+                </div>
+              </div>
+              {sortedListings.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {sortedListings.map(l => <ListingItem key={l.id} listing={l} viewMode="grid" />)}
+                </div>
+              ) : (
+                <div className="text-center py-20 bg-white rounded-xl border border-gray-100">
+                  <Package className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+                  <p className="text-gray-500">Aucun produit disponible</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Avis ── */}
+          {activeTab === 'avis' && (
+            <div className="max-w-3xl">
+              {reviews.length > 0 ? (
+                <>
+                  <div className="bg-white rounded-xl border border-gray-100 p-5 mb-5 flex items-center gap-6">
+                    <div className="text-center">
+                      <p className="text-[40px] font-black text-gray-900">{ratingInfo.average.toFixed(1)}</p>
+                      <Stars rating={ratingInfo.average} />
+                      <p className="text-[11px] text-gray-400 mt-1">{ratingInfo.count} avis</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {reviews.map(r => <ReviewItem key={r.id} review={r} />)}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-20 bg-white rounded-xl border border-gray-100">
+                  <Star className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+                  <p className="text-gray-500">Aucun avis pour l'instant</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── À propos ── */}
+          {activeTab === 'apropos' && (
+            <div className="max-w-2xl bg-white rounded-xl border border-gray-100 p-6 space-y-5">
+              <h3 className="text-[16px] font-black text-gray-900">À propos de {seller.name}</h3>
+              <p className="text-[14px] text-gray-600 leading-relaxed">
+                {seller.bio || `Bienvenue sur la boutique de ${seller.name}. Retrouvez ici tous les produits disponibles sur Zando+.`}
+              </p>
+              <div className="border-t border-gray-100 pt-5 grid grid-cols-2 gap-4">
+                {[
+                  { icon: Package,   label: 'Produits actifs',    value: listings.length     },
+                  { icon: ShoppingBag, label: 'Commandes réussies', value: txCount            },
+                  { icon: Star,      label: 'Note moyenne',       value: ratingInfo.count > 0 ? `${ratingInfo.average.toFixed(1)}/5` : 'N/A' },
+                  { icon: Calendar,  label: 'Membre depuis',      value: memberSince          },
+                  seller.location && { icon: MapPin, label: 'Localisation', value: seller.location },
+                ].filter(Boolean).map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400">{label}</p>
+                      <p className="text-[13px] font-bold text-gray-900">{value}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
+
         </div>
       </div>
     </>
