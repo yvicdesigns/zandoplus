@@ -97,7 +97,7 @@ const AdminAdsTab = memo(() => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'active': return <Badge className="bg-green-500">Actif</Badge>;
+      case 'active': return <Badge className="bg-custom-green-500">Actif</Badge>;
       case 'pending_approval': return <Badge variant="secondary">En attente</Badge>;
       case 'pending_payment': return <Badge variant="outline">Paiement en attente</Badge>;
       case 'rejected': return <Badge variant="destructive">Rejeté</Badge>;

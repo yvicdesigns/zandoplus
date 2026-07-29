@@ -13,6 +13,10 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Zando+" />
 
+        <!-- Connexions anticipées — réduit la latence au premier chargement -->
+        <link rel="preconnect" href="https://axlpfskrrlwibcnxkfvb.supabase.co" crossorigin />
+        <link rel="dns-prefetch" href="https://axlpfskrrlwibcnxkfvb.supabase.co" />
+
         <!-- SEO static fallback (before JS executes) -->
         <meta name="description" content="La première place de marché en ligne du Congo Brazzaville. Achetez et vendez électronique, véhicules, immobilier, mode et plus encore." />
         <meta name="keywords" content="annonces Congo, vente Congo Brazzaville, acheter vendre Congo, marché en ligne Congo, Zando+" />
@@ -68,7 +72,12 @@
         <link rel="apple-touch-startup-image" href="/splashscreens/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
       </head>
       <body>
-        <div id="root"></div>
+        <div id="root">
+          <div id="html-splash" style="position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+            <img src="/android-chrome-192x192.png" alt="Zando+" width="80" height="80" style="border-radius:20px;animation:zp-pulse 1.2s ease-in-out infinite alternate;" />
+            <style>@keyframes zp-pulse{from{opacity:1;transform:scale(1)}to{opacity:.7;transform:scale(.96)}}</style>
+          </div>
+        </div>
         <script type="module" src="/src/main.jsx"></script>
       </body>
     </html>

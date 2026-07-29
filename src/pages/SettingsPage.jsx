@@ -171,7 +171,7 @@ const SettingsPage = () => {
               </div>
               {momoNumber && (
                 <p className="text-xs text-gray-500 flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                  <CheckCircle className="w-3.5 h-3.5 text-custom-green-500" />
                   Numéro actuel : <span className="font-mono font-semibold">{momoNumber}</span>
                 </p>
               )}
@@ -182,7 +182,7 @@ const SettingsPage = () => {
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="bg-green-100 p-3 rounded-full">
-                  <Shield className="w-6 h-6 text-green-600" />
+                  <Shield className="w-6 h-6 text-custom-green-600" />
                 </div>
                 <div>
                   <CardTitle>Sécurité</CardTitle>

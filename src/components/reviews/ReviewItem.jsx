@@ -23,7 +23,7 @@ const ReviewItem = ({ review }) => {
               <div className="flex items-center gap-2">
                 <p className="font-semibold">{review.reviewer?.full_name || 'Utilisateur Anonyme'}</p>
                 {review.verified_purchase && (
-                  <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                  <span className="flex items-center gap-1 text-xs text-custom-green-600 font-medium">
                     <ShieldCheck className="w-3 h-3" /> Achat vérifié
                   </span>
                 )}

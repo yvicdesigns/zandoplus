@@ -9,7 +9,7 @@ const Toggle = ({ enabled, onChange, disabled }) => (
   <button
     onClick={() => !disabled && onChange(!enabled)}
     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-      enabled ? 'bg-green-500' : 'bg-gray-300'
+      enabled ? 'bg-custom-green-500' : 'bg-gray-300'
     } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
   >
     <span
@@ -75,7 +75,7 @@ const AdminDeliveryConfigTab = () => {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-custom-green-500" />
     </div>
   );
 

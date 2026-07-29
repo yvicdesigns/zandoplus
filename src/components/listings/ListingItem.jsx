@@ -119,7 +119,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
-                    className={`p-2 rounded-lg border transition-colors ${inCart ? 'bg-green-100 border-green-400 text-green-700' : 'border-gray-300 hover:border-green-400 hover:bg-green-50 text-gray-500'}`}
+                    className={`p-2 rounded-lg border transition-colors ${inCart ? 'bg-custom-green-100 border-custom-green-400 text-custom-green-700' : 'border-gray-300 hover:border-custom-green-400 hover:bg-custom-green-50 text-gray-500'}`}
                     title={inCart ? 'Dans le panier' : 'Ajouter au panier'}
                   >
                     {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}

@@ -225,7 +225,7 @@ const AdminEscrowTab = memo(() => {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    className="flex-1 bg-custom-green-600 hover:bg-custom-green-700 text-white"
                     onClick={() => handleCodDelivered(tx)}
                     disabled={actionLoading?.id === tx.id}
                   >
@@ -398,7 +398,7 @@ const AdminEscrowTab = memo(() => {
                         {['livre', 'confirme', 'litige'].includes(tx.statut) && (
                           <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-custom-green-600 hover:bg-custom-green-700 text-white"
                             onClick={() => setReleaseTarget(tx)}
                             disabled={!!actionLoading}
                           >
@@ -508,7 +508,7 @@ const AdminEscrowTab = memo(() => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setReleaseTarget(null)}>Annuler</Button>
             <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-custom-green-600 hover:bg-custom-green-700 text-white"
               onClick={() => handleRelease(releaseTarget)}
               disabled={actionLoading?.id === releaseTarget?.id}
             >

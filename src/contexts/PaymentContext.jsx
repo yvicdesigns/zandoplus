@@ -79,7 +79,7 @@ export const PaymentProvider = ({ children }) => {
       toast({
         title: 'Preuve envoyée !',
         description: 'Votre preuve de paiement a été soumise pour vérification.',
-        className: 'bg-green-500 text-white',
+        className: 'bg-custom-green-500 text-white',
       });
 
       return data;

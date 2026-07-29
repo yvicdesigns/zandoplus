@@ -93,7 +93,7 @@ const ShareMenu = ({ listing }) => {
             onClick={handleCopy}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors"
           >
-            {copied ? <Check className="w-5 h-5 text-green-500" /> : <Link className="w-5 h-5" />}
+            {copied ? <Check className="w-5 h-5 text-custom-green-500" /> : <Link className="w-5 h-5" />}
             {copied ? 'Lien copié !' : 'Copier le lien'}
           </button>
 

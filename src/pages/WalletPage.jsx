@@ -148,9 +148,9 @@ const WalletPage = () => {
             <Card className="border-0 shadow-md">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1 text-sm text-gray-500">
-                  <CheckCircle className="w-4 h-4 text-green-500" /> Disponible
+                  <CheckCircle className="w-4 h-4 text-custom-green-500" /> Disponible
                 </div>
-                <p className="text-2xl font-bold text-green-600">{formatAmount(wallet?.solde_disponible)} <span className="text-sm font-normal text-gray-500">FCFA</span></p>
+                <p className="text-2xl font-bold text-custom-green-600">{formatAmount(wallet?.solde_disponible)} <span className="text-sm font-normal text-gray-500">FCFA</span></p>
                 <p className="text-xs text-gray-400 mt-1">Retrait possible</p>
               </CardContent>
             </Card>
@@ -215,7 +215,7 @@ const WalletPage = () => {
                           <p className="font-semibold text-gray-800">{formatAmount(w.montant)} FCFA</p>
                           <p className="text-xs text-gray-400">MoMo : {w.momo_number}</p>
                           <p className="text-xs text-gray-400">Demandé le {formatDate(w.created_at)}</p>
-                          {w.paid_at && <p className="text-xs text-green-600">Payé le {formatDate(w.paid_at)}</p>}
+                          {w.paid_at && <p className="text-xs text-custom-green-600">Payé le {formatDate(w.paid_at)}</p>}
                           {w.admin_notes && <p className="text-xs text-gray-500 mt-1 italic">{w.admin_notes}</p>}
                         </div>
                         <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>

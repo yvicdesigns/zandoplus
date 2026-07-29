@@ -47,7 +47,7 @@ const AndroidInstructions = () => {
         transition={{ delay: 0.2 }}
         className="text-center text-green-700 bg-green-50 p-6 rounded-lg shadow-inner"
       >
-        <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
+        <CheckCircle className="mx-auto h-12 w-12 mb-4 text-custom-green-600" />
         <h2 className="text-2xl font-semibold">Application installée !</h2>
         <p className="mt-2">Vous utilisez déjà l'application Zando+. Profitez bien !</p>
       </motion.div>
@@ -73,15 +73,15 @@ const AndroidInstructions = () => {
       <div className="pt-4">
         <p className="text-sm text-gray-500 text-center">Si le bouton n'apparaît pas ou ne fonctionne pas, suivez ces étapes :</p>
         <div className="flex items-start space-x-4 mt-4">
-          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold text-lg">1</div>
+          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-custom-green-600 rounded-full flex items-center justify-center font-bold text-lg">1</div>
           <p className="pt-0.5">Ouvrez ce site dans le navigateur <span className="font-bold">Chrome</span>.</p>
         </div>
         <div className="flex items-start space-x-4 mt-2">
-          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold text-lg">2</div>
+          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-custom-green-600 rounded-full flex items-center justify-center font-bold text-lg">2</div>
           <p className="pt-0.5">Appuyez sur le menu (les trois points en haut à droite).</p>
         </div>
         <div className="flex items-start space-x-4 mt-2">
-          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold text-lg">3</div>
+          <div className="flex-shrink-0 w-8 h-8 bg-green-100 text-custom-green-600 rounded-full flex items-center justify-center font-bold text-lg">3</div>
           <p className="pt-0.5">Sélectionnez <span className="font-bold">"Installer l'application"</span>.</p>
         </div>
       </div>

@@ -29,7 +29,7 @@ const FileUpload = ({ onFileSelect, onFileRemove, label, acceptedFileTypes, requ
       <div className="w-full">
         <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 border-green-200">
           <div className="flex items-center gap-2">
-            <File className="w-5 h-5 text-green-600" />
+            <File className="w-5 h-5 text-custom-green-600" />
             <span className="text-sm font-medium text-green-800">Document déjà fourni</span>
           </div>
           {!disabled && (

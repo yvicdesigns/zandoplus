@@ -23,12 +23,12 @@ const NotificationItem = ({ notification, onRead }) => {
       case 'boost_expired':
         return <AlertTriangle className="w-5 h-5 text-orange-500" />;
       case 'verification_approved':
-        return <CheckCheck className="w-5 h-5 text-green-500" />;
+        return <CheckCheck className="w-5 h-5 text-custom-green-500" />;
       case 'verification_rejected':
         return <AlertTriangle className="w-5 h-5 text-red-500" />;
       case 'new_order':
       case 'new_escrow_order':
-        return <ShoppingBag className="w-5 h-5 text-green-600" />;
+        return <ShoppingBag className="w-5 h-5 text-custom-green-600" />;
       case 'payment_secured':
         return <ShieldCheck className="w-5 h-5 text-blue-500" />;
       case 'payment_validated':
@@ -36,7 +36,7 @@ const NotificationItem = ({ notification, onRead }) => {
       case 'order_shipped':
         return <Truck className="w-5 h-5 text-purple-500" />;
       case 'receipt_confirmed':
-        return <PackageCheck className="w-5 h-5 text-green-600" />;
+        return <PackageCheck className="w-5 h-5 text-custom-green-600" />;
       case 'withdrawal_complete':
         return <Wallet className="w-5 h-5 text-green-700" />;
       case 'dispute_opened':

@@ -61,7 +61,7 @@ const AdminEmailDiagnosticsTab = () => {
       
       setTestResult(data);
       if (data.success) {
-        toast({ title: "Succès", description: "E-mail de test envoyé.", className: "bg-green-500 text-white" });
+        toast({ title: "Succès", description: "E-mail de test envoyé.", className: "bg-custom-green-500 text-white" });
       } else {
         toast({ title: "Échec de l'envoi", description: data.message, variant: "destructive" });
       }
@@ -92,7 +92,7 @@ const AdminEmailDiagnosticsTab = () => {
 
       setTestResult(data);
       if (data.success) {
-        toast({ title: "Succès", description: "E-mail de récupération de test envoyé.", className: "bg-green-500 text-white" });
+        toast({ title: "Succès", description: "E-mail de récupération de test envoyé.", className: "bg-custom-green-500 text-white" });
       } else {
         toast({ title: "Échec", description: data.error, variant: "destructive" });
       }

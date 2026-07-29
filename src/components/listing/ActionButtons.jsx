@@ -92,7 +92,7 @@ const ActionButtons = ({ listing }) => {
               className={`w-full ${inCart ? 'border-green-500 text-green-700 bg-green-50' : 'border-gray-300 hover:border-green-400'}`}
               onClick={() => addItem(listing, (title) => toast({ title: inCart ? 'Déjà dans le panier' : 'Ajouté au panier ✅', description: title, className: 'bg-green-100 text-green-800' }))}
             >
-              {inCart ? <CheckCircle className="mr-2 h-5 w-5 text-green-600" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
+              {inCart ? <CheckCircle className="mr-2 h-5 w-5 text-custom-green-600" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
               {inCart ? 'Dans le panier' : 'Ajouter au panier'}
             </Button>
           </>

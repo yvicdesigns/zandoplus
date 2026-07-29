@@ -19,7 +19,7 @@ const badgeVariants = cva(
         popular: 'border-transparent bg-yellow-400 text-gray-900',
         new: 'border-transparent bg-cyan-400 text-gray-900',
         urgent: 'border-transparent bg-red-500 text-white',
-        verified: 'border-transparent bg-green-500 text-white',
+        verified: 'border-transparent bg-custom-green-500 text-white',
         'fast-response': 'border-transparent bg-blue-500 text-white',
       },
     },

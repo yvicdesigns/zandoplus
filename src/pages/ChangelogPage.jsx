@@ -43,7 +43,7 @@ const ChangelogPage = () => {
       
       <div className="container mx-auto px-4 max-w-4xl">
         <Link to="/">
-          <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-green-600">
+          <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-custom-green-600">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour à l'accueil
           </Button>
@@ -58,7 +58,7 @@ const ChangelogPage = () => {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-custom-green-600" />
           </div>
         ) : changelogs.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
@@ -69,7 +69,7 @@ const ChangelogPage = () => {
             {changelogs.map((log, index) => (
               <div key={log.id} className="relative flex flex-col md:flex-row gap-8 items-start group">
                 {/* Timeline Dot */}
-                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-green-500 border-4 border-white shadow-sm mt-6 z-10" />
+                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-custom-green-500 border-4 border-white shadow-sm mt-6 z-10" />
 
                 {/* Date Side */}
                 <div className={`md:w-1/2 pl-20 md:pl-0 md:text-right md:pr-12 mt-5 ${index % 2 === 0 ? 'md:order-1' : 'md:order-2 md:text-left md:pl-12 md:pr-0'}`}>

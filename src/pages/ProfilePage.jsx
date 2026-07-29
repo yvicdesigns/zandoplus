@@ -107,7 +107,7 @@ const ProfilePage = () => {
       toast({ 
         title: "Profil mis à jour", 
         description: "Vos informations ont été sauvegardées avec succès.",
-        className: "bg-green-500 text-white" 
+        className: "bg-custom-green-500 text-white" 
       });
       
     } catch (error) {
@@ -153,7 +153,7 @@ const ProfilePage = () => {
       if (dbError) throw dbError;
 
       if (typeof updateUser === 'function') await updateUser();
-      toast({ title: "Avatar mis à jour", description: "Votre nouvelle photo de profil est en place.", className: "bg-green-500 text-white" });
+      toast({ title: "Avatar mis à jour", description: "Votre nouvelle photo de profil est en place.", className: "bg-custom-green-500 text-white" });
     } catch (error) {
       toast({ title: "Erreur d'upload", description: error.message, variant: "destructive" });
     } finally {
@@ -194,7 +194,7 @@ const ProfilePage = () => {
       if (dbError) throw dbError;
 
       if (typeof updateUser === 'function') await updateUser();
-      toast({ title: "Bannière mise à jour", description: "Votre nouvelle bannière est magnifique !", className: "bg-green-500 text-white" });
+      toast({ title: "Bannière mise à jour", description: "Votre nouvelle bannière est magnifique !", className: "bg-custom-green-500 text-white" });
     } catch (error) {
       toast({ title: "Erreur d'upload", description: error.message, variant: "destructive" });
     } finally {

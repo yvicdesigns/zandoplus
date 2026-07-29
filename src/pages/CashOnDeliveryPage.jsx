@@ -115,13 +115,13 @@ const CashOnDeliveryPage = () => {
 
   if (loading) return (
     <div className="flex justify-center items-center min-h-screen">
-      <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      <Loader2 className="w-8 h-8 animate-spin text-custom-green-600" />
     </div>
   );
 
   if (done) return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">
-      <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+      <CheckCircle className="w-16 h-16 text-custom-green-500 mx-auto mb-4" />
       <h1 className="text-2xl font-bold mb-2">Commande confirmée !</h1>
       <p className="text-gray-600 mb-2">Votre commande a été transmise au vendeur.</p>
       <p className="text-gray-600 mb-6">

@@ -79,7 +79,7 @@ const ConversationItem = ({ chat, isSelected, onSelect }) => {
             <div className="flex items-center space-x-2">
               <h3 className="font-semibold text-sm truncate">{participantName}</h3>
               {chat.participant?.verified && !isSystemConversation && (
-                <Shield className="w-4 h-4 text-green-500" />
+                <Shield className="w-4 h-4 text-custom-green-500" />
               )}
             </div>
             <div className="flex items-center space-x-2">

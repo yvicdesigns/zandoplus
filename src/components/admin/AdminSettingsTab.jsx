@@ -113,7 +113,7 @@ const AdminSettingsTab = memo(() => {
         <Card>
           <CardHeader>
              <div className="flex items-center gap-4">
-              <div className="bg-green-100 text-green-600 p-3 rounded-full">
+              <div className="bg-custom-green-100 text-custom-green-600 p-3 rounded-full">
                 <ImageIcon className="w-6 h-6" />
               </div>
               <div>

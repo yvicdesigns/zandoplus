@@ -168,7 +168,7 @@ export const ListingsProvider = ({ children }) => {
         setFavorites(newFavorites);
         toast({ title: "Erreur", description: "Impossible d'ajouter aux favoris.", variant: "destructive" });
       } else {
-        toast({ title: "Ajouté aux favoris!", description: "L'annonce a été ajoutée à vos favoris.", className: "bg-green-100 text-green-800" });
+        toast({ title: "Ajouté aux favoris!", description: "L'annonce a été ajoutée à vos favoris.", className: "bg-custom-green-100 text-custom-green-800" });
       }
     }
   };

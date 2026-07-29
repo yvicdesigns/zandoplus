@@ -117,7 +117,7 @@ const AdminChangelogTab = () => {
       toast({
         title: 'Succès',
         description: `Changelog ${editingLog ? 'mis à jour' : 'créé'} avec succès`,
-        className: 'bg-green-500 text-white'
+        className: 'bg-custom-green-500 text-white'
       });
 
       setIsDialogOpen(false);

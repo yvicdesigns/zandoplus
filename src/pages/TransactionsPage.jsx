@@ -225,7 +225,7 @@ const TransactionsPage = () => {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  tab === t.id ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  tab === t.id ? 'bg-custom-green-600 text-white' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 {t.label}
@@ -235,7 +235,7 @@ const TransactionsPage = () => {
 
           {loading ? (
             <div className="flex justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-custom-green-600" />
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-20 text-gray-400">

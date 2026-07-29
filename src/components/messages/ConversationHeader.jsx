@@ -81,7 +81,7 @@ const ConversationHeader = ({ conversation }) => {
             <div className="flex items-center space-x-2">
               <Link to={`/seller/${participant?.shop_slug || participant?.id}`} className="font-semibold hover:underline">{participant?.full_name}</Link>
               {participant?.verified && (
-                <Shield className="w-4 h-4 text-green-500" title="Utilisateur vérifié" />
+                <Shield className="w-4 h-4 text-custom-green-500" title="Utilisateur vérifié" />
               )}
             </div>
             <div className="flex items-center space-x-1.5">

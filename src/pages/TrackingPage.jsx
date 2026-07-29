@@ -22,7 +22,7 @@ const TrackingPage = () => {
       case 'in_transit':
         return { text: 'En transit', color: 'bg-blue-500', icon: <Truck className="w-4 h-4" /> };
       case 'delivered':
-        return { text: 'Livré', color: 'bg-green-500', icon: <CheckCircle className="w-4 h-4" /> };
+        return { text: 'Livré', color: 'bg-custom-green-500', icon: <CheckCircle className="w-4 h-4" /> };
       case 'cancelled':
         return { text: 'Annulé', color: 'bg-red-500', icon: <XCircle className="w-4 h-4" /> };
       default:

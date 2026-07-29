@@ -296,13 +296,48 @@ export default defineConfig({
 		},
 	},
 	build: {
+		chunkSizeWarningLimit: 600,
 		rollupOptions: {
 			external: [
 				'@babel/parser',
 				'@babel/traverse',
 				'@babel/generator',
 				'@babel/types'
-			]
+			],
+			output: {
+				manualChunks(id) {
+					if (!id.includes('node_modules')) return;
+					// React ecosystem — critique, mis en cache longtemps
+					if (
+						id.includes('/react/') ||
+						id.includes('/react-dom/') ||
+						id.includes('/react-router') ||
+						id.includes('/scheduler/')
+					) return 'vendor-react';
+					// Animations Framer Motion
+					if (id.includes('framer-motion') || id.includes('@emotion/is-prop-valid')) return 'vendor-motion';
+					// Supabase SDK
+					if (id.includes('@supabase')) return 'vendor-supabase';
+					// Icônes Lucide
+					if (id.includes('lucide-react')) return 'vendor-icons';
+					// Composants Radix UI
+					if (id.includes('@radix-ui')) return 'vendor-ui';
+					// Lottie — uniquement sur iOS, chunk séparé pour ne pas polluer vendor-misc
+					if (id.includes('lottie')) return 'vendor-lottie';
+					// Compression images — uniquement sur pages upload
+					if (id.includes('browser-image-compression')) return 'vendor-imgcomp';
+					// Dates
+					if (id.includes('date-fns')) return 'vendor-dates';
+					// Carousel — uniquement sur pages détail annonce
+					if (id.includes('embla-carousel')) return 'vendor-carousel';
+					// Formulaires
+					if (id.includes('react-hook-form')) return 'vendor-forms';
+					// Recadrage image — uniquement ProfilePage
+					if (id.includes('react-image-crop')) return 'vendor-imgcrop';
+					// Tout le reste
+					return 'vendor-misc';
+				}
+			}
 		}
 	}
 });

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import lottie from 'lottie-web';
 import { Capacitor } from '@capacitor/core';
 
 const SplashAnimationOverlay = ({ onComplete }) => {
@@ -9,30 +8,34 @@ const SplashAnimationOverlay = ({ onComplete }) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const anim = lottie.loadAnimation({
-      container: containerRef.current,
-      renderer: 'svg',
-      loop: false,
-      autoplay: true,
-      path: '/lottie/zandoplusanim.json',
-      assetsPath: '/lottie/images/',
+    let cleanup = () => {};
+
+    import('lottie-web').then(({ default: lottie }) => {
+      const anim = lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        path: '/lottie/zandoplusanim.json',
+        assetsPath: '/lottie/images/',
+      });
+
+      const handleComplete = () => {
+        setVisible(false);
+        setTimeout(() => onComplete?.(), 350);
+      };
+
+      anim.addEventListener('complete', handleComplete);
+      const timeout = setTimeout(handleComplete, 4000);
+
+      cleanup = () => {
+        anim.removeEventListener('complete', handleComplete);
+        anim.destroy();
+        clearTimeout(timeout);
+      };
     });
 
-    const handleComplete = () => {
-      setVisible(false);
-      setTimeout(() => onComplete?.(), 350);
-    };
-
-    anim.addEventListener('complete', handleComplete);
-
-    // Sécurité : cache après 4s si l'animation ne se termine pas
-    const timeout = setTimeout(handleComplete, 4000);
-
-    return () => {
-      anim.removeEventListener('complete', handleComplete);
-      anim.destroy();
-      clearTimeout(timeout);
-    };
+    return () => cleanup();
   }, [onComplete]);
 
   if (!visible) return null;
@@ -63,9 +66,6 @@ const SplashAnimationOverlay = ({ onComplete }) => {
 const isIOS = Capacitor.getPlatform() === 'ios';
 
 const ConditionalSplash = ({ onComplete }) => {
-  // IMPORTANT: ne jamais appeler onComplete() pendant le render —
-  // React interdit de modifier l'état d'un composant parent en cours de render.
-  // On passe par useEffect qui s'exécute APRÈS le premier rendu.
   useEffect(() => {
     if (!isIOS) onComplete?.();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

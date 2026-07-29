@@ -175,7 +175,7 @@ const CartCheckoutPage = () => {
                   <span>Livraison ({sellerGroups.length} vendeurs)</span>
                   <span>+{formatAmount(deliveryTotal)} FCFA</span>
                 </div>
-                <div className="flex justify-between px-4 py-3 bg-green-50 border-t border-green-100">
+                <div className="flex justify-between px-4 py-3 bg-custom-green-50 border-t border-custom-green-100">
                   <span className="font-bold text-gray-800">Total à payer</span>
                   <span className="font-bold text-custom-green-600 text-lg">{formatAmount(total)} FCFA</span>
                 </div>
