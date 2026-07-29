@@ -1,11 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Link } from 'react-router-dom';
-import { Flame, Zap, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Flame, Zap, ChevronLeft, ChevronRight, ArrowRight, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ListingItem from '@/components/listings/ListingItem';
-import { useAuth } from '@/contexts/AuthContext';
 import { useListings } from '@/contexts/ListingsContext';
+
+/* ─── Carte urgente landscape ─────────────────────────────── */
+const UrgentCard = ({ listing }) => (
+  <Link
+    to={`/listings/${listing.listing_slug || listing.id}`}
+    className="flex-shrink-0 w-[260px] h-[130px] flex rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
+  >
+    {/* Image carrée à gauche */}
+    <div className="relative w-[130px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
+      {listing.images?.[0]
+        ? <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        : <div className="w-full h-full flex items-center justify-center"><Flame className="w-8 h-8 text-gray-200" /></div>}
+      {/* Badge */}
+      <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
+        <Flame className="w-2 h-2" /> URGENT
+      </div>
+    </div>
+    {/* Contenu à droite */}
+    <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+      <div>
+        <p className="text-[12px] font-bold text-gray-900 line-clamp-2 leading-snug">{listing.title}</p>
+        {listing.location && (
+          <p className="flex items-center gap-0.5 text-[10px] text-gray-400 mt-1">
+            <MapPin className="w-2.5 h-2.5" /> {listing.location}
+          </p>
+        )}
+      </div>
+      <div>
+        <p className="text-[15px] font-black text-custom-green-500 leading-none">
+          {(listing.price || 0).toLocaleString('fr-FR')}
+          <span className="text-[10px] font-semibold text-gray-400 ml-1">{listing.currency || 'FCFA'}</span>
+        </p>
+        <span className="inline-block mt-1.5 text-[9px] font-bold text-red-500 border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-full">
+          Vente urgente
+        </span>
+      </div>
+    </div>
+  </Link>
+);
 
 const useScroll = () => {
   const ref = useRef(null);
@@ -58,11 +96,7 @@ export const UrgentSection = () => {
             <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div ref={ref} className="flex gap-3 overflow-x-auto scrollbar-hide flex-1">
-            {listings.map(l => (
-              <div key={l.id} className="flex-shrink-0 w-[200px]">
-                <ListingItem listing={l} viewMode="grid" isFavorite={favorites.has(l.id)} toggleFavorite={toggleFavorite} />
-              </div>
-            ))}
+            {listings.map(l => <UrgentCard key={l.id} listing={l} />)}
           </div>
           <button onClick={() => scroll(1)} className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors">
             <ChevronRight className="w-5 h-5 text-gray-600" />
