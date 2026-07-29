@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const SESSION_KEY = 'zando_urgent_popup_closed';
 
-const CARD_W  = 160; // px
-const GAP     = 10;  // px
+const CARD_W  = 220; // px
+const GAP     = 12;  // px
 const SLOT    = CARD_W + GAP;
 const VISIBLE = 3;
 const CONTAINER_W = VISIBLE * CARD_W + (VISIBLE - 1) * GAP; // 500px
