@@ -118,15 +118,15 @@ const UrgentPopup = () => {
   const navigate = useCallback((dir) => {
     clearInterval(autoRef.current);
     setDirection(dir);
-    setGroupStart(s => (s + dir * 3 + listings.length * 3) % listings.length);
+    setGroupStart(s => (s + dir + listings.length) % listings.length);
     setKey(k => k + 1);
   }, [listings.length]);
 
   useEffect(() => {
-    if (!visible || listings.length <= 3) return;
+    if (!visible || listings.length <= 1) return;
     autoRef.current = setInterval(() => {
       setDirection(1);
-      setGroupStart(s => (s + 3) % listings.length);
+      setGroupStart(s => (s + 1) % listings.length);
       setKey(k => k + 1);
     }, 4500);
     return () => clearInterval(autoRef.current);
@@ -134,8 +134,8 @@ const UrgentPopup = () => {
 
   if (!visible || listings.length === 0) return null;
 
-  const totalGroups = Math.ceil(listings.length / 3);
-  const currentGroup = Math.floor(groupStart / 3);
+  const totalGroups = listings.length;
+  const currentGroup = groupStart;
 
   return (
     <AnimatePresence>
@@ -202,7 +202,7 @@ const UrgentPopup = () => {
             <div className="relative z-20 flex items-center gap-2 mt-5">
               {Array.from({ length: totalGroups }).map((_, i) => (
                 <button key={i}
-                  onClick={(e) => { e.stopPropagation(); setDirection(i > currentGroup ? 1 : -1); setGroupStart(i * 3); setKey(k => k + 1); }}
+                  onClick={(e) => { e.stopPropagation(); setDirection(i > currentGroup ? 1 : -1); setGroupStart(i); setKey(k => k + 1); }}
                   className={`rounded-full transition-all ${i === currentGroup ? 'w-5 h-2 bg-red-400' : 'w-2 h-2 bg-white/25'}`}
                 />
               ))}
