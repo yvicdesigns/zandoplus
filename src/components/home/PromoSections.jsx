@@ -90,39 +90,41 @@ export const UrgentSection = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="py-8 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #b91c1c 100%)' }}
+      className="py-8 bg-gray-950"
     >
-      {/* Texture */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
-      <div className="max-w-[1280px] mx-auto px-6 relative">
+      <div className="max-w-[1280px] mx-auto px-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Flame className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-accent-yellow/10 border border-accent-yellow/30 rounded-xl flex items-center justify-center">
+              <Flame className="w-5 h-5 text-accent-yellow" />
             </div>
             <div>
-              <p className="text-red-200 text-[10px] font-bold uppercase tracking-widest">À saisir rapidement</p>
+              <p className="text-accent-yellow/60 text-[10px] font-bold uppercase tracking-widest">À saisir rapidement</p>
               <h2 className="text-white text-[20px] font-black leading-tight">Ventes Urgentes 🔥</h2>
             </div>
-            <span className="bg-white text-red-600 text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse">
+            <span className="bg-accent-yellow text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full animate-pulse">
               {listings.length} offres
             </span>
           </div>
           <Link to="/listings?urgent=true"
-            className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold px-4 h-9 rounded-xl transition-colors backdrop-blur-sm">
+            className="flex items-center gap-1.5 border border-white/10 hover:border-accent-yellow/50 text-white/70 hover:text-accent-yellow text-[12px] font-bold px-4 h-9 rounded-xl transition-colors">
             Voir tout <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <ScrollSection scrollRef={scrollRef} onScrollLeft={() => scroll(-1)} onScrollRight={() => scroll(1)}>
-          {listings.map(l => <UrgentCard key={l.id} listing={l} />)}
-        </ScrollSection>
+        {/* Scroll avec flèches adaptées */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => scroll(-1)} className="w-9 h-9 flex-shrink-0 bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-accent-yellow/20 hover:border-accent-yellow/40 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-white/70" />
+          </button>
+          <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide flex-1 pb-1">
+            {listings.map(l => <UrgentCard key={l.id} listing={l} />)}
+          </div>
+          <button onClick={() => scroll(1)} className="w-9 h-9 flex-shrink-0 bg-white/5 border border-white/10 rounded-full flex items-center justify-center hover:bg-accent-yellow/20 hover:border-accent-yellow/40 transition-colors">
+            <ChevronRight className="w-5 h-5 text-white/70" />
+          </button>
+        </div>
       </div>
     </motion.section>
   );
@@ -152,39 +154,40 @@ export const BoostedSection = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="py-8 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #78350f 0%, #d97706 50%, #b45309 100%)' }}
+      className="py-8 bg-custom-green-500"
     >
-      {/* Texture */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
-      <div className="max-w-[1280px] mx-auto px-6 relative">
+      <div className="max-w-[1280px] mx-auto px-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+              <Zap className="w-5 h-5 text-accent-yellow" />
             </div>
             <div>
-              <p className="text-amber-200 text-[10px] font-bold uppercase tracking-widest">Mises en avant</p>
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Mises en avant</p>
               <h2 className="text-white text-[20px] font-black leading-tight">Annonces Boostées ⚡</h2>
             </div>
-            <span className="bg-white text-amber-600 text-[10px] font-black px-2.5 py-1 rounded-full">
+            <span className="bg-accent-yellow text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full">
               {listings.length} annonces
             </span>
           </div>
           <Link to="/listings?boosted=true"
-            className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold px-4 h-9 rounded-xl transition-colors backdrop-blur-sm">
+            className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold px-4 h-9 rounded-xl transition-colors">
             Voir tout <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <ScrollSection scrollRef={scrollRef} onScrollLeft={() => scroll(-1)} onScrollRight={() => scroll(1)}>
-          {listings.map(l => <BoostedCard key={l.id} listing={l} />)}
-        </ScrollSection>
+        <div className="flex items-center gap-3">
+          <button onClick={() => scroll(-1)} className="w-9 h-9 flex-shrink-0 bg-white/15 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/25 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide flex-1 pb-1">
+            {listings.map(l => <BoostedCard key={l.id} listing={l} />)}
+          </div>
+          <button onClick={() => scroll(1)} className="w-9 h-9 flex-shrink-0 bg-white/15 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/25 transition-colors">
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </div>
     </motion.section>
   );
