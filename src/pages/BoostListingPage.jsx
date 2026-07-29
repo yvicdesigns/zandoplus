@@ -3,23 +3,54 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Zap, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Zap, Flame, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
-const BOOST_AMOUNT = 500;
-const BOOST_DAYS = 7;
+const PLANS = [
+  {
+    id: 'simple',
+    label: 'Boost Simple',
+    icon: Zap,
+    price: 500,
+    days: 7,
+    color: 'amber',
+    description: 'Votre annonce apparaît en tête des résultats.',
+    perks: [
+      'Affiché en premier dans les résultats',
+      'Badge "Boosté ⚡" visible',
+      'Mis en avant dans sa catégorie',
+      'Durée : 7 jours',
+    ],
+  },
+  {
+    id: 'urgent',
+    label: 'Boost Urgent',
+    icon: Flame,
+    price: 2000,
+    days: 7,
+    color: 'red',
+    badge: 'Recommandé',
+    description: 'Visibilité maximale — popup au chargement du site.',
+    perks: [
+      'Popup automatique pour tous les visiteurs',
+      'Badge "Urgent 🔥" rouge animé',
+      'Affiché en premier dans les résultats',
+      'Section "Offres Urgentes" sur l\'accueil',
+      'Durée : 7 jours',
+    ],
+  },
+];
 
 const BoostListingPage = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [listing, setListing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [listing, setListing]       = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState('urgent');
+  const [activeBoost, setActiveBoost]   = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeBoost, setActiveBoost] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -32,7 +63,7 @@ const BoostListingPage = () => {
         .single();
 
       if (error || !listingData) {
-        toast({ title: 'Erreur', description: "Annonce introuvable.", variant: 'destructive' });
+        toast({ title: 'Erreur', description: 'Annonce introuvable.', variant: 'destructive' });
         navigate('/profile');
         return;
       }
@@ -43,10 +74,9 @@ const BoostListingPage = () => {
       }
       setListing(listingData);
 
-      // Vérifie si un boost actif existe déjà
       const { data: boostData } = await supabase
         .from('ad_boosts')
-        .select('id, date_fin, statut')
+        .select('id, date_fin, statut, boost_type')
         .eq('annonce_id', listingId)
         .eq('statut', 'active')
         .maybeSingle();
@@ -57,15 +87,17 @@ const BoostListingPage = () => {
   }, [listingId, user, navigate, toast]);
 
   const handleBoost = async () => {
+    const plan = PLANS.find(p => p.id === selectedPlan);
     setIsProcessing(true);
     try {
       const { data: boost, error } = await supabase
         .from('ad_boosts')
         .insert({
           annonce_id: listing.id,
-          user_id: user.id,
-          montant: BOOST_AMOUNT,
-          statut: 'pending',
+          user_id:    user.id,
+          montant:    plan.price,
+          statut:     'pending',
+          boost_type: plan.id,
         })
         .select('id')
         .single();
@@ -74,12 +106,13 @@ const BoostListingPage = () => {
 
       navigate('/boost-payment', {
         state: {
-          boostId: boost.id,
-          listingId: listing.id,
+          boostId:      boost.id,
+          listingId:    listing.id,
           listingTitle: listing.title,
-          amount: BOOST_AMOUNT,
-          days: BOOST_DAYS,
-        }
+          amount:       plan.price,
+          days:         plan.days,
+          boostType:    plan.id,
+        },
       });
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
@@ -94,92 +127,117 @@ const BoostListingPage = () => {
     </div>
   );
 
+  const plan = PLANS.find(p => p.id === selectedPlan);
+
   return (
     <>
-      <Helmet><title>Booster l'annonce - Zando+</title></Helmet>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-12 px-4">
-        <div className="max-w-xl mx-auto">
-          <Button variant="ghost" onClick={() => navigate('/profile')} className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Retour au profil
-          </Button>
+      <Helmet><title>Booster l'annonce — Zando+</title></Helmet>
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-2xl mx-auto">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[13px] text-gray-500 hover:text-gray-900 mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
 
-          <Card className="shadow-lg border-0">
-            <CardHeader className="text-center">
-              <div className="mx-auto bg-amber-100 p-3 rounded-full w-fit mb-4">
-                <Zap className="w-8 h-8 text-amber-500" />
+          <h1 className="text-[22px] font-black text-gray-900 mb-1">Booster votre annonce</h1>
+          <p className="text-[13px] text-gray-400 mb-6">Choisissez un plan pour augmenter la visibilité de votre annonce.</p>
+
+          {/* Annonce */}
+          <div className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl mb-6 shadow-sm">
+            <img
+              src={listing.images?.[0] || 'https://via.placeholder.com/80'}
+              alt={listing.title}
+              className="w-14 h-14 object-cover rounded-xl border"
+            />
+            <div>
+              <p className="text-[11px] text-gray-400 mb-0.5">Annonce sélectionnée</p>
+              <p className="text-[14px] font-bold text-gray-900 line-clamp-1">{listing.title}</p>
+            </div>
+          </div>
+
+          {/* Boost actif */}
+          {activeBoost && (
+            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-6">
+              <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+              <div>
+                <p className="text-[13px] font-bold text-amber-800">
+                  {activeBoost.boost_type === 'urgent' ? 'Boost Urgent actif' : 'Boost Simple actif'}
+                </p>
+                <p className="text-[11px] text-amber-700">
+                  Expire le {new Date(activeBoost.date_fin).toLocaleDateString('fr-FR')}
+                </p>
               </div>
-              <CardTitle className="text-2xl font-bold">Booster cette annonce</CardTitle>
-              <CardDescription className="text-gray-600 pt-1">
-                Votre annonce apparaît en tête des résultats pendant 7 jours.
-              </CardDescription>
-            </CardHeader>
+            </div>
+          )}
 
-            <CardContent className="space-y-6">
-              {/* Aperçu annonce */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-                <img
-                  src={listing.images?.[0] || 'https://via.placeholder.com/80'}
-                  alt={listing.title}
-                  className="w-16 h-16 object-cover rounded-lg border"
-                />
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Annonce à booster</p>
-                  <p className="font-semibold text-gray-800 line-clamp-2">{listing.title}</p>
-                </div>
-              </div>
-
-              {/* Boost actif ? */}
-              {activeBoost && (
-                <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-amber-800">Boost déjà actif</p>
-                    <p className="text-xs text-amber-700">
-                      Expire le {new Date(activeBoost.date_fin).toLocaleDateString('fr-FR')}
-                    </p>
+          {/* Plans */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            {PLANS.map(p => {
+              const Icon = p.icon;
+              const isSelected = selectedPlan === p.id;
+              const isRed = p.color === 'red';
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlan(p.id)}
+                  className={`relative text-left p-5 rounded-2xl border-2 transition-all ${
+                    isSelected
+                      ? isRed
+                        ? 'border-red-500 bg-red-50 shadow-lg shadow-red-100'
+                        : 'border-amber-400 bg-amber-50 shadow-lg shadow-amber-100'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  {p.badge && (
+                    <span className="absolute top-3 right-3 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full">
+                      {p.badge}
+                    </span>
+                  )}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                    isRed ? 'bg-red-100' : 'bg-amber-100'
+                  }`}>
+                    <Icon className={`w-5 h-5 ${isRed ? 'text-red-500' : 'text-amber-500'}`} />
                   </div>
-                </div>
-              )}
+                  <p className="text-[15px] font-black text-gray-900 mb-0.5">{p.label}</p>
+                  <p className="text-[11px] text-gray-400 mb-3">{p.description}</p>
+                  <p className={`text-[22px] font-black mb-3 ${isRed ? 'text-red-500' : 'text-amber-500'}`}>
+                    {p.price.toLocaleString('fr-FR')} FCFA
+                    <span className="text-[11px] font-semibold text-gray-400 ml-1">/ {p.days} jours</span>
+                  </p>
+                  <ul className="space-y-1.5">
+                    {p.perks.map(perk => (
+                      <li key={perk} className="flex items-start gap-2 text-[11px] text-gray-600">
+                        <CheckCircle className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${isRed ? 'text-red-400' : 'text-amber-400'}`} />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              );
+            })}
+          </div>
 
-              {/* Détail de l'offre */}
-              <div className="space-y-3">
-                {[
-                  'Affiché en premier dans les résultats de recherche',
-                  'Badge "Boosté" visible sur votre annonce',
-                  'Mis en avant dans sa catégorie',
-                  'Durée : 7 jours',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-3">
-                    <CheckCircle className="w-4 h-4 text-custom-green-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">{item}</span>
-                  </div>
-                ))}
-              </div>
+          {/* CTA */}
+          <button
+            onClick={handleBoost}
+            disabled={isProcessing || !!activeBoost}
+            className={`w-full h-14 rounded-2xl text-white font-black text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+              plan.color === 'red'
+                ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200'
+                : 'bg-amber-400 hover:bg-amber-500 shadow-lg shadow-amber-200'
+            }`}
+          >
+            {isProcessing
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : plan.color === 'red' ? <Flame className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
+            {activeBoost
+              ? 'Boost déjà actif'
+              : `Continuer avec ${plan.label} — ${plan.price.toLocaleString()} FCFA`}
+          </button>
 
-              {/* Prix */}
-              <div className="text-center bg-green-50 border border-custom-green-200 rounded-xl p-5">
-                <p className="text-sm text-gray-500 mb-1">Prix unique</p>
-                <p className="text-4xl font-bold text-custom-green-600">{BOOST_AMOUNT.toLocaleString()} FCFA</p>
-                <p className="text-xs text-gray-400 mt-1">pour {BOOST_DAYS} jours</p>
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex flex-col gap-3">
-              <Button
-                onClick={handleBoost}
-                disabled={isProcessing || !!activeBoost}
-                size="lg"
-                className="w-full gradient-bg hover:opacity-90 text-base"
-              >
-                {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
-                {activeBoost ? 'Boost déjà actif' : 'Booster pour 500 FCFA'}
-              </Button>
-              <div className="flex items-center justify-center text-xs text-gray-400 gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Paiement via Airtel Money ou MTN Money
-              </div>
-            </CardFooter>
-          </Card>
+          <div className="flex items-center justify-center text-[11px] text-gray-400 gap-1 mt-3">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Paiement via Airtel Money ou MTN Money
+          </div>
         </div>
       </div>
     </>

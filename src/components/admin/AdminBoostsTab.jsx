@@ -75,10 +75,17 @@ const AdminBoostsTab = memo(() => {
       return;
     }
 
+    const isUrgent = boost.boost_type === 'urgent';
     if (isActivating) {
-      await supabase.from('listings').update({ is_boosted: true }).eq('id', boost.annonce?.id);
+      await supabase.from('listings').update({
+        is_boosted: true,
+        ...(isUrgent ? { is_urgent: true } : {}),
+      }).eq('id', boost.annonce?.id);
     } else {
-      await supabase.from('listings').update({ is_boosted: false }).eq('id', boost.annonce?.id);
+      await supabase.from('listings').update({
+        is_boosted: false,
+        ...(isUrgent ? { is_urgent: false } : {}),
+      }).eq('id', boost.annonce?.id);
     }
 
     toast({ title: 'Succès', description: `Boost ${isActivating ? 'activé' : 'désactivé'} avec succès.` });
@@ -190,7 +197,18 @@ const AdminBoostsTab = memo(() => {
                     </div>
 
                     {/* Details */}
-                    <div className="text-sm text-gray-600 space-y-0.5">
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center gap-2">
+                        {boost.boost_type === 'urgent' ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded-full">
+                            🔥 Urgent
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                            ⚡ Simple
+                          </span>
+                        )}
+                      </div>
                       <p>Montant : <span className="font-semibold text-amber-700">{boost.montant?.toLocaleString()} FCFA</span></p>
                       {boost.date_fin && <p>Expire : {formatDate(boost.date_fin)}</p>}
                     </div>

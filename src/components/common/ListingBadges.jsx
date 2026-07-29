@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Award, Zap, ShieldCheck, Clock, Sparkles, PackageX } from 'lucide-react';
+import { Award, Zap, ShieldCheck, Clock, Sparkles, PackageX, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const badgeConfig = {
@@ -20,9 +20,9 @@ const badgeConfig = {
   },
   urgent: {
     label: 'Urgent',
-    icon: <Zap className="w-3 h-3 md:w-4 md:h-4" />,
-    variant: 'urgent',
-    tooltip: 'Le vendeur souhaite vendre rapidement.',
+    icon: <Flame className="w-3 h-3 md:w-4 md:h-4" />,
+    tooltip: 'Vente urgente — offre limitée.',
+    customClasses: 'bg-red-500 text-white animate-pulse text-[0.6rem] px-1.5 py-0.5 md:text-xs md:px-2.5 md:py-0.5 shadow-sm shadow-red-200',
   },
   new: {
     label: 'Nouveau',

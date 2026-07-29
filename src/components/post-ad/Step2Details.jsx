@@ -186,9 +186,14 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
             </div>
         )}
         
-        <div className="flex items-center space-x-2">
-          <Checkbox id="is_urgent" name="is_urgent" checked={formData.is_urgent} onCheckedChange={(checked) => handleSelectChange('is_urgent', checked)} />
-          <Label htmlFor="is_urgent" className="cursor-pointer">Marquer comme "Urgent"</Label>
+        <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-xl opacity-70">
+          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-base">🔥</span>
+          </div>
+          <div>
+            <p className="text-[13px] font-bold text-red-700">Boost Urgent</p>
+            <p className="text-[11px] text-red-400">Disponible après publication — depuis votre espace vendeur.</p>
+          </div>
         </div>
       </div>
     </motion.div>

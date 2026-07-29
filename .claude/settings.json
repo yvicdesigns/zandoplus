@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(grep -rn \"seller/:id\\\\|/seller/\\\\${\" src/ --include=\"*.jsx\" --include=\"*.js\" --include=\"*.tsx\")",
+      "Bash(grep -rn \"/listings/\\\\${\\\\|listings/:id\\\\|listings/:listing\\\\|to.*listings.*id\\\\|navigate.*listings\" src/ --include=\"*.jsx\" --include=\"*.js\")",
+      "Bash(grep -rn \"/listings/\\\\${\\\\|listings.*id\" src/ --include=\"*.jsx\")",
+      "Bash(grep -rn \"to={\\\\`/listings/\\\\${\" src/ --include=\"*.jsx\")",
+      "Bash(grep -rn \"listings/\\\\${listing\\\\|listings/\\\\${item\\\\|listings/\\\\${delivery\" src/ --include=\"*.jsx\")",
+      "Bash(grep -rPn '`/listings/\\\\$\\\\{' src/ --include=\"*.jsx\")",
+      "Bash(curl -s -X POST https://axlpfskrrlwibcnxkfvb.supabase.co/functions/v1/send-contact-email -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4bHBmc2tycmx3aWJjbnhrZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk0MjUyMjksImV4cCI6MjAzNTAwMTIyOX0.p1aMbXnPbBiKsLGzmqaHsYTWcBzBjg_sAbQEyCOzsiE' -d '{\"name\":\"Test\",\"email\":\"test@test.com\",\"subject\":\"Test sujet\",\"message\":\"Test message\"}')",
+      "Bash(curl -s -X POST https://axlpfskrrlwibcnxkfvb.supabase.co/functions/v1/notify-withdrawal-request -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4bHBmc2tycmx3aWJjbnhrZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk0MjUyMjksImV4cCI6MjAzNTAwMTIyOX0.p1aMbXnPbBiKsLGzmqaHsYTWcBzBjg_sAbQEyCOzsiE' -d '{\"vendeur_name\":\"Test\",\"vendeur_momo\":\"0600000000\",\"montant\":5000,\"commission\":350,\"net\":4650,\"transaction_id\":\"test-123\"}')",
+      "Bash(curl -s -X POST https://axlpfskrrlwibcnxkfvb.supabase.co/functions/v1/notify-new-message -H 'Content-Type: application/json' -d '{\"receiver_id\":\"00000000-0000-0000-0000-000000000000\",\"sender_name\":\"Test\",\"conversation_id\":\"test\",\"message_preview\":\"Test\"}')",
+      "Bash(curl -s -X POST https://axlpfskrrlwibcnxkfvb.supabase.co/functions/v1/diagnose-email-config -H 'Content-Type: application/json' -d '{}')",
+      "Bash(which java *)",
+      "Read(//Applications/**)",
+      "Bash(/usr/libexec/java_home -V 2>&1 && echo \"---\" && ls /Library/Java/JavaVirtualMachines/ 2>/dev/null)",
+      "Read(//Library/Java/JavaVirtualMachines/**)",
+      "Bash(JAVA_HOME=\"/Users/tchissambouvanyvic/Library/Java/JavaVirtualMachines/jbr-21.0.8/Contents/Home\" cd \"/Users/tchissambouvanyvic/zando plus/android\")",
+      "Bash(curl -sI \"https://axlpfskrrlwibcnxkfvb.supabase.co/storage/v1/object/public/downloads/zandoplus.apk\")",
+      "Bash(grep -E \"gradient|#[0-9a-fA-F]{3,6}|--color|custom-green|primary|brand\" \"/Users/tchissambouvanyvic/zando plus/src/index.css\")",
+      "Bash(npx --prefix \"/Users/tchissambouvanyvic/moncommunitymanager\" tsc --noEmit)",
+      "Bash(mkdir -p \"/Users/tchissambouvanyvic/moncommunitymanager/src/app/dashboard/brands/[brandId]/settings/facebook-pages\")",
+      "Bash(git -C \"/Users/tchissambouvanyvic/zando plus\" diff --name-only HEAD~10 HEAD)",
+      "Bash(git -C \"/Users/tchissambouvanyvic/moncommunitymanager\" status --short)",
+      "Bash(npx lighthouse *)",
+      "Bash(node -e ' *)",
+      "Bash(sort -k5 -rn)",
+      "Bash(/opt/homebrew/bin/vercel deploy *)",
+      "Bash(git checkout *)",
+      "WebFetch(domain:claude.ai)",
+      "Bash(grep -v \"//\\\\|handleEscrow\\\\|/escrow\\\\|escrowId\\\\|escrow_id\\\\|EscrowPaymentPage\\\\|AdminEscrowTab\\\\|escrow_transactions\\\\|escrow_status\\\\|escrow_amount\\\\|escrow_released\\\\|'escrow'\\\\|\\\\\"escrow\\\\\"\\\\|\\\\`escrow\")",
+      "Bash(awk '{print $3}')",
+      "Bash(gh pr *)",
+      "Bash(vercel --prod=false --yes)",
+      "Bash(git stash *)",
+      "Bash(vercel projects *)"
+    ],
+    "additionalDirectories": [
+      "/Users/tchissambouvanyvic/moncommunitymanager/src/lib/social",
+      "/Users/tchissambouvanyvic/moncommunitymanager/src/app/api/social/callback",
+      "/Users/tchissambouvanyvic/moncommunitymanager/src/app/api/social/pages",
+      "/Users/tchissambouvanyvic/moncommunitymanager/src/app/dashboard/brands/[brandId]/settings",
+      "/Users/tchissambouvanyvic/moncommunitymanager"
+    ]
+  }
+}
