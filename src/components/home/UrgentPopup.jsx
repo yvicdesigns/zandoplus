@@ -43,22 +43,26 @@ const UrgentPopup = () => {
 
   const baseLen = listings.length / 3;
 
-  const go = useCallback((dir) => {
-    clearInterval(autoRef.current);
+  const slide = useCallback((dir) => {
     setCenter(c => {
       let next = c + dir;
-      // si on sort de la copie du milieu, on recentre silencieusement
       if (next >= baseLen * 2) next -= baseLen;
       if (next < baseLen)      next += baseLen;
       return next;
     });
   }, [baseLen]);
 
+  const go = useCallback((dir) => {
+    clearInterval(autoRef.current);
+    slide(dir);
+    autoRef.current = setInterval(() => slide(1), 4000);
+  }, [slide]);
+
   useEffect(() => {
     if (!visible || baseLen <= 1) return;
-    autoRef.current = setInterval(() => go(1), 4000);
+    autoRef.current = setInterval(() => slide(1), 4000);
     return () => clearInterval(autoRef.current);
-  }, [visible, baseLen, go]);
+  }, [visible, baseLen, slide]);
 
   const close = useCallback(() => {
     setClosing(true);
@@ -99,17 +103,19 @@ const UrgentPopup = () => {
             <X className="w-4 h-4" />
           </button>
 
+          {/* Tout le contenu — stopPropagation global pour éviter fermeture accidentelle */}
+          <div className="relative z-10 flex flex-col items-center" onClick={e => e.stopPropagation()}>
+
           {/* Header */}
-          <div className="relative z-20 text-center mb-6">
+          <div className="text-center mb-6">
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">Ventes urgentes</p>
             <h2 className="text-white text-[18px] font-black">🔥 Offres à saisir rapidement</h2>
           </div>
 
           {/* Carousel */}
           <div
-            className="relative z-10"
+            className="relative"
             style={{ width: CONTAINER_W, overflow: 'hidden' }}
-            onClick={e => e.stopPropagation()}
           >
             {/* Track qui slide */}
             <motion.div
@@ -173,7 +179,7 @@ const UrgentPopup = () => {
 
           {/* Flèches */}
           {baseLen > 1 && (
-            <div className="relative z-20 flex items-center gap-4 mt-5">
+            <div className="flex items-center gap-4 mt-5">
               <button onClick={() => go(-1)}
                 className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-colors">
                 <ChevronLeft className="w-4 h-4" />
@@ -183,7 +189,7 @@ const UrgentPopup = () => {
               <div className="flex items-center gap-1.5">
                 {Array.from({ length: baseLen }).map((_, i) => (
                   <button key={i}
-                    onClick={() => { clearInterval(autoRef.current); setCenter(baseLen + i); }}
+                    onClick={() => { clearInterval(autoRef.current); setCenter(baseLen + i); autoRef.current = setInterval(() => slide(1), 4000); }}
                     className={`rounded-full transition-all ${i === currentDot ? 'w-5 h-2 bg-red-400' : 'w-2 h-2 bg-white/25'}`}
                   />
                 ))}
@@ -195,6 +201,8 @@ const UrgentPopup = () => {
               </button>
             </div>
           )}
+
+          </div>{/* fin stopPropagation wrapper */}
         </motion.div>
       )}
     </AnimatePresence>
