@@ -8,9 +8,15 @@ import { useListings } from '@/contexts/ListingsContext';
 
 /* ─── Carte urgente landscape ─────────────────────────────── */
 const UrgentCard = ({ listing }) => (
+  <motion.div
+    animate={{ rotate: [0, -2, 2, -2, 2, -1, 1, 0] }}
+    transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
+    className="flex-shrink-0"
+    style={{ transformOrigin: 'center bottom' }}
+  >
   <Link
     to={`/listings/${listing.listing_slug || listing.id}`}
-    className="flex-shrink-0 w-[260px] h-[130px] flex rounded-xl overflow-hidden bg-category-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+    className="w-[260px] h-[130px] flex rounded-xl overflow-hidden bg-category-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
   >
     {/* Image carrée à gauche */}
     <div className="relative w-[130px] h-full flex-shrink-0 overflow-hidden bg-category-card">
@@ -43,6 +49,7 @@ const UrgentCard = ({ listing }) => (
       </div>
     </div>
   </Link>
+  </motion.div>
 );
 
 const useScroll = () => {
