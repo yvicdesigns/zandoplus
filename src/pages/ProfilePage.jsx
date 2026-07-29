@@ -15,6 +15,10 @@ import {
 } from 'lucide-react';
 import AddressesTab from '@/components/profile/AddressesTab';
 import MessagesInline from '@/components/messages/MessagesInline';
+import CommandesInline from '@/components/profile/CommandesInline';
+import FavorisInline from '@/components/profile/FavorisInline';
+import NotificationsInline from '@/components/profile/NotificationsInline';
+import AvisInline from '@/components/profile/AvisInline';
 import 'react-image-crop/dist/ReactCrop.css';
 
 const fmt = (d) => {
@@ -137,13 +141,13 @@ const ProfilePage = () => {
 
   const NAV = [
     { id: 'dashboard',     label: 'Tableau de bord',         icon: LayoutDashboard },
-    { id: 'commandes',     label: 'Mes commandes',            icon: Package,        action: () => navigate('/transactions') },
-    { id: 'favoris',       label: 'Mes favoris',              icon: Heart,          action: () => navigate('/favorites') },
-    { id: 'adresses',      label: 'Mes adresses',             icon: MapPin          },
-    { id: 'paiement',      label: 'Mes moyens de paiement',   icon: CreditCard,     disabled: true },
+    { id: 'commandes',     label: 'Mes commandes',            icon: Package        },
+    { id: 'favoris',       label: 'Mes favoris',              icon: Heart          },
+    { id: 'adresses',      label: 'Mes adresses',             icon: MapPin         },
+    { id: 'paiement',      label: 'Mes moyens de paiement',   icon: CreditCard,    disabled: true },
     { id: 'messages',      label: 'Messages',                 icon: MessageSquare  },
-    { id: 'notifications', label: 'Notifications',            icon: Bell,           action: () => navigate('/notifications') },
-    { id: 'avis',          label: 'Mes avis',                 icon: Star,           action: () => navigate('/reviews') },
+    { id: 'notifications', label: 'Notifications',            icon: Bell           },
+    { id: 'avis',          label: 'Mes avis',                 icon: Star           },
     { id: 'parrainage',    label: 'Parrainage',               icon: Users,          disabled: true },
     { id: 'parametres',    label: 'Paramètres du compte',     icon: Settings        },
   ];
@@ -159,6 +163,30 @@ const ProfilePage = () => {
     if (activeSection === 'messages') return (
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: 500 }}>
         <MessagesInline />
+      </div>
+    );
+
+    if (activeSection === 'commandes') return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <CommandesInline />
+      </div>
+    );
+
+    if (activeSection === 'favoris') return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <FavorisInline />
+      </div>
+    );
+
+    if (activeSection === 'notifications') return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <NotificationsInline />
+      </div>
+    );
+
+    if (activeSection === 'avis') return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <AvisInline />
       </div>
     );
 
@@ -282,17 +310,17 @@ const ProfilePage = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { icon: ShoppingBag, color: 'bg-green-100 text-custom-green-500', count: stats.commandes, label: 'Commandes',    link: '/transactions', linkLabel: 'Voir mes commandes' },
-            { icon: Heart,       color: 'bg-pink-100 text-pink-500',          count: favorites.size,  label: 'Favoris',      link: '/favorites',    linkLabel: 'Voir mes favoris' },
-            { icon: Star,        color: 'bg-yellow-100 text-yellow-500',      count: stats.avis,      label: 'Avis laissés', link: '/reviews',      linkLabel: 'Voir mes avis' },
-          ].map(({ icon: Icon, color, count, label, link, linkLabel }) => (
+            { icon: ShoppingBag, color: 'bg-green-100 text-custom-green-500', count: stats.commandes, label: 'Commandes',    section: 'commandes',     linkLabel: 'Voir mes commandes' },
+            { icon: Heart,       color: 'bg-pink-100 text-pink-500',          count: favorites.size,  label: 'Favoris',      section: 'favoris',       linkLabel: 'Voir mes favoris' },
+            { icon: Star,        color: 'bg-yellow-100 text-yellow-500',      count: stats.avis,      label: 'Avis laissés', section: 'avis',          linkLabel: 'Voir mes avis' },
+          ].map(({ icon: Icon, color, count, label, section, linkLabel }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col items-center text-center">
               <div className={`w-12 h-12 rounded-full ${color} flex items-center justify-center mb-3`}>
                 <Icon className="w-6 h-6" />
               </div>
               <p className="text-[28px] font-black text-gray-900 leading-none">{count}</p>
               <p className="text-[12px] text-gray-500 mt-1 mb-3">{label}</p>
-              <button onClick={() => navigate(link)} className="text-[12px] text-custom-green-500 font-semibold hover:underline">
+              <button onClick={() => setActiveSection(section)} className="text-[12px] text-custom-green-500 font-semibold hover:underline">
                 {linkLabel}
               </button>
             </div>
