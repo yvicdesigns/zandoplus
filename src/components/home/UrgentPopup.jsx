@@ -11,10 +11,9 @@ const CardGroup = ({ listings, startIndex, onClose }) => {
   const group = [0, 1, 2].map(i => listings[(startIndex + i) % listings.length]);
 
   const cardStyle = (pos) => {
-    // pos 0 = left, 1 = center, 2 = right
-    if (pos === 0) return { rotateY: 28, x: '-8%', scale: 0.82, z: -60, brightness: 0.75 };
-    if (pos === 1) return { rotateY: 0,  x: '0%',  scale: 1,    z: 0,   brightness: 1    };
-    if (pos === 2) return { rotateY: -28,x: '8%',  scale: 0.82, z: -60, brightness: 0.75 };
+    if (pos === 0) return { rotateY: 0, x: '0%', scale: 0.88, z: 0, brightness: 0.8 };
+    if (pos === 1) return { rotateY: 0, x: '0%', scale: 1,    z: 0, brightness: 1   };
+    if (pos === 2) return { rotateY: 0, x: '0%', scale: 0.88, z: 0, brightness: 0.8 };
   };
 
   return (
