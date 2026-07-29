@@ -12,7 +12,7 @@ import {
   Loader2, Star, Heart, MessageSquare, MapPin, Calendar,
   Package, Users, Clock, ThumbsUp, ChevronRight, BadgeCheck,
   Truck, Shield, Headphones, CheckCircle, SlidersHorizontal,
-  ShoppingBag,
+  ShoppingBag, Store, LayoutDashboard,
 } from 'lucide-react';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -139,6 +139,25 @@ const SellerShopPage = () => {
         <title>Boutique {seller.name} — Zando+</title>
         <meta name="description" content={`Explorez la boutique de ${seller.name} sur Zando+ Congo.`} />
       </Helmet>
+
+      {/* Bannière "tu regardes ta propre boutique" */}
+      {user?.id === seller.id && (
+        <div className="bg-accent-yellow border-b border-yellow-300 sticky top-0 z-40">
+          <div className="max-w-[1280px] mx-auto px-6 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-gray-800">
+              <Store className="w-4 h-4" />
+              <span>Vous prévisualisez votre boutique telle qu'elle apparaît aux clients</span>
+            </div>
+            <Link
+              to="/espace-vendeur"
+              className="flex items-center gap-1.5 bg-custom-green-500 text-white text-[12px] font-bold px-4 py-1.5 rounded-lg hover:bg-custom-green-600 transition-colors"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              Mon espace vendeur
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="bg-page-bg min-h-screen">
 

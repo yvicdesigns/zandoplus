@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Menu, X, User, MessageCircle, Plus, Settings, LogOut,
   ShoppingBag, LogIn, LayoutDashboard, Heart, ShoppingCart,
-  ShieldCheck, Wallet, KeyRound, ChevronDown, Facebook, Instagram, Music,
+  ShieldCheck, Wallet, KeyRound, ChevronDown, Facebook, Instagram, Music, Store,
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -243,6 +243,12 @@ const Header = memo(({ onLoginClick }) => {
                       <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
                     </div>
                     <div className="py-1.5">
+                      {user?.is_seller && (
+                        <Link to="/espace-vendeur" className="flex items-center px-3 py-2 mx-1.5 mb-1 text-[13px] font-bold text-white bg-custom-green-500 hover:bg-custom-green-600 rounded-lg transition-colors">
+                          <Store className="w-4 h-4 mr-2.5" />
+                          Espace vendeur
+                        </Link>
+                      )}
                       {[
                         { to: '/profile',      icon: User,          label: 'Mon Profil' },
                         { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
@@ -411,6 +417,13 @@ const Header = memo(({ onLoginClick }) => {
               {/* Compte */}
               {!authPending && user ? (
                 <div className="border-t border-gray-100 pt-4 space-y-1">
+                  {user?.is_seller && (
+                    <Link to="/espace-vendeur" onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center py-2.5 px-3 text-[13px] font-bold text-white bg-custom-green-500 hover:bg-custom-green-600 rounded-lg transition-colors mb-1">
+                      <Store className="w-4 h-4 mr-2.5" />
+                      Espace vendeur
+                    </Link>
+                  )}
                   {[
                     { to: '/profile',      icon: User,          label: 'Mon Profil' },
                     { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
