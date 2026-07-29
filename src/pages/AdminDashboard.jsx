@@ -91,7 +91,7 @@ const NAV_GROUPS = [
 const TAB_LABELS = {
   overview: 'Vue d\'ensemble', users: 'Utilisateurs', listings: 'Annonces',
   deliveries: 'Livraisons', reports: 'Signalements', verifications: 'Vérifications',
-  boosts: 'Boosts', escrow: 'Escrow', withdrawals: 'Retraits',
+  boosts: 'Boosts', escrow: 'Fonds protégés', withdrawals: 'Retraits',
   beta: 'Testeurs Beta', ads: 'Publicités', payments: 'Paiements',
   site: 'Gestion du site', categories: 'Catégories', approvals: 'Approbations',
   audit: 'Audit Logs', 'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',

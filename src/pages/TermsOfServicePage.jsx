@@ -102,8 +102,8 @@ const TermsOfServicePage = () => {
                <p>Nous nous réservons le droit de supprimer tout contenu et de suspendre ou résilier tout compte qui enfreint ces règles, sans préavis.</p>
             </Section>
             
-            <Section icon={FileText} title="4. Service d'Achat Sécurisé (Escrow)">
-                <p>Zando+ Congo propose un service d'achat sécurisé dit "escrow" permettant à l'acheteur de déposer un paiement que Zando+ conserve jusqu'à confirmation de réception du bien acheté. Ce service est soumis aux conditions suivantes :</p>
+            <Section icon={FileText} title="4. Service d'Achat Sécurisé (Fonds protégés)">
+                <p>Zando+ Congo propose un service d'achat sécurisé par fonds protégés permettant à l'acheteur de déposer un paiement que Zando+ conserve jusqu'à confirmation de réception du bien acheté. Ce service est soumis aux conditions suivantes :</p>
                 <ul>
                   <li>Une commission de <strong>3%</strong> du montant de la transaction est prélevée sur la part reversée au vendeur. L'acheteur paie le prix affiché sans surcoût.</li>
                   <li>L'acheteur dispose de <strong>72 heures</strong> après la déclaration de livraison par le vendeur pour confirmer la réception ou ouvrir un litige.</li>
@@ -113,7 +113,7 @@ const TermsOfServicePage = () => {
             </Section>
 
             <Section icon={Gavel} title="5. Limitation de responsabilité">
-                <p>En dehors du service d'achat sécurisé décrit à l'article 4, Zando+ Congo est une plateforme de mise en relation. Nous ne garantissons pas la qualité, la sécurité ou la légalité des articles proposés hors escrow, ni la véracité des annonces.</p>
+                <p>En dehors du service d'achat sécurisé décrit à l'article 4, Zando+ Congo est une plateforme de mise en relation. Nous ne garantissons pas la qualité, la sécurité ou la légalité des articles proposés hors fonds protégés, ni la véracité des annonces.</p>
                 <p>En aucun cas, Zando+ Congo ne pourra être tenu responsable des dommages directs ou indirects résultant de transactions effectuées en dehors du système d'achat sécurisé.</p>
             </Section>
 

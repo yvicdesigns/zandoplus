@@ -209,7 +209,7 @@ const EscrowPaymentPage = () => {
                   </div>
                 )}
 
-                {/* Options escrow (mobile money) */}
+                {/* Options fonds protégés (mobile money) */}
                 <div className="space-y-2">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> Payer par Mobile Money
@@ -224,7 +224,7 @@ const EscrowPaymentPage = () => {
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-colors ${isSelected ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
                       >
                         <div className={`p-2 rounded-lg ${isSelected ? 'bg-green-100' : 'bg-gray-100'}`}>
-                          <Icon className={`w-4 h-4 ${isSelected ? 'text-green-600' : 'text-gray-500'}`} />
+                          <Icon className={`w-4 h-4 ${isSelected ? 'text-custom-green-600' : 'text-gray-500'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`font-semibold text-sm ${isSelected ? 'text-green-800' : 'text-gray-700'}`}>{opt.label}</p>
@@ -273,7 +273,7 @@ const EscrowPaymentPage = () => {
                     <span>+{deliveryFee.toLocaleString()} FCFA</span>
                   </div>
                 )}
-                <div className="flex justify-between px-4 py-3 bg-green-50 border-t border-green-100">
+                <div className="flex justify-between px-4 py-3 bg-custom-green-50 border-t border-custom-green-100">
                   <span className="font-bold text-gray-800">Vous payez</span>
                   <span className="font-bold text-custom-green-600 text-lg">{totalAmount.toLocaleString()} {listing.currency || 'FCFA'}</span>
                 </div>

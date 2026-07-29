@@ -96,7 +96,7 @@ const PrivacyPolicyPage = () => {
                 <li>Faciliter la communication entre acheteurs et vendeurs.</li>
                 <li>Vous envoyer des notifications concernant votre compte ou la plateforme.</li>
                 <li>Personnaliser l’affichage des annonces selon votre ville enregistrée (priorité géographique) afin de vous montrer en premier les annonces proches de vous.</li>
-                <li>Gérer les transactions d’achat sécurisé (escrow) et vérifier les preuves de paiement.</li>
+                <li>Gérer les transactions d’achat sécurisé (fonds protégés) et vérifier les preuves de paiement.</li>
                 <li>Prévenir les activités frauduleuses et renforcer la sécurité.</li>
                 <li>Analyser l’utilisation et les tendances afin d’améliorer nos services.</li>
               </ul>

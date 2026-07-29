@@ -71,7 +71,7 @@ const EditSiteSettingsDialog = ({ isOpen, onClose }) => {
             <div className="space-y-2">
               <Label htmlFor="whatsapp_number">📱 Numéro de paiement MoMo (Airtel / MTN)</Label>
               <Input id="whatsapp_number" placeholder="+242XXXXXXXXX" {...register('whatsapp_number')} />
-              <p className="text-xs text-gray-500">Numéro affiché aux clients pour envoyer les paiements escrow.</p>
+              <p className="text-xs text-gray-500">Numéro affiché aux clients pour envoyer les paiements sécurisés.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="logo_url">URL du Logo</Label>

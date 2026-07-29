@@ -77,7 +77,7 @@ const HelpCenterPage = () => {
         q: "Qu'est-ce que l'Achat Sécurisé Zando ?",
         a: (
           <>
-            L'Achat Sécurisé Zando est notre système de paiement escrow intégré. Voici comment ça fonctionne :
+            L'Achat Sécurisé Zando est notre système de fonds protégés intégré. Voici comment ça fonctionne :
             <ol className="list-decimal list-inside mt-2 space-y-1">
               <li>Vous envoyez le paiement (Airtel Money ou MTN Money) au numéro Zando+.</li>
               <li>Vous uploadez la capture d'écran de votre paiement sur la plateforme.</li>

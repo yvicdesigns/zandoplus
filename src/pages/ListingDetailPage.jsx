@@ -546,7 +546,7 @@ const ListingDetailPage = () => {
                     },
                     {
                       icon: Shield,
-                      title: 'Achat protégé — Escrow Zando+',
+                      title: 'Achat protégé — Fonds protégés Zando+',
                       desc: 'Vos fonds sont bloqués jusqu\'à confirmation de réception. Le paiement est libéré uniquement après validation de votre commande.',
                     },
                     {
