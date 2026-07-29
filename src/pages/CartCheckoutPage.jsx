@@ -338,99 +338,97 @@ const CartCheckoutPage = () => {
             {/* ══ GAUCHE ══ */}
             <div className="lg:col-span-8 space-y-5">
 
-              {/* ── Adresse de livraison ── */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-[15px] font-black text-gray-900 mb-4">Adresse de livraison</h2>
+              {/* ── Adresse + Mode de livraison côte à côte ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {/* Cartes adresses existantes */}
-                {addresses.length > 0 && (
-                  <div className="space-y-3 mb-3">
-                    {addresses.map(addr => {
-                      const Icon = LABEL_ICONS[addr.label] || MapPin;
-                      const isSelected = selectedAddressId === addr.id;
-                      return (
-                        <label
-                          key={addr.id}
-                          className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                            isSelected
-                              ? 'border-custom-green-500 bg-green-50'
-                              : 'border-gray-100 hover:border-gray-200'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="address"
-                            checked={isSelected}
-                            onChange={() => setSelectedAddressId(addr.id)}
-                            className="accent-custom-green-500 w-4 h-4 mt-0.5 flex-shrink-0"
-                          />
-                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Icon className="w-4 h-4 text-gray-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-[13px] font-bold text-gray-900">{addr.label}</p>
-                              {addr.is_default && (
-                                <span className="text-[10px] font-bold text-custom-green-600 bg-green-50 border border-custom-green-200 px-2 py-0.5 rounded-full">
-                                  Par défaut
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[12px] text-gray-700 mt-0.5">{addr.full_name}</p>
-                            <p className="text-[12px] text-gray-500">{addr.street}</p>
-                            <p className="text-[12px] text-gray-500">{addr.city}, République du Congo</p>
-                            {addr.phone && <p className="text-[12px] text-gray-400">{addr.phone}</p>}
-                          </div>
-                          <button
-                            onClick={e => { e.preventDefault(); /* TODO: edit */ }}
-                            className="text-[11px] text-gray-400 hover:text-custom-green-500 flex items-center gap-1 flex-shrink-0"
+                {/* Colonne 1 — Adresse de livraison */}
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <h2 className="text-[15px] font-black text-gray-900 mb-4">Adresse de livraison</h2>
+
+                  {addresses.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {addresses.map(addr => {
+                        const Icon = LABEL_ICONS[addr.label] || MapPin;
+                        const isSelected = selectedAddressId === addr.id;
+                        return (
+                          <label
+                            key={addr.id}
+                            className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-custom-green-500 bg-green-50'
+                                : 'border-gray-100 hover:border-gray-200'
+                            }`}
                           >
-                            <Pencil className="w-3 h-3" /> Modifier
-                          </button>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
+                            <input
+                              type="radio" name="address" checked={isSelected}
+                              onChange={() => setSelectedAddressId(addr.id)}
+                              className="accent-custom-green-500 w-4 h-4 mt-0.5 flex-shrink-0"
+                            />
+                            <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Icon className="w-3.5 h-3.5 text-gray-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-[12px] font-bold text-gray-900">{addr.label}</p>
+                                {addr.is_default && (
+                                  <span className="text-[9px] font-bold text-custom-green-600 bg-green-50 border border-custom-green-200 px-1.5 py-0.5 rounded-full">
+                                    Par défaut
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-gray-500 truncate">{addr.street}</p>
+                              <p className="text-[11px] text-gray-500">{addr.city}</p>
+                              {addr.phone && <p className="text-[11px] text-gray-400">{addr.phone}</p>}
+                            </div>
+                            <button
+                              onClick={e => { e.preventDefault(); }}
+                              className="text-[11px] text-gray-400 hover:text-custom-green-500 flex items-center gap-0.5 flex-shrink-0"
+                            >
+                              <Pencil className="w-3 h-3" /> Modifier
+                            </button>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                {/* Ajouter nouvelle adresse */}
-                {!showAddForm ? (
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="flex items-center gap-2 text-[13px] font-semibold text-custom-green-600 hover:text-custom-green-700 transition-colors mt-1"
-                  >
-                    <div className="w-6 h-6 rounded-full border-2 border-custom-green-500 flex items-center justify-center">
+                  {!showAddForm ? (
+                    <button
+                      onClick={() => setShowAddForm(true)}
+                      className="w-full flex items-center justify-center gap-2 h-10 border-2 border-dashed border-gray-200 rounded-xl text-[12px] font-semibold text-custom-green-600 hover:border-custom-green-400 hover:bg-green-50 transition-colors"
+                    >
                       <Plus className="w-3.5 h-3.5" />
-                    </div>
-                    Ajouter une nouvelle adresse
-                  </button>
-                ) : (
-                  <AddressForm
-                    onSave={handleSaveAddress}
-                    onCancel={addresses.length > 0 ? () => setShowAddForm(false) : null}
-                    loading={savingAddress}
-                  />
-                )}
-              </div>
+                      Ajouter une nouvelle adresse
+                    </button>
+                  ) : (
+                    <AddressForm
+                      onSave={handleSaveAddress}
+                      onCancel={addresses.length > 0 ? () => setShowAddForm(false) : null}
+                      loading={savingAddress}
+                    />
+                  )}
+                </div>
 
-              {/* ── Mode de livraison ── */}
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h2 className="text-[15px] font-black text-gray-900 mb-4">Mode de livraison</h2>
-                <label className="flex items-center justify-between p-4 rounded-xl border-2 border-custom-green-500 bg-green-50 cursor-default">
-                  <div className="flex items-center gap-3">
-                    <input type="radio" checked readOnly className="accent-custom-green-500 w-4 h-4" />
-                    <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Truck className="w-4 h-4 text-custom-green-500" />
+                {/* Colonne 2 — Mode de livraison */}
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <h2 className="text-[15px] font-black text-gray-900 mb-4">Mode de livraison</h2>
+                  <label className="flex items-center justify-between p-3 rounded-xl border-2 border-custom-green-500 bg-green-50 cursor-default">
+                    <div className="flex items-center gap-3">
+                      <input type="radio" checked readOnly className="accent-custom-green-500 w-4 h-4" />
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-custom-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-semibold text-gray-900">Livraison Zando+</p>
+                        <p className="text-[11px] text-gray-500">Livraison à domicile dans votre ville</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[13px] font-semibold text-gray-900">Livraison Zando+</p>
-                      <p className="text-[11px] text-gray-500">Livraison à domicile dans votre ville</p>
-                    </div>
-                  </div>
-                  <span className="text-[13px] font-bold text-gray-900">
-                    {fmt(ZANDO_DELIVERY_FEE)} FCFA / vendeur
-                  </span>
-                </label>
+                    <span className="text-[12px] font-bold text-gray-900 text-right leading-tight">
+                      {fmt(ZANDO_DELIVERY_FEE)}<br/>
+                      <span className="text-[10px] font-normal text-gray-400">FCFA/vendeur</span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {/* ── Méthode de paiement ── */}
