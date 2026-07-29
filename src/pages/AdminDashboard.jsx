@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AdminStatsGrid from "@/components/admin/AdminStatsGrid";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminListingsTab from "@/components/admin/AdminListingsTab";
 import AdminDeliveriesTab from "@/components/admin/AdminDeliveriesTab";
@@ -10,9 +9,6 @@ import AdminAdsTab from "@/components/admin/AdminAdsTab";
 import AdminVerificationsTab from "@/components/admin/AdminVerificationsTab";
 import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 import AdminHeroTab from "@/components/admin/AdminHeroTab";
-import AdminSubscribersTab from "@/components/admin/AdminSubscribersTab";
-import AdminBulkMessageTab from "@/components/admin/AdminBulkMessageTab";
-import AdminDeletionRequestsTab from '@/components/admin/AdminDeletionRequestsTab';
 import AdminChangelogTab from '@/components/admin/AdminChangelogTab';
 import AdminQATab from '@/components/admin/AdminQATab';
 import AdminAuditLogTab from '@/components/admin/AdminAuditLogTab';
@@ -27,241 +23,587 @@ import AdminDeliveryConfigTab from '@/components/admin/AdminDeliveryConfigTab';
 import { Helmet } from 'react-helmet-async';
 import {
   Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck,
-  Settings, Image, Mail, MessageSquare, Trash2, GitBranch, Activity,
-  FileText, ClipboardCheck, CreditCard, LayoutGrid, Menu, X,
-  ChevronRight, BarChart3, Home, Wallet, AlertTriangle, MapPin,
-  TrendingUp, ArrowRight, RefreshCw, Bell, Globe, LogOut,
+  Settings, Mail, Activity, FileText, ClipboardCheck, CreditCard,
+  LayoutGrid, Menu, X, ChevronRight, Home, Wallet, MapPin,
+  ArrowRight, RefreshCw, Bell, Globe, LogOut, TrendingUp,
+  TrendingDown, Minus, Shield, Package, Tag, Star,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { format, subDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-/* ─── Nav config ────────────────────────────────────────────── */
+/* ─── Nav ───────────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
     label: 'Gestion',
     items: [
-      { id: 'users',          icon: Users,        label: 'Utilisateurs',     badge: 'total_users' },
-      { id: 'listings',       icon: ShoppingBag,  label: 'Annonces',         badge: 'total_listings' },
-      { id: 'deliveries',     icon: Truck,        label: 'Livraisons' },
-      { id: 'delivery-config',icon: MapPin,       label: 'Config Livraison' },
-      { id: 'reports',        icon: Flag,         label: 'Signalements',     badge: 'pending_reports', badgeAlert: true },
-      { id: 'verifications',  icon: ShieldCheck,  label: 'Vérifications' },
+      { id: 'users',           icon: Users,        label: 'Utilisateurs',    badge: 'total_users' },
+      { id: 'listings',        icon: ShoppingBag,  label: 'Annonces',        badge: 'total_listings' },
+      { id: 'deliveries',      icon: Truck,        label: 'Livraisons' },
+      { id: 'categories',      icon: LayoutGrid,   label: 'Catégories' },
+      { id: 'reports',         icon: Flag,         label: 'Signalements',    badge: 'pending_reports', badgeAlert: true },
+      { id: 'verifications',   icon: ShieldCheck,  label: 'Vérifications' },
     ],
   },
   {
     label: 'Monétisation',
     items: [
-      { id: 'boosts',      icon: Zap,        label: 'Boosts' },
-      { id: 'escrow',      icon: ShieldCheck, label: 'Escrow',    badge: 'pending_escrow',       badgeAlert: true },
-      { id: 'withdrawals', icon: Wallet,     label: 'Retraits',  badge: 'pending_withdrawals',  badgeAlert: true },
-      { id: 'ads',         icon: Megaphone,  label: 'Publicités' },
-      { id: 'payments',    icon: CreditCard, label: 'Paiements', adminOnly: true },
+      { id: 'escrow',          icon: ShieldCheck,  label: 'Transactions',    badge: 'pending_escrow', badgeAlert: true },
+      { id: 'payments',        icon: CreditCard,   label: 'Paiements',       adminOnly: true },
+      { id: 'withdrawals',     icon: Wallet,       label: 'Retraits',        badge: 'pending_withdrawals', badgeAlert: true },
+      { id: 'ads',             icon: Megaphone,    label: 'Publicités' },
+      { id: 'boosts',          icon: Zap,          label: 'Boosts' },
     ],
   },
   {
-    label: 'Site & Contenu',
+    label: 'Configuration',
     items: [
-      { id: 'site',       icon: Globe,       label: 'Gestion du site' },
-      { id: 'categories', icon: LayoutGrid,  label: 'Catégories' },
-    ],
-  },
-  {
-    label: 'Programme',
-    items: [
-      { id: 'beta', icon: Users, label: 'Testeurs Beta' },
-    ],
-  },
-  {
-    label: 'Système',
-    items: [
-      { id: 'approvals',  icon: ClipboardCheck, label: 'Approbations', adminOnly: true },
-      { id: 'audit',      icon: FileText,        label: 'Audit Logs',   adminOnly: true },
-      { id: 'email-test', icon: Mail,            label: 'Test E-mail',  adminOnly: true },
-      { id: 'settings',   icon: Settings,        label: 'Paramètres' },
-      { id: 'qa',         icon: Activity,        label: 'QA & Tests' },
+      { id: 'settings',        icon: Settings,     label: 'Paramètres' },
+      { id: 'approvals',       icon: ClipboardCheck,label: 'Approbations',   adminOnly: true },
+      { id: 'audit',           icon: FileText,     label: "Logs d'activité", adminOnly: true },
+      { id: 'delivery-config', icon: MapPin,       label: 'Config Livraison' },
+      { id: 'site',            icon: Globe,        label: 'Gestion du site' },
+      { id: 'email-test',      icon: Mail,         label: 'Test E-mail',     adminOnly: true },
+      { id: 'qa',              icon: Activity,     label: 'QA & Tests' },
+      { id: 'beta',            icon: Users,        label: 'Testeurs Beta' },
     ],
   },
 ];
 
 const TAB_LABELS = {
-  overview: 'Vue d\'ensemble', users: 'Utilisateurs', listings: 'Annonces',
+  overview: "Vue d'ensemble", users: 'Utilisateurs', listings: 'Annonces',
   deliveries: 'Livraisons', reports: 'Signalements', verifications: 'Vérifications',
-  boosts: 'Boosts', escrow: 'Fonds protégés', withdrawals: 'Retraits',
-  beta: 'Testeurs Beta', ads: 'Publicités', payments: 'Paiements',
-  site: 'Gestion du site', categories: 'Catégories', approvals: 'Approbations',
-  audit: 'Audit Logs', 'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
-  'delivery-config': 'Config Livraison',
-};
-
-const ROLE_CFG = {
-  admin:  { label: 'Admin',    cls: 'bg-red-500/20 text-red-300 border border-red-500/30' },
-  editor: { label: 'Éditeur',  cls: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  viewer: { label: 'Lecteur',  cls: 'bg-white/10 text-white/50 border border-white/20' },
+  boosts: 'Boosts', escrow: 'Transactions', withdrawals: 'Retraits',
+  ads: 'Publicités', payments: 'Paiements', site: 'Gestion du site',
+  categories: 'Catégories', approvals: 'Approbations', audit: "Logs d'activité",
+  'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
+  'delivery-config': 'Config Livraison', beta: 'Testeurs Beta',
 };
 
 /* ─── Tab renderer ──────────────────────────────────────────── */
-const renderTabContent = (activeTab) => {
-  switch (activeTab) {
-    case 'users':            return <AdminUsersTab />;
-    case 'listings':         return <AdminListingsTab />;
-    case 'deliveries':       return <AdminDeliveriesTab />;
-    case 'delivery-config':  return <AdminDeliveryConfigTab />;
-    case 'reports':          return <AdminReportsTab />;
-    case 'verifications':    return <AdminVerificationsTab />;
-    case 'boosts':           return <AdminBoostsTab />;
-    case 'escrow':           return <AdminEscrowTab />;
-    case 'withdrawals':      return <AdminWithdrawalsTab />;
-    case 'ads':              return <AdminAdsTab />;
-    case 'payments':         return <AdminPaymentsTab />;
-    case 'site':             return <AdminSiteTab />;
-    case 'categories':       return <AdminCategoriesTab />;
-    case 'hero':             return <AdminHeroTab />;
-    case 'approvals':        return <AdminChangeRequestsTab />;
-    case 'audit':            return <AdminAuditLogTab />;
-    case 'email-test':       return <AdminEmailTestTab />;
-    case 'settings':         return <AdminSettingsTab />;
-    case 'qa':               return <AdminQATab />;
-    case 'beta':             return <AdminBetaTab />;
-    default:                 return null;
+const renderTabContent = (t) => {
+  switch (t) {
+    case 'users':           return <AdminUsersTab />;
+    case 'listings':        return <AdminListingsTab />;
+    case 'deliveries':      return <AdminDeliveriesTab />;
+    case 'delivery-config': return <AdminDeliveryConfigTab />;
+    case 'reports':         return <AdminReportsTab />;
+    case 'verifications':   return <AdminVerificationsTab />;
+    case 'boosts':          return <AdminBoostsTab />;
+    case 'escrow':          return <AdminEscrowTab />;
+    case 'withdrawals':     return <AdminWithdrawalsTab />;
+    case 'ads':             return <AdminAdsTab />;
+    case 'payments':        return <AdminPaymentsTab />;
+    case 'site':            return <AdminSiteTab />;
+    case 'categories':      return <AdminCategoriesTab />;
+    case 'hero':            return <AdminHeroTab />;
+    case 'approvals':       return <AdminChangeRequestsTab />;
+    case 'audit':           return <AdminAuditLogTab />;
+    case 'email-test':      return <AdminEmailTestTab />;
+    case 'settings':        return <AdminSettingsTab />;
+    case 'qa':              return <AdminQATab />;
+    case 'beta':            return <AdminBetaTab />;
+    default:                return null;
   }
 };
 
-/* ─── Overview ──────────────────────────────────────────────── */
-const OverviewTab = ({ stats, counts, loading, setActiveTab }) => {
-  const alerts = [
-    counts.pending_reports    > 0 && { id: 'reports',     label: 'Signalements',         value: counts.pending_reports,    icon: Flag,       cls: 'border-red-200 bg-red-50 text-red-700',         dot: 'bg-red-500' },
-    counts.pending_escrow     > 0 && { id: 'escrow',      label: 'Escrow en attente',    value: counts.pending_escrow,     icon: ShieldCheck,cls: 'border-orange-200 bg-orange-50 text-orange-700', dot: 'bg-orange-500' },
-    counts.pending_withdrawals> 0 && { id: 'withdrawals', label: 'Retraits portefeuille',value: counts.pending_withdrawals,icon: Wallet,     cls: 'border-violet-200 bg-violet-50 text-violet-700', dot: 'bg-violet-500' },
-  ].filter(Boolean);
+/* ─── Donut SVG ─────────────────────────────────────────────── */
+const DonutChart = ({ segments, size = 110, thickness = 14 }) => {
+  const r = (size - thickness) / 2;
+  const circ = 2 * Math.PI * r;
+  const cx = size / 2, cy = size / 2;
+  const total = segments.reduce((s, d) => s + d.value, 0) || 1;
 
-  const QUICK = [
-    { id: 'users',       label: 'Utilisateurs', icon: Users,        bg: 'bg-blue-100',   ic: 'text-blue-600'   },
-    { id: 'listings',    label: 'Annonces',     icon: ShoppingBag,  bg: 'bg-emerald-100',ic: 'text-emerald-600'},
-    { id: 'escrow',      label: 'Escrow',       icon: ShieldCheck,  bg: 'bg-green-100',  ic: 'text-green-600'  },
-    { id: 'boosts',      label: 'Boosts',       icon: Zap,          bg: 'bg-amber-100',  ic: 'text-amber-600'  },
-    { id: 'deliveries',  label: 'Livraisons',   icon: Truck,        bg: 'bg-orange-100', ic: 'text-orange-600' },
-    { id: 'settings',    label: 'Paramètres',   icon: Settings,     bg: 'bg-gray-100',   ic: 'text-gray-600'   },
+  let accumulated = 0;
+  return (
+    <svg width={size} height={size}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth={thickness} />
+      {segments.map((seg, i) => {
+        const frac = seg.value / total;
+        const len = frac * circ;
+        const offset = circ - accumulated * circ / total;
+        accumulated += seg.value;
+        return (
+          <circle key={i}
+            cx={cx} cy={cy} r={r}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={thickness}
+            strokeDasharray={`${len} ${circ}`}
+            strokeDashoffset={offset + circ * 0.25}
+            strokeLinecap="butt"
+            style={{ transform: `rotate(-90deg)`, transformOrigin: `${cx}px ${cy}px` }}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
+/* ─── Multi-line SVG chart ──────────────────────────────────── */
+const MultiLineChart = ({ series, labels }) => {
+  const W = 560, H = 180, PL = 36, PR = 16, PT = 16, PB = 32;
+  const innerW = W - PL - PR;
+  const innerH = H - PT - PB;
+
+  if (!series.length || !series[0].data.length) return (
+    <div className="h-[180px] flex items-center justify-center text-gray-300 text-[13px]">Aucune donnée</div>
+  );
+
+  const allVals = series.flatMap(s => s.data);
+  const maxVal = Math.max(...allVals, 1);
+  const n = series[0].data.length;
+
+  const getX = (i) => PL + (i / (n - 1)) * innerW;
+  const getY = (v) => PT + (1 - v / maxVal) * innerH;
+
+  const gridVals = [0, Math.round(maxVal * 0.33), Math.round(maxVal * 0.66), maxVal];
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 180 }}>
+      {/* Grid lines */}
+      {gridVals.map((v, i) => {
+        const y = getY(v);
+        return (
+          <g key={i}>
+            <line x1={PL} y1={y} x2={W - PR} y2={y} stroke="#f3f4f6" strokeWidth="1" />
+            <text x={PL - 4} y={y + 4} textAnchor="end" fontSize="9" fill="#9ca3af">{v}</text>
+          </g>
+        );
+      })}
+
+      {/* Lines */}
+      {series.map(s => {
+        const pts = s.data.map((v, i) => `${getX(i)},${getY(v)}`).join(' ');
+        return (
+          <g key={s.label}>
+            <polyline points={pts} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            {s.data.map((v, i) => (
+              <circle key={i} cx={getX(i)} cy={getY(v)} r="3" fill={s.color} />
+            ))}
+          </g>
+        );
+      })}
+
+      {/* X labels */}
+      {labels.map((l, i) => {
+        if (n <= 7 || i % Math.ceil(n / 7) === 0 || i === n - 1) {
+          return <text key={i} x={getX(i)} y={H - 4} textAnchor="middle" fontSize="9" fill="#9ca3af">{l}</text>;
+        }
+        return null;
+      })}
+    </svg>
+  );
+};
+
+/* ─── Overview ──────────────────────────────────────────────── */
+const OverviewTab = ({ counts, loading, setActiveTab }) => {
+  const [period, setPeriod] = useState('7');
+  const [chartData, setChartData] = useState({ series: [], labels: [] });
+  const [activities, setActivities] = useState([]);
+  const [userDist, setUserDist] = useState([]);
+  const [orderDist, setOrderDist] = useState([]);
+  const [topCategories, setTopCategories] = useState([]);
+  const [weekChanges, setWeekChanges] = useState({});
+  const [loadingExtra, setLoadingExtra] = useState(true);
+
+  const { user } = useAuth();
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Admin';
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      setLoadingExtra(true);
+      const days = parseInt(period);
+      const from = subDays(new Date(), days).toISOString();
+      const prevFrom = subDays(new Date(), days * 2).toISOString();
+
+      try {
+        const [
+          { data: recentProfiles },
+          { data: recentListings },
+          { data: recentTx },
+          { data: prevProfiles },
+          { data: prevListings },
+          { data: prevTx },
+          { data: allProfiles },
+          { data: txAll },
+          { data: listingsAll },
+        ] = await Promise.all([
+          supabase.from('profiles').select('created_at').gte('created_at', from),
+          supabase.from('listings').select('created_at').gte('created_at', from),
+          supabase.from('transactions_escrow').select('created_at, montant').gte('created_at', from),
+          supabase.from('profiles').select('id').gte('created_at', prevFrom).lt('created_at', from),
+          supabase.from('listings').select('id').gte('created_at', prevFrom).lt('created_at', from),
+          supabase.from('transactions_escrow').select('id').gte('created_at', prevFrom).lt('created_at', from),
+          supabase.from('profiles').select('is_seller'),
+          supabase.from('transactions_escrow').select('statut'),
+          supabase.from('listings').select('category').eq('status', 'active'),
+        ]);
+
+        /* ── % changes ── */
+        const pct = (curr, prev) => prev > 0 ? +((curr - prev) / prev * 100).toFixed(1) : null;
+        setWeekChanges({
+          users:    pct(recentProfiles?.length || 0,  prevProfiles?.length || 0),
+          listings: pct(recentListings?.length || 0,  prevListings?.length || 0),
+          orders:   pct(recentTx?.length || 0,        prevTx?.length || 0),
+        });
+
+        /* ── Chart (daily counts) ── */
+        const dayMap = {};
+        const lblMap = {};
+        for (let i = days - 1; i >= 0; i--) {
+          const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
+          dayMap[d] = { users: 0, listings: 0, orders: 0 };
+          lblMap[d] = format(subDays(new Date(), i), 'd MMM', { locale: fr });
+        }
+        recentProfiles?.forEach(p => { const d = p.created_at.split('T')[0]; if (dayMap[d]) dayMap[d].users++; });
+        recentListings?.forEach(l => { const d = l.created_at.split('T')[0]; if (dayMap[d]) dayMap[d].listings++; });
+        recentTx?.forEach(t => { const d = t.created_at.split('T')[0]; if (dayMap[d]) dayMap[d].orders++; });
+        const keys = Object.keys(dayMap);
+        setChartData({
+          labels: keys.map(k => lblMap[k]),
+          series: [
+            { label: 'Utilisateurs', color: '#005023', data: keys.map(k => dayMap[k].users) },
+            { label: 'Annonces',     color: '#3b82f6', data: keys.map(k => dayMap[k].listings) },
+            { label: 'Commandes',    color: '#f59e0b', data: keys.map(k => dayMap[k].orders) },
+          ],
+        });
+
+        /* ── User distribution ── */
+        const sellers = (allProfiles || []).filter(p => p.is_seller).length;
+        const buyers  = (allProfiles || []).length - sellers;
+        const totalU  = allProfiles?.length || 1;
+        setUserDist([
+          { label: 'Acheteurs', value: buyers,  pct: Math.round(buyers / totalU * 100),  color: '#005023' },
+          { label: 'Vendeurs',  value: sellers, pct: Math.round(sellers / totalU * 100), color: '#3b82f6' },
+        ]);
+
+        /* ── Order distribution ── */
+        const orderMap = {};
+        const orderCfg = {
+          fonds_liberes:  { label: 'Livrées',    color: '#005023' },
+          fonds_bloques:  { label: 'En cours',   color: '#f59e0b' },
+          confirme:       { label: 'Confirmées', color: '#3b82f6' },
+          cod_en_attente: { label: 'En attente', color: '#8b5cf6' },
+          rembourse:      { label: 'Remboursés', color: '#6b7280' },
+          cod_annule:     { label: 'Annulées',   color: '#ef4444' },
+        };
+        (txAll || []).forEach(t => { orderMap[t.statut] = (orderMap[t.statut] || 0) + 1; });
+        const totalO = (txAll || []).length || 1;
+        const orderSegments = Object.entries(orderMap)
+          .filter(([k]) => orderCfg[k])
+          .map(([k, v]) => ({ label: orderCfg[k].label, value: v, pct: Math.round(v / totalO * 100), color: orderCfg[k].color }))
+          .sort((a, b) => b.value - a.value);
+        setOrderDist(orderSegments);
+
+        /* ── Top categories ── */
+        const catMap = {};
+        (listingsAll || []).forEach(l => { if (l.category) catMap[l.category] = (catMap[l.category] || 0) + 1; });
+        const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const maxCat = sorted[0]?.[1] || 1;
+        setTopCategories(sorted.map(([name, count]) => ({ name, count, pct: Math.round(count / maxCat * 100) })));
+
+        /* ── Recent activities ── */
+        const [
+          { data: newUsers },
+          { data: newListings },
+          { data: newOrders },
+          { data: newReports },
+        ] = await Promise.all([
+          supabase.from('profiles').select('id, full_name, created_at').order('created_at', { ascending: false }).limit(2),
+          supabase.from('listings').select('id, title, created_at').order('created_at', { ascending: false }).limit(2),
+          supabase.from('transactions_escrow').select('id, statut, created_at, annonce:annonce_id(title)').order('created_at', { ascending: false }).limit(2),
+          supabase.from('reports').select('id, created_at, listing:listing_id(title)').order('created_at', { ascending: false }).limit(1).maybeSingle().then(r => ({ data: r.data ? [r.data] : [] })),
+        ]);
+
+        const feed = [
+          ...(newUsers || []).map(u => ({ type: 'user',    label: 'Nouvel utilisateur inscrit',  sub: `${u.full_name || 'Utilisateur'} a rejoint la plateforme`, time: u.created_at, icon: Users,       color: 'bg-blue-100 text-blue-600' })),
+          ...(newListings || []).map(l => ({ type: 'listing', label: 'Nouvelle annonce publiée', sub: `"${l.title}" publiée`, time: l.created_at, icon: ShoppingBag, color: 'bg-green-100 text-green-600' })),
+          ...(newOrders || []).map(o => ({ type: 'order',   label: 'Nouvelle commande',          sub: `Commande #ZND-${o.id.slice(-5).toUpperCase()} — ${o.annonce?.title || ''}`, time: o.created_at, icon: Package, color: 'bg-amber-100 text-amber-600' })),
+          ...(newReports || []).map(r => ({ type: 'report', label: 'Signalement reçu',           sub: `Signalement sur l'annonce ${r.listing?.title || ''}`, time: r.created_at, icon: Flag, color: 'bg-red-100 text-red-600' })),
+        ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
+
+        setActivities(feed);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingExtra(false);
+      }
+    };
+    fetchOverview();
+  }, [period]);
+
+  const timeAgo = (iso) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `Il y a ${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `Il y a ${h} h`;
+    return `Il y a ${Math.floor(h / 24)} j`;
+  };
+
+  const pctDisplay = (v) => {
+    if (v == null) return null;
+    if (v > 0) return { icon: TrendingUp,   cls: 'text-emerald-600', label: `+${v}%` };
+    if (v < 0) return { icon: TrendingDown,  cls: 'text-red-500',    label: `${v}%` };
+    return { icon: Minus, cls: 'text-gray-400', label: '0%' };
+  };
+
+  const KPI = [
+    { label: 'Utilisateurs',     sub: 'Total utilisateurs',  value: counts.total_users,    pctKey: 'users',    icon: Users,       bg: 'bg-blue-50',    ic: 'text-blue-500',    section: 'users' },
+    { label: 'Annonces actives', sub: 'Total annonces',      value: counts.total_listings, pctKey: 'listings', icon: ShoppingBag, bg: 'bg-emerald-50', ic: 'text-emerald-500', section: 'listings' },
+    { label: 'Boosts actifs',    sub: 'Total boosts',        value: 0,                     pctKey: null,       icon: Zap,         bg: 'bg-amber-50',   ic: 'text-amber-500',   section: 'boosts' },
+    { label: 'Signalements',     sub: 'Total signalements',  value: counts.pending_reports,pctKey: null,       icon: Flag,        bg: 'bg-red-50',     ic: 'text-red-400',     section: 'reports' },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
-      {/* Hero KPI card */}
-      <div className="rounded-2xl overflow-hidden bg-[#0d1f12] relative">
-        {/* décos bg */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-72 h-72 bg-custom-green-500 opacity-10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-20 w-48 h-48 bg-accent-yellow opacity-5 rounded-full blur-2xl" />
-        </div>
-
-        <div className="relative z-10 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-0.5">Tableau de bord</p>
-              <h2 className="text-white text-[20px] font-black">Vue d'ensemble</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-white/40 text-[11px] font-semibold">En direct</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Utilisateurs',     value: counts.total_users,    icon: Users,       color: 'text-blue-400',   section: 'users' },
-              { label: 'Annonces actives', value: counts.total_listings, icon: ShoppingBag, color: 'text-emerald-400',section: 'listings' },
-              { label: 'Signalements',     value: counts.pending_reports,icon: Flag,        color: 'text-red-400',    section: 'reports' },
-              { label: 'Retraits',         value: counts.pending_withdrawals, icon: Wallet, color: 'text-violet-400', section: 'withdrawals' },
-            ].map(({ label, value, icon: Icon, color, section }) => (
-              <button key={label} onClick={() => setActiveTab(section)}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 text-left transition-all group">
-                <Icon className={`w-5 h-5 ${color} mb-3`} />
-                <p className="text-white text-[26px] font-black leading-none">{loading ? '—' : (value ?? 0).toLocaleString('fr-FR')}</p>
-                <p className="text-white/40 text-[11px] mt-1 group-hover:text-white/60 transition-colors">{label}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Alertes */}
-      {alerts.length > 0 && (
+      {/* Greeting */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="w-4 h-4 text-red-500" />
-            <h3 className="text-[13px] font-black text-gray-900">Actions requises</h3>
-            <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full animate-pulse">{alerts.length}</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {alerts.map(({ id, label, value, icon: Icon, cls, dot }) => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left hover:shadow-md transition-all ${cls}`}>
-                <div className="relative flex-shrink-0">
-                  <Icon className="w-5 h-5" />
-                  <span className={`absolute -top-1 -right-1 w-2 h-2 ${dot} rounded-full animate-pulse`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[22px] font-black leading-none">{value}</p>
-                  <p className="text-[11px] font-semibold mt-0.5 opacity-80">{label}</p>
-                </div>
-                <ArrowRight className="w-4 h-4 opacity-50 flex-shrink-0" />
-              </button>
-            ))}
+          <h1 className="text-[22px] font-black text-gray-900">Bonjour, {firstName} 👋</h1>
+          <p className="text-[13px] text-gray-400 mt-0.5">Voici un aperçu des activités sur Zando+ aujourd'hui.</p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 h-9 text-[12px] font-semibold text-gray-600 bg-white">
+            {format(new Date(), 'd MMM yyyy', { locale: fr })}
           </div>
         </div>
-      )}
-
-      {/* Statistiques */}
-      <div>
-        <h3 className="text-[13px] font-black text-gray-900 mb-3">Statistiques</h3>
-        <AdminStatsGrid stats={stats} loading={loading} />
       </div>
 
-      {/* Accès rapide */}
-      <div>
-        <h3 className="text-[13px] font-black text-gray-900 mb-3">Accès rapide</h3>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-          {QUICK.map(({ id, label, icon: Icon, bg, ic }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className="flex flex-col items-center gap-2.5 p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all group">
-              <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center`}>
-                <Icon className={`w-5 h-5 ${ic}`} />
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPI.map(({ label, sub, value, pctKey, icon: Icon, bg, ic, section }) => {
+          const ch = pctDisplay(weekChanges[pctKey]);
+          const ChIcon = ch?.icon;
+          return (
+            <button key={label} onClick={() => setActiveTab(section)}
+              className="bg-white border border-gray-100 rounded-2xl p-5 text-left hover:shadow-md transition-all group">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-11 h-11 ${bg} rounded-xl flex items-center justify-center`}>
+                  <Icon className={`w-5 h-5 ${ic}`} />
+                </div>
+                {ch && <div className={`flex items-center gap-1 text-[11px] font-bold ${ch.cls}`}>
+                  <ChIcon className="w-3 h-3" />{ch.label}
+                </div>}
               </div>
-              <span className="text-[11px] font-bold text-gray-700 group-hover:text-gray-900">{label}</span>
+              <p className="text-[28px] font-black text-gray-900 leading-none">{loading ? '—' : (value ?? 0).toLocaleString('fr-FR')}</p>
+              <p className="text-[12px] font-semibold text-gray-700 mt-1">{label}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>
+              {ch && <p className={`text-[11px] font-semibold mt-2 ${ch.cls}`}>
+                {ch.label} vs la semaine dernière
+              </p>}
             </button>
-          ))}
+          );
+        })}
+      </div>
+
+      {/* Chart + Activités récentes */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* Chart */}
+        <div className="col-span-12 lg:col-span-7 bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[14px] font-black text-gray-900">Aperçu des activités</h3>
+            <select value={period} onChange={e => setPeriod(e.target.value)}
+              className="h-8 px-3 border border-gray-200 rounded-lg text-[11px] font-semibold text-gray-600 focus:outline-none focus:border-custom-green-500">
+              <option value="7">7 derniers jours</option>
+              <option value="30">30 derniers jours</option>
+              <option value="90">90 derniers jours</option>
+            </select>
+          </div>
+          {/* Legend */}
+          <div className="flex items-center gap-4 mb-3 flex-wrap">
+            {chartData.series.map(s => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <span className="w-3 h-0.5 rounded-full inline-block" style={{ backgroundColor: s.color }} />
+                <span className="text-[11px] text-gray-500 font-medium">{s.label}</span>
+              </div>
+            ))}
+          </div>
+          {loadingExtra ? (
+            <div className="h-[180px] flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-custom-green-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <MultiLineChart series={chartData.series} labels={chartData.labels} />
+          )}
         </div>
+
+        {/* Activités récentes */}
+        <div className="col-span-12 lg:col-span-5 bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[14px] font-black text-gray-900">Activités récentes</h3>
+          </div>
+          {loadingExtra ? (
+            <div className="space-y-3">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="flex items-start gap-3 animate-pulse">
+                  <div className="w-8 h-8 rounded-xl bg-gray-100 flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 bg-gray-100 rounded w-3/4" />
+                    <div className="h-2 bg-gray-100 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activities.length === 0 ? (
+            <p className="text-[13px] text-gray-400 text-center py-8">Aucune activité récente</p>
+          ) : (
+            <div className="space-y-3">
+              {activities.map((a, i) => {
+                const Icon = a.icon;
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${a.color}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold text-gray-900 leading-tight">{a.label}</p>
+                      <p className="text-[11px] text-gray-400 truncate">{a.sub}</p>
+                    </div>
+                    <p className="text-[11px] text-gray-300 flex-shrink-0 whitespace-nowrap">{timeAgo(a.time)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Donuts + Top catégories */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* Répartition utilisateurs */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5">
+          <h3 className="text-[14px] font-black text-gray-900 mb-4">Répartition des utilisateurs</h3>
+          {loadingExtra ? (
+            <div className="h-[140px] flex items-center justify-center"><div className="w-6 h-6 border-2 border-custom-green-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : (
+            <div className="flex items-center gap-6">
+              <DonutChart segments={userDist} size={110} thickness={14} />
+              <div className="flex-1 space-y-2.5">
+                {userDist.map((s, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                      <span className="text-[12px] font-semibold text-gray-700">{s.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[12px] font-black text-gray-900">{s.pct}%</span>
+                      <span className="text-[10px] text-gray-400 ml-1">({s.value})</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Statut des commandes */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5">
+          <h3 className="text-[14px] font-black text-gray-900 mb-4">Statut des commandes</h3>
+          {loadingExtra ? (
+            <div className="h-[140px] flex items-center justify-center"><div className="w-6 h-6 border-2 border-custom-green-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : orderDist.length === 0 ? (
+            <p className="text-[13px] text-gray-400 text-center py-8">Aucune commande</p>
+          ) : (
+            <div className="flex items-center gap-6">
+              <DonutChart segments={orderDist} size={110} thickness={14} />
+              <div className="flex-1 space-y-2">
+                {orderDist.slice(0, 4).map((s, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                      <span className="text-[11px] font-semibold text-gray-700">{s.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] font-black text-gray-900">{s.pct}%</span>
+                      <span className="text-[10px] text-gray-400 ml-1">({s.value})</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Top catégories */}
+        <div className="col-span-12 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[14px] font-black text-gray-900">Top catégories</h3>
+            <button onClick={() => setActiveTab('categories')} className="text-[11px] text-custom-green-500 font-bold hover:underline">Voir tout</button>
+          </div>
+          {loadingExtra ? (
+            <div className="space-y-3 animate-pulse">
+              {[1,2,3,4,5].map(i => <div key={i} className="h-6 bg-gray-100 rounded" />)}
+            </div>
+          ) : topCategories.length === 0 ? (
+            <p className="text-[13px] text-gray-400 text-center py-8">Aucune catégorie</p>
+          ) : (
+            <div className="space-y-3">
+              {topCategories.map(({ name, count, pct }) => (
+                <div key={name}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[12px] font-semibold text-gray-700 truncate">{name}</span>
+                    <span className="text-[11px] text-gray-400 flex-shrink-0 ml-2">{count} annonces</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-custom-green-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Security banner */}
+      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-5">
+        <div className="w-14 h-14 bg-white border border-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+          <Shield className="w-7 h-7 text-custom-green-500" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[14px] font-black text-gray-900">Plateforme sécurisée</p>
+          <p className="text-[12px] text-gray-500 mt-0.5">
+            Zando+ utilise des systèmes avancés pour protéger les données et garantir la sécurité de tous les utilisateurs.
+          </p>
+        </div>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className="flex-shrink-0 flex items-center gap-2 h-10 px-5 bg-custom-green-500 text-white text-[12px] font-bold rounded-xl hover:bg-custom-green-600 transition-colors whitespace-nowrap"
+        >
+          Voir les paramètres de sécurité <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
     </div>
   );
 };
 
-/* ─── Sidebar ───────────────────────────────────────────────── */
+/* ─── Sidebar blanche ───────────────────────────────────────── */
 const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, onNavigate, signOut }) => {
   const navigate = useNavigate();
   const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
+  const role = userRole === 'admin' ? 'Administrateur' : userRole === 'editor' ? 'Éditeur' : 'Lecteur';
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const avatarUrl = user?.user_metadata?.avatar_url;
 
   const go = (id) => { setActiveTab(id); onNavigate?.(); };
 
   return (
-    <nav className="flex flex-col h-full select-none bg-[#0d1f12]">
+    <nav className="flex flex-col h-full select-none bg-white border-r border-gray-100">
 
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/8 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-accent-yellow flex items-center justify-center flex-shrink-0 shadow-lg">
-            <span className="text-[14px] font-black text-gray-900">Z+</span>
-          </div>
-          <div>
-            <p className="text-white font-black text-[14px] leading-tight">Zando+</p>
-            <p className="text-white/35 text-[10px] font-semibold tracking-wider uppercase">Administration</p>
-          </div>
+      <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[22px] font-black text-custom-green-500 leading-none">Zando</span>
+          <span className="text-[22px] font-black text-accent-yellow leading-none">+</span>
         </div>
       </div>
 
@@ -271,25 +613,23 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
           onClick={() => go('overview')}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
             activeTab === 'overview'
-              ? 'bg-accent-yellow/15 text-accent-yellow'
-              : 'text-white/50 hover:text-white hover:bg-white/6'
+              ? 'bg-custom-green-500 text-white shadow-sm'
+              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
           }`}
         >
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === 'overview' ? 'bg-accent-yellow/20' : 'bg-white/6'}`}>
-            <Home className="w-3.5 h-3.5" />
-          </div>
+          <Home className="w-4 h-4 flex-shrink-0" />
           <span className="text-[13px] font-bold flex-1">Vue d'ensemble</span>
         </button>
       </div>
 
       {/* Groups */}
-      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-0.5 scrollbar-thin scrollbar-thumb-white/10">
+      <div className="flex-1 overflow-y-auto py-1 px-3 scrollbar-thin scrollbar-thumb-gray-200">
         {NAV_GROUPS.map((group) => {
           const visible = group.items.filter(i => !i.adminOnly || isAdmin);
           if (!visible.length) return null;
           return (
-            <div key={group.label} className="mb-2">
-              <p className="text-white/25 text-[9px] font-black uppercase tracking-[0.15em] px-3 pt-3 pb-1.5">
+            <div key={group.label} className="mb-3">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-3 pt-3 pb-1.5">
                 {group.label}
               </p>
               {visible.map((item) => {
@@ -300,26 +640,21 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
                   <button
                     key={item.id}
                     onClick={() => go(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all relative group ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                       isActive
-                        ? 'bg-accent-yellow/15 text-accent-yellow'
-                        : 'text-white/45 hover:text-white hover:bg-white/6'
+                        ? 'bg-custom-green-500 text-white shadow-sm'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="sidebar-indicator"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-accent-yellow"
-                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'bg-accent-yellow/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
-                      <item.icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[12.5px] font-semibold flex-1 leading-none">{item.label}</span>
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[13px] font-semibold flex-1">{item.label}</span>
                     {showBadge && (
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        item.badgeAlert ? 'bg-red-500 text-white animate-pulse' : 'bg-white/15 text-white/60'
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : item.badgeAlert
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-gray-100 text-gray-500'
                       }`}>
                         {count > 99 ? '99+' : count}
                       </span>
@@ -333,23 +668,22 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-3 py-3 border-t border-white/8 space-y-1">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-custom-green-500 flex items-center justify-center flex-shrink-0 shadow">
+      <div className="flex-shrink-0 px-3 py-3 border-t border-gray-100">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-custom-green-500 flex items-center justify-center flex-shrink-0 shadow-sm relative">
             {avatarUrl
               ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-              : <span className="text-white text-[11px] font-black">{initials}</span>}
+              : <span className="text-white text-[12px] font-black">{initials}</span>}
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-[12px] font-bold truncate leading-tight">{name}</p>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${ROLE_CFG[userRole]?.cls || ROLE_CFG.viewer.cls}`}>
-              {ROLE_CFG[userRole]?.label || 'Accès limité'}
-            </span>
+            <p className="text-[12px] font-bold text-gray-900 truncate leading-tight">{name}</p>
+            <p className="text-[11px] text-gray-400">{role}</p>
           </div>
         </div>
         <button
           onClick={() => { signOut?.(); navigate('/'); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors text-[12px] font-semibold"
+          className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-[12px] font-semibold"
         >
           <LogOut className="w-3.5 h-3.5" /> Se déconnecter
         </button>
@@ -362,7 +696,6 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const mainRef = React.useRef(null);
-  const [stats, setStats] = useState([]);
   const [counts, setCounts] = useState({
     total_users: 0, total_listings: 0, pending_reports: 0,
     pending_escrow: 0, pending_withdrawals: 0,
@@ -371,7 +704,7 @@ const AdminDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
-  const { userRole, isAdmin, user, signOut } = useAuth();
+  const { userRole, isAdmin, user, logout } = useAuth();
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -386,18 +719,12 @@ const AdminDashboard = () => {
         supabase.from('wallet_withdrawals').select('id', { count: 'exact', head: true }).eq('statut', 'pending'),
       ]);
       if (data) {
-        setStats([
-          { label: 'Utilisateurs',     value: data.total_users,     icon: Users,       color: 'from-blue-500 to-blue-600' },
-          { label: 'Annonces actives', value: data.total_listings,  icon: ShoppingBag, color: 'from-emerald-500 to-teal-600', change: `+${data.new_listings_last_24h} / 24h` },
-          { label: 'Boosts actifs',    value: data.active_boosts,   icon: Zap,         color: 'from-amber-400 to-orange-500' },
-          { label: 'Signalements',     value: data.pending_reports, icon: Flag,        color: 'from-red-500 to-pink-600' },
-        ]);
         setCounts({
-          total_users:          data.total_users,
-          total_listings:       data.total_listings,
-          pending_reports:      data.pending_reports,
-          pending_escrow:       escrowRes.count || 0,
-          pending_withdrawals:  withdrawalRes.count || 0,
+          total_users:         data.total_users,
+          total_listings:      data.total_listings,
+          pending_reports:     data.pending_reports,
+          pending_escrow:      escrowRes.count || 0,
+          pending_withdrawals: withdrawalRes.count || 0,
         });
       }
     } catch (err) {
@@ -412,36 +739,29 @@ const AdminDashboard = () => {
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
   const totalAlerts = counts.pending_reports + counts.pending_escrow + counts.pending_withdrawals;
-
-  const sidebarProps = { activeTab, setActiveTab, isAdmin, userRole, user, counts, signOut };
+  const sidebarProps = { activeTab, setActiveTab, isAdmin, userRole, user, counts, signOut: logout };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex bg-page-bg">
-      <Helmet>
-        <title>Administration — Zando+ Congo</title>
-      </Helmet>
+      <Helmet><title>Administration — Zando+ Congo</title></Helmet>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[220px] flex-shrink-0 sticky top-16 md:top-[7.75rem] h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)] overflow-hidden shadow-2xl shadow-black/30">
+      <aside className="hidden lg:flex flex-col w-[220px] flex-shrink-0 sticky top-16 md:top-[7.75rem] h-[calc(100vh-4rem)] md:h-[calc(100vh-7.75rem)] overflow-hidden">
         <SidebarNav {...sidebarProps} />
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-            />
-            <motion.aside
-              initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" />
+            <motion.aside initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed top-0 left-0 h-full w-[220px] z-50 lg:hidden shadow-2xl flex flex-col"
-            >
+              className="fixed top-0 left-0 h-full w-[220px] z-50 lg:hidden shadow-2xl flex flex-col">
               <button onClick={() => setSidebarOpen(false)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors z-10">
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors z-10">
                 <X className="w-4 h-4" />
               </button>
               <SidebarNav {...sidebarProps} onNavigate={() => setSidebarOpen(false)} />
@@ -455,14 +775,10 @@ const AdminDashboard = () => {
 
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 lg:px-6 h-14 flex items-center gap-3 shadow-sm">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-xl hover:bg-gray-100 text-gray-500">
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Breadcrumb */}
           <div className="flex items-center gap-1.5 text-[13px] min-w-0">
             <button onClick={() => setActiveTab('overview')} className="text-gray-400 hover:text-custom-green-500 transition-colors flex-shrink-0">
               <Home className="w-3.5 h-3.5" />
@@ -476,13 +792,9 @@ const AdminDashboard = () => {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            {/* Alert bell */}
             {totalAlerts > 0 && (
               <button
-                onClick={() => {
-                  const first = counts.pending_reports > 0 ? 'reports' : counts.pending_escrow > 0 ? 'escrow' : 'withdrawals';
-                  setActiveTab(first);
-                }}
+                onClick={() => setActiveTab(counts.pending_reports > 0 ? 'reports' : counts.pending_escrow > 0 ? 'escrow' : 'withdrawals')}
                 className="relative p-2 rounded-xl hover:bg-red-50 text-red-500 transition-colors"
               >
                 <Bell className="w-4 h-4" />
@@ -491,22 +803,16 @@ const AdminDashboard = () => {
                 </span>
               </button>
             )}
-
-            {/* Refresh */}
-            <button
-              onClick={() => fetchStats(true)}
-              disabled={refreshing}
-              className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-            >
+            <button onClick={() => fetchStats(true)} disabled={refreshing}
+              className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
-
             <span className={`hidden sm:inline-flex text-[11px] font-bold px-2.5 py-1 rounded-full border ${
               userRole === 'admin' ? 'bg-red-50 text-red-600 border-red-200'
               : userRole === 'editor' ? 'bg-blue-50 text-blue-600 border-blue-200'
               : 'bg-gray-50 text-gray-500 border-gray-200'
             }`}>
-              {ROLE_CFG[userRole]?.label || 'Accès limité'}
+              {userRole === 'admin' ? 'Admin' : userRole === 'editor' ? 'Éditeur' : 'Lecteur'}
             </span>
           </div>
         </div>
@@ -514,18 +820,12 @@ const AdminDashboard = () => {
         {/* Content */}
         <div className="p-4 lg:p-6">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15 }}
-            >
-              {activeTab === 'overview' ? (
-                <OverviewTab stats={stats} counts={counts} loading={loading} setActiveTab={setActiveTab} />
-              ) : (
-                renderTabContent(activeTab)
-              )}
+            <motion.div key={activeTab}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}>
+              {activeTab === 'overview'
+                ? <OverviewTab counts={counts} loading={loading} setActiveTab={setActiveTab} />
+                : renderTabContent(activeTab)}
             </motion.div>
           </AnimatePresence>
         </div>
