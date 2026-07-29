@@ -438,14 +438,29 @@ const ProfilePage = () => {
 
                 {/* CTA Vendeur */}
                 <div className="m-3 bg-gradient-to-br from-custom-green-500 to-green-700 rounded-xl p-4 text-white">
-                  <p className="text-[13px] font-black mb-1">Vendez sur Zando+</p>
-                  <p className="text-[11px] opacity-80 mb-3">Devenez vendeur et développez votre activité en ligne.</p>
-                  <button
-                    onClick={() => navigate('/become-seller')}
-                    className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors"
-                  >
-                    Devenir vendeur
-                  </button>
+                  {user.is_seller ? (
+                    <>
+                      <p className="text-[13px] font-black mb-1">Mon espace vendeur</p>
+                      <p className="text-[11px] opacity-80 mb-3">Gérez votre boutique et suivez vos ventes.</p>
+                      <button
+                        onClick={() => navigate('/espace-vendeur')}
+                        className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors"
+                      >
+                        Accéder à mon espace
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[13px] font-black mb-1">Vendez sur Zando+</p>
+                      <p className="text-[11px] opacity-80 mb-3">Devenez vendeur et développez votre activité en ligne.</p>
+                      <button
+                        onClick={() => navigate('/become-seller')}
+                        className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors"
+                      >
+                        Devenir vendeur
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
