@@ -243,25 +243,32 @@ const Header = memo(({ onLoginClick }) => {
                       <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
                     </div>
                     <div className="py-1.5">
-                      {user?.is_seller && (
+                      {/* Espace vendeur — visible si vendeur ou admin */}
+                      {(user?.is_seller || isAdmin) && (
                         <Link to="/espace-vendeur" className="flex items-center px-3 py-2 mx-1.5 mb-1 text-[13px] font-bold text-white bg-custom-green-500 hover:bg-custom-green-600 rounded-lg transition-colors">
                           <Store className="w-4 h-4 mr-2.5" />
                           Espace vendeur
                         </Link>
                       )}
+                      {/* Bloc compte */}
                       {[
-                        { to: '/profile',      icon: User,          label: 'Mon Profil' },
-                        { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
+                        { to: '/profile',      icon: User,          label: 'Mon Profil'       },
+                        { to: '/messages',     icon: MessageCircle, label: 'Mes Messages'     },
                         { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
                         { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
-                        { to: '/settings',     icon: Settings,      label: 'Paramètres' },
-                        ...(isAdmin ? [{ to: '/admin', icon: LayoutDashboard, label: 'Dashboard Admin' }] : []),
                       ].map(({ to, icon: Icon, label }) => (
                         <Link key={to} to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors">
                           <Icon className="w-4 h-4 mr-2.5 opacity-60" />
                           {label}
                         </Link>
                       ))}
+                      {/* Dashboard Admin séparé */}
+                      {isAdmin && (
+                        <Link to="/admin" className="flex items-center px-3 py-2 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-custom-green-500 transition-colors border-t border-gray-100 mt-1">
+                          <LayoutDashboard className="w-4 h-4 mr-2.5 opacity-60" />
+                          Dashboard Admin
+                        </Link>
+                      )}
                       <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors mt-1 border-t border-gray-100">
                         <LogOut className="w-4 h-4 mr-2.5" />
                         Déconnexion
@@ -417,7 +424,8 @@ const Header = memo(({ onLoginClick }) => {
               {/* Compte */}
               {!authPending && user ? (
                 <div className="border-t border-gray-100 pt-4 space-y-1">
-                  {user?.is_seller && (
+                  {/* Espace vendeur — visible si vendeur ou admin */}
+                  {(user?.is_seller || isAdmin) && (
                     <Link to="/espace-vendeur" onClick={() => setIsMenuOpen(false)}
                       className="flex items-center py-2.5 px-3 text-[13px] font-bold text-white bg-custom-green-500 hover:bg-custom-green-600 rounded-lg transition-colors mb-1">
                       <Store className="w-4 h-4 mr-2.5" />
@@ -425,13 +433,11 @@ const Header = memo(({ onLoginClick }) => {
                     </Link>
                   )}
                   {[
-                    { to: '/profile',      icon: User,          label: 'Mon Profil' },
-                    { to: '/messages',     icon: MessageCircle, label: 'Mes Messages' },
-                    { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier' },
+                    { to: '/profile',      icon: User,          label: 'Mon Profil'       },
+                    { to: '/messages',     icon: MessageCircle, label: 'Mes Messages'     },
+                    { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier'       },
                     { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
                     { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
-                    { to: '/settings',     icon: Settings,      label: 'Paramètres' },
-                    ...(isAdmin ? [{ to: '/admin', icon: LayoutDashboard, label: 'Dashboard Admin' }] : []),
                   ].map(({ to, icon: Icon, label }) => (
                     <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
                       className="flex items-center py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg">
@@ -439,6 +445,13 @@ const Header = memo(({ onLoginClick }) => {
                       {label}
                     </Link>
                   ))}
+                  {isAdmin && (
+                    <Link to="/admin" onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center py-2.5 px-3 text-[13px] text-gray-500 hover:bg-gray-50 rounded-lg border-t border-gray-100 mt-1">
+                      <LayoutDashboard className="w-4 h-4 mr-2.5 opacity-60" />
+                      Dashboard Admin
+                    </Link>
+                  )}
                   <Link to="/post-ad" onClick={() => setIsMenuOpen(false)}>
                     <button className="w-full mt-2 h-[42px] bg-custom-green-500 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-2">
                       <Plus className="w-4 h-4" /> Publier une annonce
