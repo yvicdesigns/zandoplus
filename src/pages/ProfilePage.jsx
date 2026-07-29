@@ -14,6 +14,7 @@ import {
   Shield, Eye, BadgeCheck,
 } from 'lucide-react';
 import AddressesTab from '@/components/profile/AddressesTab';
+import MessagesInline from '@/components/messages/MessagesInline';
 import 'react-image-crop/dist/ReactCrop.css';
 
 const fmt = (d) => {
@@ -140,7 +141,7 @@ const ProfilePage = () => {
     { id: 'favoris',       label: 'Mes favoris',              icon: Heart,          action: () => navigate('/favorites') },
     { id: 'adresses',      label: 'Mes adresses',             icon: MapPin          },
     { id: 'paiement',      label: 'Mes moyens de paiement',   icon: CreditCard,     disabled: true },
-    { id: 'messages',      label: 'Messages',                 icon: MessageSquare,  action: () => navigate('/messages') },
+    { id: 'messages',      label: 'Messages',                 icon: MessageSquare  },
     { id: 'notifications', label: 'Notifications',            icon: Bell,           action: () => navigate('/notifications') },
     { id: 'avis',          label: 'Mes avis',                 icon: Star,           action: () => navigate('/reviews') },
     { id: 'parrainage',    label: 'Parrainage',               icon: Users,          disabled: true },
@@ -155,6 +156,12 @@ const ProfilePage = () => {
 
   /* ── Contenu principal selon section active ── */
   const renderMain = () => {
+    if (activeSection === 'messages') return (
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: 500 }}>
+        <MessagesInline />
+      </div>
+    );
+
     if (activeSection === 'adresses') return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h2 className="text-[17px] font-black text-gray-900 mb-6">Mes adresses</h2>
