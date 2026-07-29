@@ -122,9 +122,9 @@ const HomePage = () => {
         <Suspense fallback={<FullPageLoader />}>
           <HeroSection />
           <TrustBarSection />
-          <BoostedSection />
-          <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
           <UrgentSection />
+          <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
+          <BoostedSection />
           <ListingsSection />
           <OffresSection />
           <AppBannerSection />
