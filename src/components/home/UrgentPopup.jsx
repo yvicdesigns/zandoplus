@@ -31,26 +31,32 @@ const UrgentPopup = () => {
         .order('created_at', { ascending: false })
         .limit(12);
       if (data && data.length > 0) {
-        // triple pour boucle infinie fluide
-        const tripled = [...data, ...data, ...data];
-        setListings(tripled);
-        setCenter(data.length); // démarre au milieu de la triplication
+        // Triple seulement si assez d'items pour que la boucle ait du sens
+        const shouldTriple = data.length >= 3;
+        const displayed = shouldTriple ? [...data, ...data, ...data] : data;
+        setListings(displayed);
+        setCenter(shouldTriple ? data.length : 0);
         setTimeout(() => setVisible(true), 700);
       }
     };
     load();
   }, []);
 
-  const baseLen = listings.length / 3;
+  const isTripled = listings.length > 0 && listings.length % 3 === 0 && listings.length >= 9;
+  const baseLen = isTripled ? listings.length / 3 : listings.length;
 
   const slide = useCallback((dir) => {
     setCenter(c => {
+      if (!isTripled) {
+        // mode simple : reboucle entre 0 et baseLen-1
+        return (c + dir + baseLen) % baseLen;
+      }
       let next = c + dir;
       if (next >= baseLen * 2) next -= baseLen;
       if (next < baseLen)      next += baseLen;
       return next;
     });
-  }, [baseLen]);
+  }, [baseLen, isTripled]);
 
   const go = useCallback((dir) => {
     clearInterval(autoRef.current);
@@ -81,7 +87,7 @@ const UrgentPopup = () => {
   const renderFrom = center - 2;
   const renderTo   = center + 2;
 
-  const currentDot = (center - baseLen) % baseLen; // dot actif (0 à baseLen-1)
+  const currentDot = isTripled ? (center - baseLen) % baseLen : center;
 
   return (
     <AnimatePresence>
