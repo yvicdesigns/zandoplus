@@ -3,8 +3,6 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Link } from 'react-router-dom';
 import { Flame, Zap, ChevronLeft, ChevronRight, ArrowRight, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ListingItem from '@/components/listings/ListingItem';
-import { useListings } from '@/contexts/ListingsContext';
 
 /* ─── Carte urgente landscape ─────────────────────────────── */
 const UrgentCard = ({ listing }) => (
@@ -52,6 +50,52 @@ const UrgentCard = ({ listing }) => (
   </motion.div>
 );
 
+/* ─── Carte boostée landscape ─────────────────────────────── */
+const BoostedCard = ({ listing }) => (
+  <motion.div
+    animate={{ rotate: [0, -2, 2, -2, 2, -1, 1, 0] }}
+    transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 3.5, ease: 'easeInOut' }}
+    className="flex-shrink-0"
+    style={{ transformOrigin: 'center bottom' }}
+  >
+    <Link
+      to={`/listings/${listing.listing_slug || listing.id}`}
+      className="w-[260px] h-[130px] flex rounded-xl overflow-hidden bg-category-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+    >
+      {/* Image carrée à gauche */}
+      <div className="relative w-[130px] h-full flex-shrink-0 overflow-hidden bg-category-card">
+        {listing.images?.[0]
+          ? <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          : <div className="w-full h-full flex items-center justify-center"><Zap className="w-8 h-8 text-gray-200" /></div>}
+        {/* Badge */}
+        <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 bg-accent-yellow text-gray-900 text-[8px] font-black px-1.5 py-0.5 rounded-full">
+          <Zap className="w-2 h-2" /> BOOSTÉ
+        </div>
+      </div>
+      {/* Contenu à droite */}
+      <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+        <div>
+          <p className="text-[12px] font-bold text-gray-900 line-clamp-2 leading-snug">{listing.title}</p>
+          {listing.location && (
+            <p className="flex items-center gap-0.5 text-[10px] text-gray-400 mt-1">
+              <MapPin className="w-2.5 h-2.5" /> {listing.location}
+            </p>
+          )}
+        </div>
+        <div>
+          <p className="text-[15px] font-black text-custom-green-500 leading-none">
+            {(listing.price || 0).toLocaleString('fr-FR')}
+            <span className="text-[10px] font-semibold text-gray-400 ml-1">{listing.currency || 'FCFA'}</span>
+          </p>
+          <span className="inline-block mt-1.5 text-[9px] font-bold text-amber-600 border border-amber-200 bg-amber-50 px-1.5 py-0.5 rounded-full">
+            Annonce boostée
+          </span>
+        </div>
+      </div>
+    </Link>
+  </motion.div>
+);
+
 const useScroll = () => {
   const ref = useRef(null);
   const scroll = (dir) => ref.current?.scrollBy({ left: dir * 440, behavior: 'smooth' });
@@ -63,8 +107,6 @@ export const UrgentSection = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading]   = useState(true);
   const { ref, scroll } = useScroll();
-  const { favorites, toggleFavorite } = useListings();
-
   useEffect(() => {
     supabase.from('listings')
       .select('*, seller:profiles(id, full_name, avatar_url)')
@@ -119,8 +161,6 @@ export const BoostedSection = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading]   = useState(true);
   const { ref, scroll } = useScroll();
-  const { favorites, toggleFavorite } = useListings();
-
   useEffect(() => {
     supabase.from('listings')
       .select('*, seller:profiles(id, full_name, avatar_url)')
@@ -159,11 +199,7 @@ export const BoostedSection = () => {
             <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div ref={ref} className="flex gap-3 overflow-x-auto scrollbar-hide flex-1">
-            {listings.map(l => (
-              <div key={l.id} className="flex-shrink-0 w-[200px]">
-                <ListingItem listing={l} viewMode="grid" isFavorite={favorites.has(l.id)} toggleFavorite={toggleFavorite} />
-              </div>
-            ))}
+            {listings.map(l => <BoostedCard key={l.id} listing={l} />)}
           </div>
           <button onClick={() => scroll(1)} className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors">
             <ChevronRight className="w-5 h-5 text-gray-600" />
