@@ -40,7 +40,7 @@ const AdminBoostsTab = memo(() => {
     const { data, error } = await supabase
       .from('ad_boosts')
       .select(`
-        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at,
+        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at, boost_type,
         annonce:annonce_id(id, title, images),
         user:user_id(full_name, whatsapp_number)
       `)
