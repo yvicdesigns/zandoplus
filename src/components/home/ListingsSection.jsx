@@ -19,7 +19,7 @@ const ListingsSection = () => {
   const [loadingPaginated, setLoadingPaginated] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 14;
+  const itemsPerPage = 10;
 
   const sectionRef = useRef(null);
   const scrollRef = useRef(null);
@@ -198,13 +198,6 @@ const ListingsSection = () => {
             </div>
           )}
 
-          {paginatedListings.length > 0 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          )}
         </div>
       </div>
 

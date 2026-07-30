@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Search, Eye, Trash2, Star, StarOff, CheckCircle, MessageSquare } from 'lucide-react';
+import { ShoppingBag, Search, Eye, Trash2, Star, StarOff, CheckCircle, MessageSquare, Flame } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -120,11 +120,28 @@ const AdminListingsTab = memo(() => {
        });
       if (error) throw error;
       toast({ title: 'Succès', description: `Annonce ${currentStatus ? 'retirée de' : 'mise en'} vedette.`, className: 'bg-green-100 text-green-800' });
-      fetchListings(); 
+      fetchListings();
     } catch (error) {
        toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
     } finally {
         setLoadingAction(null);
+    }
+  };
+
+  const handleToggleDailyOffer = async (listingId, currentStatus) => {
+    setLoadingAction(listingId);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ is_daily_offer: !currentStatus })
+        .eq('id', listingId);
+      if (error) throw error;
+      toast({ title: 'Succès', description: `Offre du jour ${currentStatus ? 'retirée' : 'activée'}.`, className: 'bg-green-100 text-green-800' });
+      fetchListings();
+    } catch (error) {
+      toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -261,8 +278,11 @@ const AdminListingsTab = memo(() => {
                         </Button>
                       )}
                       <Button asChild size="icon" variant="ghost"><Link to={`/listings/${listing.id}`}><Eye className="w-4 h-4" /></Link></Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleToggleFeatured(listing.id, listing.featured)} disabled={loadingAction === listing.id}>
+                      <Button size="icon" variant="ghost" onClick={() => handleToggleFeatured(listing.id, listing.featured)} disabled={loadingAction === listing.id} title="Mettre en vedette">
                         {listing.featured ? <Star className="w-4 h-4 text-amber-500 fill-current" /> : <StarOff className="w-4 h-4 text-gray-400" />}
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => handleToggleDailyOffer(listing.id, listing.is_daily_offer)} disabled={loadingAction === listing.id} title="Offre du jour">
+                        <Flame className={`w-4 h-4 ${listing.is_daily_offer ? 'text-red-500 fill-current' : 'text-gray-300'}`} />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => openDeleteDialog(listing.id)} disabled={loadingAction === listing.id} className="text-red-500 hover:text-red-700 bg-red-50"><Trash2 className="w-4 h-4" /></Button>
                     </div>

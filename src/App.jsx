@@ -75,6 +75,7 @@ const TestersLandingPage = lazy(() => import('@/pages/TestersLandingPage'));
 const TesterDashboardPage = lazy(() => import('@/pages/TesterDashboardPage'));
 const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
+const BoutiquesOfficiellesPage = lazy(() => import('@/pages/BoutiquesOfficiellesPage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -283,6 +284,7 @@ const AppContent = () => {
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/testeurs" element={<TestersLandingPage />} />
                     <Route path="/boost-shop" element={<ShopBoostPage />} />
+                    <Route path="/boutiques-officielles" element={<BoutiquesOfficiellesPage />} />
                     <Route element={<TesterProtectedRoute />}>
                         <Route path="/dashboard/tester" element={<TesterDashboardPage />} />
                     </Route>

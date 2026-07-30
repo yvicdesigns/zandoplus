@@ -108,7 +108,8 @@ const OffresSection = () => {
         .from('listings')
         .select('*, seller:profiles(id, full_name, avatar_url)')
         .eq('status', 'active')
-        .order('views_count', { ascending: false, nullsFirst: false })
+        .eq('is_daily_offer', true)
+        .order('created_at', { ascending: false })
         .limit(10);
       if (data) setOffres(data);
       setLoading(false);

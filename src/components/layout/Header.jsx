@@ -104,10 +104,10 @@ const Header = memo(({ onLoginClick }) => {
 
   const navLinks = [
     { label: 'Accueil',                href: '/' },
-    { label: 'Offres du jour 🔥',      href: '/listings?sort=views' },
-    { label: 'Nouveautés',             href: '/listings?sort=newest' },
-    { label: 'Meilleures ventes',      href: '/listings?sort=popular' },
-    { label: 'Boutiques officielles',  href: '/shops' },
+    { label: 'Offres du jour 🔥',      href: '/listings?daily=true' },
+    { label: 'Nouveautés',             href: '/listings?sortBy=newest' },
+    { label: 'Meilleures ventes',      href: '/listings?sortBy=popularity' },
+    { label: 'Boutiques officielles',  href: '/boutiques-officielles' },
     { label: 'Aide & Support',         href: '/help' },
   ];
 
