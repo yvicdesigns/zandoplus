@@ -4,6 +4,8 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Zap, Flame, ShieldCheck, CheckCircle, Loader2, Plus, Minus } from 'lucide-react';
+import { fbTrack } from '@/components/analytics/MetaPixel';
+import { ttqTrack } from '@/components/analytics/TikTokPixel';
 import { Helmet } from 'react-helmet-async';
 
 const TYPES = [
@@ -133,6 +135,10 @@ const BoostListingPage = () => {
         .single();
 
       if (error) throw error;
+
+      // Pixels — InitiateCheckout
+      fbTrack('InitiateCheckout', { value: totalPrice, currency: 'XAF', content_name: listing.title, num_items: 1 });
+      ttqTrack('InitiateCheckout', { value: totalPrice, currency: 'XAF', content_name: listing.title });
 
       navigate('/boost-payment', {
         state: {

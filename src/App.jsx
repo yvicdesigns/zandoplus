@@ -26,6 +26,8 @@ import { MessagesDrawerProvider } from '@/contexts/MessagesDrawerContext';
 import MessagesDrawer from '@/components/messages/MessagesDrawer';
 
 const GoogleAnalytics  = lazy(() => import('@/components/analytics/GoogleAnalytics'));
+const MetaPixel        = lazy(() => import('@/components/analytics/MetaPixel'));
+const TikTokPixel      = lazy(() => import('@/components/analytics/TikTokPixel'));
 const PwaInstallModal  = lazy(() => import('@/components/common/PwaInstallModal'));
 const BugReportButton  = lazy(() => import('@/components/beta/BugReportButton'));
 const ChatWidget       = lazy(() => import('@/components/ai/ChatWidget'));
@@ -232,6 +234,8 @@ const AppContent = () => {
             <Suspense fallback={null}><PwaInstallModal /></Suspense>
             <DynamicFavicon />
             <Suspense fallback={null}><GoogleAnalytics /></Suspense>
+            <Suspense fallback={null}><MetaPixel /></Suspense>
+            <Suspense fallback={null}><TikTokPixel /></Suspense>
             <Routes>
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<HomePage />} />

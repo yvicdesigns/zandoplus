@@ -17,6 +17,8 @@ import SendMessageDialog from '@/components/listing/SendMessageDialog';
 import { Helmet } from 'react-helmet-async';
 import { useListings } from '@/contexts/ListingsContext';
 import { sanitizeHtml, sanitizeInput } from '@/lib/validationUtils';
+import { fbTrack } from '@/components/analytics/MetaPixel';
+import { ttqTrack } from '@/components/analytics/TikTokPixel';
 import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -95,6 +97,10 @@ const ListingDetailPage = () => {
       setListing(sanitizedListing);
       if (user?.id !== data.user_id) {
         await supabase.rpc('increment_listing_view', { p_listing_id: data.id });
+        // Pixels — ViewContent
+        const pixelParams = { content_name: data.title, content_ids: [data.id], content_type: 'product', value: data.price || 0, currency: data.currency || 'XAF' };
+        fbTrack('ViewContent', pixelParams);
+        ttqTrack('ViewContent', pixelParams);
       }
       if (data.category) {
         const { data: relatedData } = await supabase

@@ -6,6 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { UploadCloud, CheckCircle, ArrowLeft, Loader2, Copy } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Helmet } from 'react-helmet-async';
+import { fbTrack } from '@/components/analytics/MetaPixel';
+import { ttqTrack } from '@/components/analytics/TikTokPixel';
 
 const BoostPaymentConfirmationPage = () => {
   const { state } = useLocation();
@@ -55,6 +57,10 @@ const BoostPaymentConfirmationPage = () => {
         .update({ preuve_paiement_url: publicUrl })
         .eq('id', boostId);
       if (updateError) throw updateError;
+
+      // Pixels — Purchase / CompletePayment
+      fbTrack('Purchase', { value: amount, currency: 'XAF', content_name: listingTitle, num_items: 1 });
+      ttqTrack('CompletePayment', { value: amount, currency: 'XAF', content_name: listingTitle });
 
       setSubmitted(true);
     } catch (err) {
