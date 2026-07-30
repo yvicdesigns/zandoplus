@@ -26,6 +26,7 @@ const ListingsPage = () => {
   const maxPrice = searchParams.get('maxPrice');
   const condition = searchParams.get('condition');
   const sortBy = searchParams.get('sortBy');
+  const daily = searchParams.get('daily');
 
   const getFiltersFromURL = useCallback(() => ({
     search: search || '',
@@ -37,7 +38,8 @@ const ListingsPage = () => {
     ],
     condition: condition || '',
     sortBy: sortBy || 'newest',
-  }), [search, category, location, minPrice, maxPrice, condition, sortBy]);
+    daily: daily === 'true',
+  }), [search, category, location, minPrice, maxPrice, condition, sortBy, daily]);
 
   const [localFilters, setLocalFilters] = useState(getFiltersFromURL());
 

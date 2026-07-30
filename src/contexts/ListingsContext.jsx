@@ -51,6 +51,7 @@ export const ListingsProvider = ({ children }) => {
         }
         if (filters.condition) query = query.eq('condition', filters.condition);
         if (filters.search) query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        if (filters.daily) query = query.eq('is_daily_offer', true);
 
         switch (filters.sortBy) {
           case 'price-low': query = query.order('price', { ascending: true }); break;

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { supabase } from '@/lib/customSupabaseClient';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,7 +22,41 @@ import { getCategoryEmoji } from '@/components/post-ad/categoryIcons';
 const SearchBar = memo(({ onSubmit }) => {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
+  const wrapperRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  // Fermer dropdown si clic extérieur
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Autocomplete avec debounce 250ms
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    if (q.trim().length < 2) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      let query = supabase
+        .from('listings')
+        .select('id, title, images, price, currency, listing_slug')
+        .eq('status', 'active')
+        .ilike('title', `%${q.trim()}%`)
+        .limit(6);
+      if (cat) query = query.eq('category', cat);
+      const { data } = await query;
+      setSuggestions(data || []);
+      setShowSuggestions(true);
+    }, 250);
+    return () => clearTimeout(debounceRef.current);
+  }, [q, cat]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,42 +64,80 @@ const SearchBar = memo(({ onSubmit }) => {
       const params = new URLSearchParams({ search: q.trim() });
       if (cat) params.set('category', cat);
       navigate(`/listings?${params}`);
-      setQ('');
+      setQ(''); setSuggestions([]); setShowSuggestions(false);
       onSubmit?.();
     }
   };
 
+  const handleSuggestionClick = (listing) => {
+    navigate(`/listings/${listing.listing_slug || listing.id}`);
+    setQ(''); setSuggestions([]); setShowSuggestions(false);
+    onSubmit?.();
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-1 max-w-[640px]">
-      <select
-        value={cat}
-        onChange={e => setCat(e.target.value)}
-        className="border-2 border-custom-green-500 border-r-0 rounded-l-lg px-3 text-[13px] text-gray-600 bg-white h-[44px] cursor-pointer outline-none shrink-0 hidden md:block"
-      >
-        <option value="">Toutes les catégories</option>
-        <option value="electronics">Électronique</option>
-        <option value="phones-tablets">Téléphones</option>
-        <option value="fashion">Mode</option>
-        <option value="maison-meubles">Maison</option>
-        <option value="vehicles">Véhicules</option>
-        <option value="real-estate">Immobilier</option>
-        <option value="beaute-soins">Beauté</option>
-        <option value="jobs">Emplois</option>
-      </select>
-      <input
-        type="text"
-        placeholder="Rechercher un produit, une marque..."
-        value={q}
-        onChange={e => setQ(e.target.value)}
-        className="flex-1 border-2 border-custom-green-500 border-l-0 md:border-l-0 border-r-0 px-4 text-[13px] outline-none h-[44px] bg-white min-w-0 rounded-l-lg md:rounded-l-none"
-      />
-      <button
-        type="submit"
-        className="w-[50px] h-[44px] bg-custom-green-500 text-white flex items-center justify-center rounded-r-lg hover:bg-custom-green-600 transition-colors shrink-0"
-      >
-        <Search className="w-5 h-5" />
-      </button>
-    </form>
+    <div ref={wrapperRef} className="flex flex-1 max-w-[640px] relative">
+      <form onSubmit={handleSubmit} className="flex w-full">
+        <select
+          value={cat}
+          onChange={e => setCat(e.target.value)}
+          className="border-2 border-custom-green-500 border-r-0 rounded-l-lg px-3 text-[13px] text-gray-600 bg-white h-[44px] cursor-pointer outline-none shrink-0 hidden md:block"
+        >
+          <option value="">Toutes les catégories</option>
+          <option value="electronics">Électronique</option>
+          <option value="phones-tablets">Téléphones</option>
+          <option value="fashion">Mode</option>
+          <option value="maison-meubles">Maison</option>
+          <option value="vehicles">Véhicules</option>
+          <option value="real-estate">Immobilier</option>
+          <option value="beaute-soins">Beauté</option>
+          <option value="jobs">Emplois</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Rechercher un produit, une marque..."
+          value={q}
+          onChange={e => { setQ(e.target.value); if (!e.target.value.trim()) setShowSuggestions(false); }}
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          className="flex-1 border-2 border-custom-green-500 border-l-0 md:border-l-0 border-r-0 px-4 text-[13px] outline-none h-[44px] bg-white min-w-0 rounded-l-lg md:rounded-l-none"
+        />
+        <button type="submit" className="w-[50px] h-[44px] bg-custom-green-500 text-white flex items-center justify-center rounded-r-lg hover:bg-custom-green-600 transition-colors shrink-0">
+          <Search className="w-5 h-5" />
+        </button>
+      </form>
+
+      {/* Dropdown suggestions */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-[46px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-[100] overflow-hidden">
+          {suggestions.map((listing) => (
+            <button
+              key={listing.id}
+              onMouseDown={() => handleSuggestionClick(listing)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+            >
+              <img
+                src={listing.images?.[0] || 'https://placehold.co/40x40/f3f4f6/9ca3af?text=?'}
+                alt={listing.title}
+                className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-gray-900 truncate">{listing.title}</p>
+                <p className="text-[11px] text-custom-green-500 font-bold">
+                  {(listing.price || 0).toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                </p>
+              </div>
+              <Search className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+            </button>
+          ))}
+          <button
+            onMouseDown={handleSubmit}
+            className="w-full px-4 py-2.5 text-[12px] font-semibold text-custom-green-600 hover:bg-green-50 border-t border-gray-100 text-center transition-colors"
+          >
+            Voir tous les résultats pour "{q}"
+          </button>
+        </div>
+      )}
+    </div>
   );
 });
 
