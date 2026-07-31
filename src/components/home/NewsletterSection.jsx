@@ -51,7 +51,7 @@ const NewsletterSection = () => {
           </div>
 
           {/* Formulaire */}
-          <form onSubmit={handleSubmit} className="flex flex-shrink-0 min-w-[340px]">
+          <form onSubmit={handleSubmit} className="flex w-full md:w-auto md:flex-shrink-0 md:min-w-[340px]">
             <input
               ref={inputRef}
               type="email"

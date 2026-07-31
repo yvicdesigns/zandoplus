@@ -76,12 +76,12 @@ const SearchBar = memo(({ onSubmit }) => {
   };
 
   return (
-    <div ref={wrapperRef} className="flex flex-1 max-w-[640px] relative">
-      <form onSubmit={handleSubmit} className="flex w-full">
+    <div ref={wrapperRef} className="flex flex-1 max-w-[560px] relative">
+      <form onSubmit={handleSubmit} className="flex w-full border border-gray-200 rounded-2xl overflow-hidden shadow-sm bg-white">
         <select
           value={cat}
           onChange={e => setCat(e.target.value)}
-          className="border-2 border-custom-green-500 border-r-0 rounded-l-lg px-3 text-[13px] text-gray-600 bg-white h-[44px] cursor-pointer outline-none shrink-0 hidden md:block"
+          className="border-r border-gray-200 px-3 text-[13px] text-gray-600 bg-white h-[42px] cursor-pointer outline-none shrink-0 hidden md:block"
         >
           <option value="">Toutes les catégories</option>
           <option value="electronics">Électronique</option>
@@ -99,10 +99,10 @@ const SearchBar = memo(({ onSubmit }) => {
           value={q}
           onChange={e => { setQ(e.target.value); if (!e.target.value.trim()) setShowSuggestions(false); }}
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-          className="flex-1 border-2 border-custom-green-500 border-l-0 md:border-l-0 border-r-0 px-4 text-[13px] outline-none h-[44px] bg-white min-w-0 rounded-l-lg md:rounded-l-none"
+          className="flex-1 px-4 text-[13px] outline-none h-[42px] bg-white min-w-0"
         />
-        <button type="submit" className="w-[50px] h-[44px] bg-custom-green-500 text-white flex items-center justify-center rounded-r-lg hover:bg-custom-green-600 transition-colors shrink-0">
-          <Search className="w-5 h-5" />
+        <button type="submit" className="w-[46px] h-[42px] bg-custom-green-500 text-white flex items-center justify-center hover:bg-custom-green-600 transition-colors shrink-0 rounded-r-2xl">
+          <Search className="w-4 h-4" />
         </button>
       </form>
 
@@ -236,7 +236,30 @@ const Header = memo(({ onLoginClick }) => {
 
       {/* ── 2. Header principal blanc ── */}
       <div className="bg-card-bg border-b border-gray-200">
-        <div className="max-w-[1280px] mx-auto px-6 py-3 flex items-center gap-5">
+
+        {/* ── Mobile uniquement : burger | logo centré | panier ── */}
+        <div className="md:hidden flex items-center px-4 py-3 relative">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 z-10 shrink-0">
+            {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
+          </button>
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 z-10">
+            {siteSettingsLoading ? <Skeleton className="h-7 w-20" /> : siteSettings?.logo_url
+              ? <img src={siteSettings.logo_url} alt="Zando+" className="h-8 w-auto object-contain" />
+              : <span className="text-[22px] font-black text-custom-green-500 leading-none">Zando<span className="text-accent-yellow">+</span></span>
+            }
+          </Link>
+          <Link to="/cart" className="ml-auto relative p-1 z-10 shrink-0">
+            <ShoppingCart className="w-6 h-6 text-gray-700" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-[3px] bg-custom-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-card-bg">
+                {cartCount > 9 ? '9+' : cartCount}
+              </span>
+            )}
+          </Link>
+        </div>
+
+        {/* ── Desktop : layout inchangé ── */}
+        <div className="hidden md:flex max-w-[1280px] mx-auto px-6 py-3 items-center gap-5">
 
           {/* Logo */}
           <Link to="/" className="flex flex-col shrink-0 text-decoration-none">
@@ -413,7 +436,7 @@ const Header = memo(({ onLoginClick }) => {
         </div>
 
         {/* Barre de recherche mobile */}
-        <div className="md:hidden px-4 pb-3">
+        <div className="md:hidden px-5 pb-3">
           <SearchBar onSubmit={() => setIsMenuOpen(false)} />
         </div>
       </div>

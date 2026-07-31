@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, Save, Globe, Megaphone, Image, Users, Sliders } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, Save, Globe, Megaphone, Image, Users, Sliders, Upload, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import AdminHeroTab from '@/components/admin/AdminHeroTab';
 import AdminSubscribersTab from '@/components/admin/AdminSubscribersTab';
+import imageCompression from 'browser-image-compression';
 
 const Field = ({ label, hint, children }) => (
   <div>
@@ -21,6 +22,78 @@ const Input = ({ ...props }) => (
     {...props}
   />
 );
+
+/* ── Logo uploader ── */
+const LogoUploader = ({ label, hint, value, onChange }) => {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      let toUpload = file;
+      if (!file.type.includes('svg')) {
+        try { toUpload = await imageCompression(file, { maxSizeMB: 0.3, maxWidthOrHeight: 600, useWebWorker: true }); } catch {}
+      }
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `logos/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('site_assets').upload(path, toUpload, { contentType: file.type });
+      if (upErr) throw upErr;
+      const url = supabase.storage.from('site_assets').getPublicUrl(path).data.publicUrl;
+      onChange(url);
+      toast({ title: '✅ Logo uploadé !', className: 'bg-custom-green-500 text-white' });
+    } catch (err) {
+      toast({ title: 'Erreur upload', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold text-gray-700 mb-2">{label}</label>
+      <div className="flex items-center gap-4">
+        {/* Zone aperçu cliquable */}
+        <div
+          onClick={() => inputRef.current?.click()}
+          className="w-36 h-16 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 cursor-pointer hover:border-custom-green-400 hover:bg-green-50 transition-colors overflow-hidden shrink-0"
+        >
+          {value
+            ? <img src={value} alt="logo" className="max-h-12 max-w-[130px] object-contain" />
+            : <div className="text-center"><div className="text-2xl text-gray-300">🖼️</div><p className="text-[9px] text-gray-400 mt-0.5">Cliquer</p></div>
+          }
+        </div>
+        {/* Boutons */}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 h-9 px-4 bg-white border border-gray-200 text-gray-700 text-[12px] font-semibold rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            {uploading ? 'Upload en cours…' : 'Choisir un fichier'}
+          </button>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="flex items-center gap-1.5 text-[11px] text-red-400 hover:text-red-600 transition-colors"
+            >
+              <Trash2 className="w-3 h-3" /> Supprimer
+            </button>
+          )}
+          <p className="text-[10px] text-gray-400">{hint}</p>
+        </div>
+      </div>
+      <input ref={inputRef} type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" className="hidden" onChange={handleFile} />
+    </div>
+  );
+};
 
 /* ── Sous-onglet Apparence ── */
 const ApparenceSection = () => {
@@ -52,25 +125,25 @@ const ApparenceSection = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-xl">
-      <Field label="URL du logo (header)" hint="Affiché dans la barre de navigation en haut">
-        <Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://..." />
-      </Field>
-      <Field label="URL du logo (footer)" hint="Affiché dans le pied de page">
-        <Input value={form.footer_logo_url} onChange={e => setForm(f => ({ ...f, footer_logo_url: e.target.value }))} placeholder="https://..." />
-      </Field>
-      <Field label="Tagline du site" hint="Sous-titre affiché sous le logo dans le header">
+    <div className="space-y-6 max-w-xl">
+      <LogoUploader
+        label="Logo — Header (barre de navigation)"
+        hint="PNG, SVG ou WEBP recommandé · fond transparent idéal"
+        value={form.logo_url}
+        onChange={url => setForm(f => ({ ...f, logo_url: url }))}
+      />
+      <LogoUploader
+        label="Logo — Footer (pied de page)"
+        hint="Peut être identique au logo header ou en version claire"
+        value={form.footer_logo_url}
+        onChange={url => setForm(f => ({ ...f, footer_logo_url: url }))}
+      />
+      <Field label="Tagline du site" hint="Texte affiché sous le logo dans le header">
         <Input value={form.site_tagline} onChange={e => setForm(f => ({ ...f, site_tagline: e.target.value }))} placeholder="Plus de ventes, moins de tracas" />
       </Field>
-      {(form.logo_url || form.footer_logo_url) && (
-        <div className="flex gap-4 p-3 bg-gray-50 rounded-lg">
-          {form.logo_url && <div><p className="text-[10px] text-gray-400 mb-1">Header</p><img src={form.logo_url} alt="logo" className="h-8 object-contain" /></div>}
-          {form.footer_logo_url && <div><p className="text-[10px] text-gray-400 mb-1">Footer</p><img src={form.footer_logo_url} alt="logo footer" className="h-8 object-contain" /></div>}
-        </div>
-      )}
       <button onClick={save} disabled={saving} className="flex items-center gap-2 h-[40px] px-6 bg-custom-green-500 text-white text-[13px] font-bold rounded-lg hover:bg-custom-green-600 transition-colors disabled:opacity-50">
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-        Enregistrer
+        Enregistrer les paramètres
       </button>
     </div>
   );

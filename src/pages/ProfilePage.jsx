@@ -19,7 +19,7 @@ import CommandesInline from '@/components/profile/CommandesInline';
 import FavorisInline from '@/components/profile/FavorisInline';
 import NotificationsInline from '@/components/profile/NotificationsInline';
 import AvisInline from '@/components/profile/AvisInline';
-import 'react-image-crop/dist/ReactCrop.css';
+import AvatarCropDialog from '@/components/profile/AvatarCropDialog';
 
 const fmt = (d) => {
   if (!d) return 'Non renseigné';
@@ -88,6 +88,7 @@ const ProfilePage = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({ commandes: 0, avis: 0 });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropFile, setCropFile] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/');
@@ -105,14 +106,19 @@ const ProfilePage = () => {
     fetchStats();
   }, [user]);
 
-  const handleAvatarUpload = async (e) => {
+  const handleAvatarSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setCropFile(file);
+    e.target.value = null;
+  };
+
+  const handleAvatarSave = async (blob) => {
+    setCropFile(null);
     setIsUploadingAvatar(true);
     try {
-      const compressed = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 512, useWebWorker: true });
-      const path = `${user.id}/profile/${uuidv4()}`;
-      const { error: upErr } = await supabase.storage.from('profile_assets').upload(path, compressed);
+      const path = `${user.id}/profile/${uuidv4()}.webp`;
+      const { error: upErr } = await supabase.storage.from('profile_assets').upload(path, blob, { contentType: 'image/webp' });
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from('profile_assets').getPublicUrl(path);
       await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
@@ -122,7 +128,6 @@ const ProfilePage = () => {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
       setIsUploadingAvatar(false);
-      e.target.value = null;
     }
   };
 
@@ -270,7 +275,7 @@ const ProfilePage = () => {
                   : <Camera className="w-3.5 h-3.5 text-white" />
                 }
               </button>
-              <input ref={avatarInputRef} type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
+              <input ref={avatarInputRef} type="file" accept="image/*" hidden onChange={handleAvatarSelect} />
             </div>
 
             {/* Infos */}
@@ -508,6 +513,14 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {cropFile && (
+        <AvatarCropDialog
+          file={cropFile}
+          onClose={() => setCropFile(null)}
+          onSave={handleAvatarSave}
+        />
+      )}
     </>
   );
 };

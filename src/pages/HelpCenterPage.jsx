@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon, ShieldCheck, MessageCircle, Phone, Clock, ChevronRight } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -45,7 +45,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Est-ce que l'utilisation de Zando+ est gratuite ?",
-        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées. Aucun abonnement n'est requis. Nous proposons uniquement une option payante pour booster la visibilité d'une annonce (500 FCFA / 7 jours)."
+        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées. Aucun abonnement n'est requis. Nous proposons uniquement des options payantes pour booster la visibilité d'une annonce : Boost Simple à 150 FCFA/jour ou Boost Urgent à 300 FCFA/jour, pour la durée de votre choix (1 à 365 jours)."
       },
       {
         q: "Comment puis-je réinitialiser mon mot de passe ?",
@@ -121,7 +121,16 @@ const HelpCenterPage = () => {
       },
       {
         q: "Comment booster mon annonce ?",
-        a: "Depuis votre profil, cliquez sur l'annonce que vous souhaitez mettre en avant, puis sur 'Booster'. Le boost coûte 500 FCFA et place votre annonce en tête des résultats pendant 7 jours avec un badge 'Boosté' visible. Le paiement se fait via Airtel Money ou MTN Money."
+        a: (
+          <>
+            Depuis votre annonce, cliquez sur <strong>« Booster cette annonce »</strong>. Vous choisissez ensuite :
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li><strong>Boost Simple</strong> — 150 FCFA/jour : badge jaune "Boosté", mis en avant dans la section dédiée de la page d'accueil.</li>
+              <li><strong>Boost Urgent</strong> — 300 FCFA/jour : badge rouge "URGENT", apparaît dans le popup prioritaire et tout en haut de la page d'accueil.</li>
+            </ul>
+            <p className="mt-2">Vous sélectionnez le nombre de jours souhaité (de 1 à 365 jours). Le total est calculé en temps réel avant paiement. Le paiement se fait via Airtel Money ou MTN Money.</p>
+          </>
+        )
       },
       {
         q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
@@ -233,6 +242,34 @@ const HelpCenterPage = () => {
           </div>
         </section>
 
+        {/* WhatsApp contact banner */}
+        <div className="bg-green-50 border-y border-green-200">
+          <div className="container mx-auto px-4 max-w-4xl py-5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-800 text-sm">Besoin d'aide rapidement ?</p>
+                  <p className="text-gray-600 text-sm flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" /> Réponse en moins d'1h via WhatsApp
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://wa.me/242064623778?text=Bonjour%20Zando%2B%2C%20j'ai%20besoin%20d'aide."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-5 rounded-full transition-colors text-sm shrink-0"
+              >
+                <MessageCircle className="w-4 h-4" />
+                WhatsApp : +242 06 462 37 78
+              </a>
+            </div>
+          </div>
+        </div>
+
         <div className="py-20 bg-white">
           <div className="container mx-auto px-4 max-w-4xl">
             <FaqSection id="general" icon={UserCircle} title="Questions Générales" questions={faqs.general} />
@@ -241,13 +278,44 @@ const HelpCenterPage = () => {
             <FaqSection id="tips" icon={Zap} title="Techniques de Vente" questions={faqs.tips} />
             <FaqSection id="buyer-tips" icon={Lightbulb} title="Astuces pour Acheteurs" questions={faqs.buyerTips} />
 
-            <div className="mt-16 text-center p-8 bg-gray-50 rounded-xl border border-gray-200">
-                <LifeBuoy className="w-12 h-12 text-custom-green-500 mx-auto mb-4"/>
+            <div className="mt-16 p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+              <div className="text-center mb-8">
+                <LifeBuoy className="w-12 h-12 text-custom-green-500 mx-auto mb-3" />
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Vous ne trouvez pas de réponse ?</h3>
-                <p className="text-gray-600 mb-4">Notre équipe est là pour vous aider. Contactez-nous directement pour toute question spécifique.</p>
-                <Link to="/contact" className="inline-block gradient-bg text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity">
-                    Nous Contacter
+                <p className="text-gray-600">Notre équipe est disponible pour vous aider. Choisissez le canal qui vous convient le mieux.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a
+                  href="https://wa.me/242064623778?text=Bonjour%20Zando%2B%2C%20j'ai%20besoin%20d'aide."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-5 bg-white rounded-xl border border-green-200 hover:border-green-400 hover:shadow-md transition-all group"
+                >
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <MessageCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800">WhatsApp</p>
+                    <p className="text-green-600 font-semibold text-sm">+242 06 462 37 78</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Réponse rapide · 7j/7</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 ml-auto group-hover:text-green-500 transition-colors" />
+                </a>
+                <Link
+                  to="/contact"
+                  className="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 hover:border-custom-green-300 hover:shadow-md transition-all group"
+                >
+                  <div className="w-12 h-12 bg-custom-green-100 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Phone className="w-6 h-6 text-custom-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800">Formulaire de contact</p>
+                    <p className="text-gray-500 text-sm">Envoyer un message écrit</p>
+                    <p className="text-gray-400 text-xs mt-0.5">Réponse sous 24h</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 ml-auto group-hover:text-custom-green-500 transition-colors" />
                 </Link>
+              </div>
             </div>
           </div>
         </div>

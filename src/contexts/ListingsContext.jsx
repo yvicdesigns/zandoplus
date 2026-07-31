@@ -87,6 +87,33 @@ export const ListingsProvider = ({ children }) => {
         sorted = [...verified, ...others];
       }
 
+      // Mélange par vendeur quand pas de recherche ni de filtre spécifique
+      // → évite de voir 10 annonces du même vendeur d'affilée
+      const isDefaultBrowse = !filters.search && !filters.category && !filters.location && !filters.daily
+        && filters.sortBy === 'newest' && filters.priceRange[0] === 0 && filters.priceRange[1] >= 10000000;
+
+      if (isDefaultBrowse) {
+        // Séparer boostés (gardent la priorité) du reste
+        const boosted = sorted.filter(l => l.is_boosted);
+        const rest    = sorted.filter(l => !l.is_boosted);
+
+        // Interleave round-robin par vendeur pour le reste
+        const bySeller = {};
+        rest.forEach(l => {
+          const key = l.user_id || 'unknown';
+          if (!bySeller[key]) bySeller[key] = [];
+          bySeller[key].push(l);
+        });
+        const groups   = Object.values(bySeller);
+        const maxLen   = Math.max(0, ...groups.map(g => g.length));
+        const mixed    = [];
+        for (let i = 0; i < maxLen; i++) {
+          groups.forEach(group => { if (i < group.length) mixed.push(group[i]); });
+        }
+
+        sorted = [...boosted, ...mixed];
+      }
+
       setListings(sorted);
     } catch (error) {
       console.error('Error fetching listings:', error.message);

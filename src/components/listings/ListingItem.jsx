@@ -54,7 +54,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   if (viewMode === 'grid') {
     return (
       <Card className="listing-card overflow-hidden cursor-pointer border-0 shadow-lg h-full flex flex-col">
-        <div className="relative bg-gray-100 aspect-w-16 aspect-h-9 h-48"> {/* Fixed height for image container */}
+        <div className="relative bg-gray-100 h-32 sm:h-48">
           <Link to={`/listings/${listing.listing_slug || listing.id}`}>
             <img   
               className="w-full h-full object-cover object-center"
@@ -64,52 +64,68 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
           </Link>
           <button
             onClick={() => toggleFavorite(listing.id)}
-            className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
+            className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
           >
-            <Heart 
-              className={`w-5 h-5 ${isFavorite 
-                ? 'text-red-500 fill-current' 
+            <Heart
+              className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${isFavorite
+                ? 'text-red-500 fill-current'
                 : 'text-gray-400'
-              }`} 
+              }`}
             />
           </button>
-          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+          <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 z-10 flex flex-col gap-1">
             {listing.is_boosted && (
-              <span className="flex items-center gap-1 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
-                <Zap className="w-3 h-3" /> Boosté
-              </span>
+              <>
+                {/* Badge Boosté mobile : icône seule */}
+                <span className="sm:hidden flex items-center justify-center bg-amber-400 text-white w-5 h-5 rounded-full shadow">
+                  <Zap className="w-3 h-3" />
+                </span>
+                {/* Badge Boosté desktop : icône + texte */}
+                <span className="hidden sm:flex items-center gap-1 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                  <Zap className="w-3 h-3" /> Boosté
+                </span>
+              </>
             )}
             <ListingBadges listing={listing} seller={listing.seller} />
           </div>
         </div>
-        <CardContent className="p-4 flex-grow flex-col justify-between">
+        <CardContent className="p-1.5 sm:p-4 flex-grow flex-col justify-between">
           <div>
             <Link to={`/listings/${listing.listing_slug || listing.id}`}>
-              <h3 className="text-base font-bold mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors">
+              <h3 className="text-[10px] sm:text-base font-bold mb-0.5 sm:mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors leading-tight">
                 {listing.title}
               </h3>
             </Link>
-            <p className="text-base md:text-lg font-bold text-custom-green-600 mb-2">
-              {(listing.price || 0).toLocaleString()} {listing.currency || 'FCFA'}
+            <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 mb-0.5 sm:mb-2 leading-tight">
+              {(listing.price || 0).toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
             </p>
           </div>
           <div>
             {ratingInfo.review_count > 0 && (
-              <div className="flex items-center gap-1 text-sm text-gray-500 mb-2">
-                <StarRating rating={ratingInfo.average_rating} size={16} />
-                <span className="font-semibold">({ratingInfo.review_count})</span>
-              </div>
+              <>
+                {/* Rating desktop */}
+                <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500 mb-1">
+                  <StarRating rating={ratingInfo.average_rating} size={13} />
+                  <span className="font-semibold">({ratingInfo.review_count})</span>
+                </div>
+                {/* Rating mobile compact */}
+                <div className="sm:hidden flex items-center gap-0.5 mb-0.5">
+                  <StarRating rating={ratingInfo.average_rating} size={10} />
+                  <span className="text-[9px] text-gray-500">({ratingInfo.review_count})</span>
+                </div>
+              </>
             )}
-            <div className="flex items-center text-sm text-gray-500">
+            <div className="hidden sm:flex items-center text-sm text-gray-500">
               <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="truncate">{listing.location || 'N/A'}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-500 mt-1">
+            <div className="hidden sm:flex items-center text-sm text-gray-500 mt-1">
               <Calendar className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="truncate">Publiée {formatDate(listing.created_at)}</span>
             </div>
+            {/* Boutons — desktop uniquement, trop chargé en 3 col mobile */}
             {isProduct && (
-              <div className="mt-3 flex flex-col gap-1.5">
+              <div className="hidden sm:flex mt-3 flex-col gap-1.5">
                 <div className="flex gap-2">
                   <button
                     onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
@@ -133,6 +149,17 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                     <Banknote className="w-3.5 h-3.5" /> Payer à la livraison
                   </button>
                 )}
+              </div>
+            )}
+            {/* Mobile : bouton panier vert — icône seule */}
+            {isProduct && (
+              <div className="sm:hidden mt-1.5">
+                <button
+                  onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
+                  className={`w-full flex items-center justify-center py-1.5 rounded-lg transition-colors ${inCart ? 'bg-custom-green-700 text-white' : 'bg-custom-green-600 text-white hover:bg-custom-green-700'}`}
+                >
+                  {inCart ? <CheckCircle className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+                </button>
               </div>
             )}
           </div>

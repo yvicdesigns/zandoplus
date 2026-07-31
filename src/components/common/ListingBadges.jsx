@@ -84,7 +84,7 @@ const ListingBadges = ({ listing, seller, className }) => {
               <TooltipTrigger asChild>
                 <Badge {...badgeProps}>
                   {config.icon}
-                  <span className="font-semibold">{config.label}</span>
+                  <span className="hidden sm:inline font-semibold">{config.label}</span>
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>

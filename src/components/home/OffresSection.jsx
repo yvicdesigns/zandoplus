@@ -157,28 +157,34 @@ const OffresSection = () => {
         </div>
 
         {/* Cards avec flèches */}
-        <div className="flex items-center gap-3">
+        <div className="relative">
           <button
             onClick={() => scroll(-1)}
-            className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors"
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full items-center justify-center hover:border-custom-green-500 shadow-sm transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
 
-          <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide flex-1">
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto scrollbar-hide px-0 sm:px-10 pb-1"
+            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+          >
             {offres.map((listing) => (
-              <OffreCard
-                key={listing.id}
-                listing={listing}
-                isFavorite={favorites.has(listing.id)}
-                toggleFavorite={toggleFavorite}
-              />
+              <div key={listing.id} className="snap-start flex-shrink-0">
+                <OffreCard
+                  listing={listing}
+                  isFavorite={favorites.has(listing.id)}
+                  toggleFavorite={toggleFavorite}
+                />
+              </div>
             ))}
+            <div className="flex-shrink-0 w-2 sm:hidden" />
           </div>
 
           <button
             onClick={() => scroll(1)}
-            className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors"
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full items-center justify-center hover:border-custom-green-500 shadow-sm transition-colors"
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
           </button>

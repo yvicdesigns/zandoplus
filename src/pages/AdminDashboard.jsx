@@ -20,13 +20,15 @@ import AdminSiteTab from '@/components/admin/AdminSiteTab';
 import AdminBetaTab from '@/components/admin/AdminBetaTab';
 import AdminWithdrawalsTab from '@/components/admin/AdminWithdrawalsTab';
 import AdminDeliveryConfigTab from '@/components/admin/AdminDeliveryConfigTab';
+import AdminBannersTab from '@/components/admin/AdminBannersTab';
+import AdminHomepageAdsTab from '@/components/admin/AdminHomepageAdsTab';
 import { Helmet } from 'react-helmet-async';
 import {
   Users, ShoppingBag, Truck, Flag, Zap, Megaphone, ShieldCheck,
   Settings, Mail, Activity, FileText, ClipboardCheck, CreditCard,
   LayoutGrid, Menu, X, ChevronRight, Home, Wallet, MapPin,
   ArrowRight, RefreshCw, Bell, Globe, LogOut, TrendingUp,
-  TrendingDown, Minus, Shield, Package, Tag, Star,
+  TrendingDown, Minus, Shield, Package, Tag, Star, Image, Layers,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
@@ -67,6 +69,9 @@ const NAV_GROUPS = [
       { id: 'audit',           icon: FileText,     label: "Logs d'activité", adminOnly: true },
       { id: 'delivery-config', icon: MapPin,       label: 'Config Livraison' },
       { id: 'site',            icon: Globe,        label: 'Gestion du site' },
+      { id: 'hero',            icon: Layers,       label: 'Slides Hero' },
+      { id: 'banners',         icon: Image,        label: 'Bannières & Hero' },
+      { id: 'homepage-ads',    icon: Megaphone,    label: 'Publicités Homepage' },
       { id: 'email-test',      icon: Mail,         label: 'Test E-mail',     adminOnly: true },
       { id: 'qa',              icon: Activity,     label: 'QA & Tests' },
       { id: 'beta',            icon: Users,        label: 'Testeurs Beta' },
@@ -81,7 +86,7 @@ const TAB_LABELS = {
   ads: 'Publicités', payments: 'Paiements', site: 'Gestion du site',
   categories: 'Catégories', approvals: 'Approbations', audit: "Logs d'activité",
   'email-test': 'Test E-mail', settings: 'Paramètres', qa: 'QA & Tests',
-  'delivery-config': 'Config Livraison', beta: 'Testeurs Beta',
+  'delivery-config': 'Config Livraison', beta: 'Testeurs Beta', hero: 'Slides Hero', banners: 'Bannières & Hero', 'homepage-ads': 'Publicités Homepage',
 };
 
 /* ─── Tab renderer ──────────────────────────────────────────── */
@@ -101,6 +106,8 @@ const renderTabContent = (t) => {
     case 'site':            return <AdminSiteTab />;
     case 'categories':      return <AdminCategoriesTab />;
     case 'hero':            return <AdminHeroTab />;
+    case 'banners':         return <AdminBannersTab />;
+    case 'homepage-ads':    return <AdminHomepageAdsTab />;
     case 'approvals':       return <AdminChangeRequestsTab />;
     case 'audit':           return <AdminAuditLogTab />;
     case 'email-test':      return <AdminEmailTestTab />;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, List, SlidersHorizontal, Search } from 'lucide-react';
+import { LayoutGrid, List, SlidersHorizontal, Search, Flame, Sparkles, TrendingUp, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useListings } from '@/contexts/ListingsContext';
 import ListingItem from '@/components/listings/ListingItem';
@@ -112,36 +112,36 @@ const ListingsPage = () => {
           <AdBanner position="listings" />
 
           {/* Page Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{pageTitle}</h1>
-              {!loading && <p className="text-gray-600 mt-1">{listings.length} résultats</p>}
+              {!loading && <p className="text-gray-500 text-sm mt-0.5">{listings.length} résultats</p>}
             </div>
-            
+
             <div className="flex items-center gap-2 w-full md:w-auto">
               {/* Mobile Filter Toggle */}
-              <Button 
-                variant="outline" 
-                onClick={() => setIsSidebarOpen(true)} 
+              <Button
+                variant="outline"
+                onClick={() => setIsSidebarOpen(true)}
                 className="flex-1 md:hidden bg-white border-custom-green-200 text-custom-green-700 hover:bg-custom-green-50"
               >
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 Filtres & Tri
               </Button>
-              
+
               {/* Desktop View Toggles */}
               <div className="hidden md:flex items-center gap-1 bg-white p-1 rounded-lg border shadow-sm">
-                <Button 
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-                  size="icon" 
+                <Button
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="icon"
                   onClick={() => setViewMode('grid')}
                   className={viewMode === 'grid' ? 'bg-custom-green-100 text-custom-green-700' : 'text-gray-500'}
                 >
                   <LayoutGrid className="w-5 h-5" />
                 </Button>
-                <Button 
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-                  size="icon" 
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="icon"
                   onClick={() => setViewMode('list')}
                   className={viewMode === 'list' ? 'bg-custom-green-100 text-custom-green-700' : 'text-gray-500'}
                 >
@@ -150,6 +150,44 @@ const ListingsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Filter Tabs */}
+          {(() => {
+            const activeTab = searchParams.get('daily') === 'true' ? 'Offres du jour'
+              : searchParams.get('sortBy') === 'popularity' ? 'Populaires'
+              : searchParams.get('sortBy') === 'newest' ? 'Nouveautés'
+              : 'Tous';
+
+            const tabs = [
+              { label: 'Tous',          icon: Grid3X3,   emoji: null,  params: {} },
+              { label: 'Offres du jour',icon: Flame,     emoji: '🔥',  params: { daily: 'true' } },
+              { label: 'Nouveautés',    icon: Sparkles,  emoji: null,  params: { sortBy: 'newest' } },
+              { label: 'Populaires',    icon: TrendingUp,emoji: null,  params: { sortBy: 'popularity' } },
+            ];
+
+            return (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-5">
+                {tabs.map(({ label, icon: Icon, emoji, params: tabParams }) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      const newParams = new URLSearchParams();
+                      Object.entries(tabParams).forEach(([k, v]) => newParams.set(k, v));
+                      setSearchParams(newParams, { replace: true });
+                    }}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all border ${
+                      activeTab === label
+                        ? 'bg-custom-green-500 text-white border-custom-green-500 shadow-md'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-custom-green-300 hover:text-custom-green-600'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}{emoji && ` ${emoji}`}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar / Filters */}
@@ -181,15 +219,15 @@ const ListingsPage = () => {
             {/* Main Content */}
             <main className="lg:col-span-3">
               {loading ? (
-                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+                <div className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-3 lg:grid-cols-3' : 'grid-cols-1'}`}>
                   {[...Array(9)].map((_, i) => (
                     <Skeleton key={i} className="h-80 w-full rounded-lg" />
                   ))}
                 </div>
               ) : listings.length > 0 ? (
                 <>
-                    <div 
-                      className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}
+                    <div
+                      className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-3 lg:grid-cols-3' : 'grid-cols-1'}`}
                     >
                       {listings.slice(0, visibleCount).map(listing => (
                           <ListingItem

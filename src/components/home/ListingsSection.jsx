@@ -116,20 +116,21 @@ const ListingsSection = () => {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="relative">
               <button
                 onClick={() => scroll(-1)}
-                className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors"
+                className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full items-center justify-center hover:border-custom-green-500 shadow-sm transition-colors"
               >
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
 
               <div
                 ref={scrollRef}
-                className="flex gap-3 overflow-x-auto scrollbar-hide flex-1"
+                className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 sm:px-10"
+                style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
               >
                 {boostedListings.map((listing) => (
-                  <div key={listing.id} className="flex-shrink-0 w-[200px]">
+                  <div key={listing.id} className="flex-shrink-0 w-[170px] sm:w-[200px] snap-start">
                     <ListingItem
                       listing={listing}
                       viewMode="grid"
@@ -138,11 +139,12 @@ const ListingsSection = () => {
                     />
                   </div>
                 ))}
+                <div className="flex-shrink-0 w-2 sm:hidden" />
               </div>
 
               <button
                 onClick={() => scroll(1)}
-                className="w-9 h-9 flex-shrink-0 bg-card-bg border border-gray-200 rounded-full flex items-center justify-center hover:border-custom-green-500 transition-colors"
+                className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full items-center justify-center hover:border-custom-green-500 shadow-sm transition-colors"
               >
                 <ChevronRight className="w-5 h-5 text-gray-600" />
               </button>
@@ -176,7 +178,7 @@ const ListingsSection = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4"
               >
                 {paginatedListings.map((listing) => (
                   <ListingItem
