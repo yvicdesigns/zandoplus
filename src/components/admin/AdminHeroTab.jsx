@@ -7,7 +7,7 @@ import { MoreHorizontal, PlusCircle, Loader2, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import HeroBuilderV22 from '@/components/admin/HeroBuilderV22';
+import HeroSlideEditor from '@/components/admin/HeroSlideEditor';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 /* Contenu par défaut = ce qui s'affiche sur la page d'accueil */
@@ -86,16 +86,8 @@ const AdminHeroTab = memo(() => {
     setIsBuilderOpen(true);
   };
 
-  const handleAddNew = async () => {
-    const nextOrder = slides.length > 0 ? Math.max(...slides.map(s => s.order || 0)) + 1 : 1;
-    const newSlide = { ...DEFAULT_SLIDE, order: nextOrder, is_active: false };
-    const { data, error } = await supabase.from('hero_slides').insert(newSlide).select().single();
-    if (error) {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de créer le slide.' });
-      return;
-    }
-    setSlides(prev => [...prev, data]);
-    setSelectedSlide(data);
+  const handleAddNew = () => {
+    setSelectedSlide(null);
     setIsBuilderOpen(true);
   };
 
@@ -243,11 +235,10 @@ const AdminHeroTab = memo(() => {
         </CardContent>
       </Card>
 
-      <HeroBuilderV22
+      <HeroSlideEditor
         isOpen={isBuilderOpen}
-        onClose={() => setIsBuilderOpen(false)}
-        slide={selectedSlide}
-        onSave={handleSave}
+        onClose={() => { setIsBuilderOpen(false); fetchSlides(); }}
+        initialSlideId={selectedSlide?.id || null}
       />
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>

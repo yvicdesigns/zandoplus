@@ -163,23 +163,24 @@ const HeroSection = () => {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState(0);
-  const [heroBanners, setHeroBanners] = useState({ mobile: null, desktop: null });
+  const [deviceKey, setDeviceKey] = useState('desktop');
   const timerRef = useRef(null);
   const touchStartX = useRef(null);
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('hero_slides').select('*').eq('is_active', true).order('order', { ascending: true }),
-      supabase.from('site_visuals').select('key, image_url, title, subtitle').in('key', ['hero_mobile', 'hero_desktop'])
-        .then(r => r.data ? r : supabase.from('banners').select('key, image_url, title, subtitle').in('key', ['hero_mobile', 'hero_desktop'])),
-    ]).then(([slidesRes, bannersRes]) => {
-      if (slidesRes.data) setSlides(slidesRes.data);
-      if (bannersRes.data) {
-        const map = {};
-        bannersRes.data.forEach(b => { map[b.key] = b; });
-        setHeroBanners({ mobile: map.hero_mobile || null, desktop: map.hero_desktop || null });
-      }
-    }).finally(() => setLoading(false));
+    const check = () => {
+      const w = window.innerWidth;
+      setDeviceKey(w < 640 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop');
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    supabase.from('hero_slides').select('*').eq('is_active', true).order('order', { ascending: true })
+      .then(({ data }) => { if (data) setSlides(data); })
+      .finally(() => setLoading(false));
   }, []);
 
   const startTimer = useCallback(() => {
@@ -206,7 +207,10 @@ const HeroSection = () => {
 
   const slide       = slides[current] ?? null;
   const layoutType  = slide?.layout_type || 'classic';
-  const settings    = slide?.settings || {};
+  const baseSettings = slide?.settings || {};
+  const devOver     = (deviceKey !== 'desktop' && baseSettings[deviceKey]?.enabled) ? baseSettings[deviceKey] : {};
+  const eff         = (key, fallback) => (devOver[key] !== undefined && devOver[key] !== 'inherit') ? devOver[key] : (baseSettings[key] ?? fallback);
+  const settings    = baseSettings;
 
   const ctaLabel      = slide?.cta_text           || 'Découvrir les offres';
   const ctaLink       = slide?.cta_link           || '/listings';
@@ -216,12 +220,12 @@ const HeroSection = () => {
   const subtitleLine  = slide?.text_content?.[1]?.spans?.map(s => s.text).join('') || null;
   const titleColor    = slide?.text_content?.[0]?.spans?.[0]?.color || null;
   const subtitleColor = slide?.text_content?.[1]?.spans?.[0]?.color || null;
-  const desktopImg    = heroBanners.desktop?.image_url || slide?.image_url || null;
-  const mobileImg     = heroBanners.mobile?.image_url  || null;
+  const deviceImg     = devOver.image_url || null;
+  const desktopImg    = deviceImg || slide?.image_url || null;
   const hasImage      = !!desktopImg;
 
-  // Badge
-  const badgeShow     = settings.badge_show !== false;
+  // Badge — device-overridable
+  const badgeShow     = eff('badge_show', true) !== false;
   const badgeText     = settings.badge_text       || 'Offres du mois';
   const badgeColor    = settings.badge_color      || '#fbc401';
   const badgeTxtColor = settings.badge_text_color || '#1a1a1a';
@@ -230,8 +234,8 @@ const HeroSection = () => {
   const descriptionLine  = settings.description  || slide?.text_content?.[2]?.spans?.[0]?.text  || null;
   const descriptionColor = settings.description_color || slide?.text_content?.[2]?.spans?.[0]?.color || '#9CA3AF';
 
-  // Background (classic)
-  const bgType           = settings.bg_type           || 'color';
+  // Background (classic) — device-overridable
+  const bgType           = eff('bg_type', 'color');
   const gradientStart    = settings.gradient_start    || '#2EB565';
   const gradientEnd      = settings.gradient_end      || '#005023';
   const gradientDir      = settings.gradient_direction|| 'to right';
@@ -243,15 +247,52 @@ const HeroSection = () => {
 
   // Buttons
   const btnCount    = settings.btn_count  ?? 2;
-  const btn1Style   = settings.btn1_style ?? 'filled';
+  const btn1Style   = settings.btn1_style ?? 'fill';
+  const btn1Color   = settings.btn1_color ?? '#fbc401';
   const btn2Style   = settings.btn2_style ?? 'outline';
+  const btn2Color   = settings.btn2_color ?? '#ffffff';
 
-  // Côté droit (classic)
-  const rightSide     = settings.right_side    || 'circle';
+  function btnInlineStyle(style, color) {
+    const isLight = (() => {
+      if (!color?.startsWith('#') || color.length < 7) return false;
+      const r = parseInt(color.slice(1,3),16)/255, g = parseInt(color.slice(3,5),16)/255, b = parseInt(color.slice(5,7),16)/255;
+      return (0.299*r + 0.587*g + 0.114*b) > 0.5;
+    })();
+    if (style === 'fill') return { backgroundColor: color, color: isLight ? '#111827' : '#ffffff', border: 'none' };
+    return { backgroundColor: 'transparent', color, border: `2px solid ${color}` };
+  }
+
+  // Côté droit (classic) — device-overridable
+  const rightSide     = eff('right_side', 'circle');
   const promoValue    = settings.promo_value   || '-50%';
   const promoLabelTop = settings.promo_label_top || 'Bons plans du mois';
   const promoCaption  = settings.promo_caption || 'Sur une sélection de produits';
   const promoColor    = settings.promo_color   || '#005023';
+
+  // Decorative positioned image (mobile / tablet)
+  // Read from current device, fall back to mobile settings if tablet has none
+  const rawDevice    = deviceKey !== 'desktop' ? (baseSettings[deviceKey] || {}) : {};
+  const rawMobile    = deviceKey === 'tablet'  ? (baseSettings['mobile']  || {}) : {};
+  const decoUrl      = rawDevice.deco_url      || rawMobile.deco_url      || null;
+  const decoPosition = rawDevice.deco_position || rawMobile.deco_position || 'bottom-right';
+  const decoSize     = rawDevice.deco_size     ?? rawMobile.deco_size     ?? 40;
+  const decoOpacity  = rawDevice.deco_opacity  ?? rawMobile.deco_opacity  ?? 1;
+
+  // Map position key → flex alignment (avoids position:absolute %-in-flex issues)
+  const decoFlexAlign = (() => {
+    const map = {
+      'top-left':      { alignItems: 'flex-start', justifyContent: 'flex-start' },
+      'top-center':    { alignItems: 'flex-start', justifyContent: 'center' },
+      'top-right':     { alignItems: 'flex-start', justifyContent: 'flex-end' },
+      'center-left':   { alignItems: 'center',     justifyContent: 'flex-start' },
+      'center':        { alignItems: 'center',     justifyContent: 'center' },
+      'center-right':  { alignItems: 'center',     justifyContent: 'flex-end' },
+      'bottom-left':   { alignItems: 'flex-end',   justifyContent: 'flex-start' },
+      'bottom-center': { alignItems: 'flex-end',   justifyContent: 'center' },
+      'bottom-right':  { alignItems: 'flex-end',   justifyContent: 'flex-end' },
+    };
+    return map[decoPosition] || map['bottom-right'];
+  })();
 
   if (loading) return (
     <section className="pt-4 pb-2">
@@ -366,22 +407,16 @@ const HeroSection = () => {
                 <div className="flex items-center gap-3 flex-wrap justify-center">
                   {btnCount >= 1 && (
                     <Link to={ctaLink}>
-                      <button className={`h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-colors ${
-                        btn1Style === 'outline'
-                          ? 'bg-transparent text-white border-2 border-white/70 hover:bg-white/10'
-                          : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                      }`}>
+                      <button className="h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-opacity hover:opacity-80"
+                        style={btnInlineStyle(btn1Style, btn1Color)}>
                         {ctaLabel} &nbsp;→
                       </button>
                     </Link>
                   )}
                   {btnCount >= 2 && (
                     <Link to={secondaryLink}>
-                      <button className={`h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-colors ${
-                        btn2Style === 'filled'
-                          ? 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                          : 'bg-white/10 backdrop-blur-sm text-white border-2 border-white/40 hover:bg-white/20'
-                      }`}>
+                      <button className="h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-opacity hover:opacity-80"
+                        style={btnInlineStyle(btn2Style, btn2Color)}>
                         {secLabel}
                       </button>
                     </Link>
@@ -453,22 +488,16 @@ const HeroSection = () => {
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                     {btnCount >= 1 && (
                       <Link to={ctaLink}>
-                        <button className={`h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-colors ${
-                          btn1Style === 'outline'
-                            ? 'bg-transparent text-custom-green-500 border-2 border-custom-green-500 hover:bg-custom-green-50'
-                            : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                        }`}>
+                        <button className="h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-opacity hover:opacity-80"
+                          style={btnInlineStyle(btn1Style, btn1Color)}>
                           {ctaLabel} &nbsp;→
                         </button>
                       </Link>
                     )}
                     {btnCount >= 2 && (
                       <Link to={secondaryLink}>
-                        <button className={`h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-colors ${
-                          btn2Style === 'filled'
-                            ? 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                            : 'bg-card-bg text-custom-green-500 border-2 border-custom-green-500 hover:bg-custom-green-50'
-                        }`}>
+                        <button className="h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-opacity hover:opacity-80"
+                          style={btnInlineStyle(btn2Style, btn2Color)}>
                           {secLabel}
                         </button>
                       </Link>
@@ -479,20 +508,11 @@ const HeroSection = () => {
             </div>
 
             {/* ── DROITE ── */}
-            <div className={`shrink-0 ${mobileImg ? 'w-[140px]' : 'w-[110px]'} sm:w-[220px] lg:w-[380px] flex items-center justify-center self-stretch relative`}>
+            <div className="shrink-0 w-[110px] sm:w-[220px] lg:w-[380px] flex items-center justify-center self-stretch relative">
               <div className="hidden lg:block absolute bottom-[-24px] right-[-24px] w-[300px] h-[300px] rounded-full" style={{ background: '#fbc401', opacity: 0.2 }} />
 
-              {mobileImg && (
-                <img
-                  src={mobileImg}
-                  alt=""
-                  className="sm:hidden w-full h-full object-contain object-bottom absolute inset-0 z-30"
-                  onError={e => { e.currentTarget.style.display = 'none'; }}
-                />
-              )}
-
-              {/* Image desktop (quand right_side = 'image' ou image admin) */}
-              {(rightSide === 'image' || mobileImg) && hasImage && (
+              {/* Image desktop (quand right_side = 'image') */}
+              {rightSide === 'image' && hasImage && (
                 <img
                   src={desktopImg}
                   alt=""
@@ -501,10 +521,10 @@ const HeroSection = () => {
                 />
               )}
 
-              {/* Cercle promo — affiché quand right_side = 'circle' et pas d'image mobile override */}
+              {/* Cercle promo — affiché quand right_side = 'circle' */}
               {rightSide === 'circle' && (
                 <div
-                  className={`${mobileImg ? 'hidden sm:flex' : 'flex'} relative z-20 w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] lg:w-[190px] lg:h-[190px] rounded-full flex-col items-center justify-center text-center px-2 sm:px-5 border-2 sm:border-4 border-white/20 shadow-lg`}
+                  className="flex relative z-20 w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] lg:w-[190px] lg:h-[190px] rounded-full flex-col items-center justify-center text-center px-2 sm:px-5 border-2 sm:border-4 border-white/20 shadow-lg"
                   style={{ backgroundColor: promoColor }}
                 >
                   <span className="text-[7px] sm:text-[9px] font-bold text-white/70 uppercase tracking-widest leading-tight">{promoLabelTop}</span>
@@ -514,6 +534,20 @@ const HeroSection = () => {
                 </div>
               )}
             </div>
+
+            {/* ── Image décorative positionnée (mobile / tablette) ── */}
+            {decoUrl && deviceKey !== 'desktop' && (
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                zIndex: 50, pointerEvents: 'none',
+                display: 'flex',
+                alignItems: decoFlexAlign.alignItems,
+                justifyContent: decoFlexAlign.justifyContent,
+                padding: '5%',
+              }}>
+                <img src={decoUrl} alt="" style={{ width: `${decoSize}%`, objectFit: 'contain', opacity: decoOpacity }} />
+              </div>
+            )}
 
             {/* ── Dots ── */}
             {slides.length > 1 && (
