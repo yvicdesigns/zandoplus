@@ -11,7 +11,7 @@ import {
   Plus, MapPin, Pencil, Home, Building2,
 } from 'lucide-react';
 
-const COMMISSION_RATE = 0.07;
+const COMMISSION_RATE = 0.10;
 const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');
 
 /* ── Logos paiement ── */
@@ -157,6 +157,7 @@ const CartCheckoutPage = () => {
   const [paymentNumber, setPaymentNumber] = useState('');
   const [proofFile, setProofFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [submitted, setSubmitted] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('mtn');
   const [promoCode, setPromoCode] = useState('');
@@ -227,12 +228,16 @@ const CartCheckoutPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     if (!selectedAddressId && addresses.length > 0) {
       toast({ title: 'Adresse requise', description: 'Veuillez sélectionner une adresse de livraison.', variant: 'destructive' });
+      submittingRef.current = false;
       return;
     }
     if (['mtn', 'airtel'].includes(paymentMethod) && !proofFile) {
       toast({ title: 'Capture requise', description: 'Veuillez uploader la preuve de paiement.', variant: 'destructive' });
+      submittingRef.current = false;
       return;
     }
     setIsSubmitting(true);
@@ -264,13 +269,16 @@ const CartCheckoutPage = () => {
       dateLimit.setHours(dateLimit.getHours() + 72);
 
       for (const group of sellerGroups) {
-        const sellerTotal = group.items.reduce((s, i) => s + i.price, 0) + ZANDO_DELIVERY_FEE;
-        await supabase.from('transactions_escrow').insert({
-          annonce_id: group.items[0].id,
+        const itemsTotal  = group.items.reduce((s, i) => s + i.price, 0);
+        const sellerTotal = itemsTotal + ZANDO_DELIVERY_FEE;
+        const firstItem   = group.items[0];
+
+        const { data: tx, error: txError } = await supabase.from('transactions_escrow').insert({
+          annonce_id: firstItem.id,
           acheteur_id: user.id,
           vendeur_id: group.seller_id,
           montant: sellerTotal,
-          commission_amount: Math.round(group.items.reduce((s, i) => s + i.price, 0) * COMMISSION_RATE),
+          commission_amount: Math.round(itemsTotal * COMMISSION_RATE),
           delivery_choice: 'zando',
           delivery_fee_paid: ZANDO_DELIVERY_FEE,
           statut: paymentMethod === 'cod' ? 'cod_pending' : 'fonds_bloques',
@@ -278,7 +286,20 @@ const CartCheckoutPage = () => {
           date_limite_confirmation: dateLimit.toISOString(),
           cart_payment_id: payment.id,
           delivery_address: selectedAddr ? `${selectedAddr.street}, ${selectedAddr.city}` : null,
-        });
+        }).select('id').single();
+        if (txError) throw txError;
+
+        // Email vendeur
+        supabase.functions.invoke('notify-purchase', {
+          body: {
+            buyer_id: user.id,
+            seller_id: group.seller_id,
+            listing_title: firstItem.title,
+            listing_price: sellerTotal,
+            currency: firstItem.currency || 'FCFA',
+            transaction_id: tx.id,
+          },
+        }).catch(() => {});
       }
 
       clearCart();
@@ -286,6 +307,7 @@ const CartCheckoutPage = () => {
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

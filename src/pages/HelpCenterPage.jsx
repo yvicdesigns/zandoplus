@@ -45,7 +45,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Est-ce que l'utilisation de Zando+ est gratuite ?",
-        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées. Aucun abonnement n'est requis. Nous proposons uniquement des options payantes pour booster la visibilité d'une annonce : Boost Simple à 150 FCFA/jour ou Boost Urgent à 300 FCFA/jour, pour la durée de votre choix (1 à 365 jours)."
+        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées pour tous. Aucun abonnement n'est requis pour vendre sur Zando+. Les seuls frais optionnels sont le boost d'annonces (150 FCFA/jour pour le Boost Simple, 300 FCFA/jour pour le Boost Urgent) et la vérification vendeur (10 000 FCFA, paiement unique)."
       },
       {
         q: "Comment puis-je réinitialiser mon mot de passe ?",
@@ -82,10 +82,10 @@ const HelpCenterPage = () => {
               <li>Vous envoyez le paiement (Airtel Money ou MTN Money) au numéro Zando+.</li>
               <li>Vous uploadez la capture d'écran de votre paiement sur la plateforme.</li>
               <li>Zando+ bloque les fonds et notifie le vendeur pour préparer la livraison.</li>
-              <li>Vous avez 72h après la livraison pour confirmer la réception.</li>
-              <li>Seulement après votre confirmation, les fonds sont libérés au vendeur.</li>
+              <li>Vous avez 48h après la déclaration de livraison par le vendeur pour confirmer la réception ou ouvrir un litige.</li>
+              <li>Passé ce délai sans action de votre part, les fonds sont libérés automatiquement au vendeur. Aucun remboursement ne sera possible après ce délai.</li>
             </ol>
-            <p className="mt-2">En cas de problème, vous pouvez ouvrir un litige dans les 48h suivant la confirmation. Notre équipe interviendra.</p>
+            <p className="mt-2">Important : aucun retour n'est accepté une fois que vous avez confirmé la réception de votre colis ou que le délai de 48h est écoulé.</p>
           </>
         )
       },
@@ -134,7 +134,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
-        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page 'Mes Transactions'. Une commission de 7% est déduite du montant qui vous est reversé — l'acheteur paie le prix affiché sans surcoût."
+        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page Mes Transactions. Une commission de 10% est déduite du montant qui vous est reversé. L'acheteur paie le prix affiché sans surcoût. Les fonds vous sont libérés après confirmation de réception par l'acheteur, ou automatiquement 48h après la déclaration de livraison."
       },
       {
         q: "Comment fonctionne la gestion des stocks ?",
@@ -145,8 +145,8 @@ const HelpCenterPage = () => {
         a: "Pour attirer plus d'acheteurs, utilisez des photos claires et de haute qualité, rédigez une description détaillée et honnête, et fixez un prix compétitif. Répondre rapidement aux questions des acheteurs est également un plus."
       },
       {
-        q: "Qu'est-ce que le statut de 'Vendeur Vérifié' ?",
-        a: "Le statut de 'Vendeur Vérifié' est un badge de confiance accordé aux vendeurs qui ont fourni des documents d'identité (passeport, carte d'identité). Cela rassure les acheteurs et peut augmenter vos ventes."
+        q: "Qu'est-ce que le statut de Vendeur Vérifié ?",
+        a: "Le statut de Vendeur Vérifié est un badge de confiance affiché sur votre profil et vos annonces. Pour l'obtenir, vous devez soumettre une Carte Nationale d'Identité valide ainsi qu'un selfie tenant cette pièce en main. Des frais uniques de 10 000 FCFA sont requis pour traiter la demande. Le délai de traitement est de 1 à 2 jours ouvrables. Ce badge rassure les acheteurs et peut significativement augmenter vos ventes."
       }
     ],
     tips: [

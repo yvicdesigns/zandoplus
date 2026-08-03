@@ -11,14 +11,14 @@ import { Helmet } from 'react-helmet-async';
 import { Banknote, Truck, ArrowLeft, Loader2, CheckCircle, MapPin, Phone } from 'lucide-react';
 import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 
-const COMMISSION_RATE = 0.07;
+const COMMISSION_RATE = 0.10;
 
 const ZONES = [
   {
     id: 'zone1',
     label: 'Zone 1 — Proche',
     quartiers: 'Poto-Poto, Moungali, Centre-ville, Plateau des 15 ans',
-    fee: 1000,
+    fee: 1500,
   },
   {
     id: 'zone2',

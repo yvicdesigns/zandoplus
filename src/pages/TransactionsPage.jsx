@@ -31,7 +31,7 @@ const STATUS_CONFIG = {
   cod_annule:          { label: 'Annulé',                          color: 'bg-gray-100 text-gray-700',    icon: XCircle        },
 };
 
-const COMMISSION_RATE = 0.07;
+const COMMISSION_RATE = 0.10;
 
 const StatusBadge = ({ statut }) => {
   const cfg = STATUS_CONFIG[statut] || { label: statut, color: 'bg-gray-100 text-gray-700', icon: Clock };
