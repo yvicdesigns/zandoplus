@@ -213,7 +213,7 @@ const ListingDetailPage = () => {
     offers: {
       '@type': 'Offer',
       price: listing.price,
-      priceCurrency: listing.currency || 'XAF',
+      priceCurrency: listing.currency === 'FCFA' ? 'XAF' : (listing.currency || 'XAF'),
       availability: listing.status === 'active' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       seller: { '@type': 'Person', name: listing.seller?.full_name || 'Vendeur' },
     },
