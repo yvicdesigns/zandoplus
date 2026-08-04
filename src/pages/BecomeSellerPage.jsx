@@ -31,7 +31,8 @@ const BecomeSellerPage = () => {
       if (error) throw error;
 
       toast({ title: 'Espace vendeur activé !', description: 'Vous pouvez maintenant publier vos annonces.', className: 'toast-success' });
-      navigate('/espace-vendeur', { replace: true });
+      // Rechargement complet pour que AuthContext relise is_seller=true depuis la DB
+      setTimeout(() => { window.location.href = '/espace-vendeur'; }, 800);
     } catch (err) {
       toast({ title: 'Erreur', description: 'Impossible d\'activer le mode vendeur.', variant: 'destructive' });
     } finally {
