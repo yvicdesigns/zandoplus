@@ -250,6 +250,7 @@ const AppContent = () => {
                     <Route path="/edit-ad/:id" element={<EditAdPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/verification" element={<VerificationPage />} />
+                    <Route path="/become-seller" element={<Navigate to="/verification" replace />} />
                     <Route path="/suivi" element={<TrackingPage />} />
                     <Route path="/data-deletion" element={<DataDeletionPage />} />
                     <Route path="/changelog" element={<ChangelogPage />} />
