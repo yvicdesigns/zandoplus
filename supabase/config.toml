@@ -1,0 +1,24 @@
+# Config minimale : ce fichier n'existait pas dans le repo avant
+# l'automatisation des paiements MoMo. Les fonctions edge
+# ci-dessous sont invoquées sans JWT Supabase (callbacks publics
+# MTN/Airtel, ou appelées par pg_cron/pg_net qui n'envoie pas
+# d'Authorization) — sans verify_jwt=false, Supabase les
+# rejetterait en 401 avant même d'exécuter le code.
+#
+# `supabase functions deploy <nom> --no-verify-jwt` a le même
+# effet si vous déployez sans passer par ce fichier.
+
+[functions.momo-collection-webhook]
+verify_jwt = false
+
+[functions.momo-payout-webhook]
+verify_jwt = false
+
+[functions.momo-auto-payout]
+verify_jwt = false
+
+[functions.momo-collection-status-poll]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false

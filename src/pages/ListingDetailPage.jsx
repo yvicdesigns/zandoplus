@@ -210,12 +210,54 @@ const ListingDetailPage = () => {
     description: listing.description.replace(/<[^>]*>/g, '').substring(0, 500),
     image: listing.images?.[0] || '',
     url: `https://www.zandopluscg.com/listings/${listing.listing_slug || listing.id}`,
+    brand: { '@type': 'Brand', name: listing.seller?.full_name || 'Zando+' },
+    ...(reviews.length > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: averageRating.toFixed(1),
+        reviewCount: reviews.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: reviews.slice(0, 5).map(r => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.reviewer?.full_name || 'Acheteur' },
+        reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+        reviewBody: r.comment || '',
+        datePublished: r.created_at?.split('T')[0],
+      })),
+    }),
     offers: {
       '@type': 'Offer',
       price: listing.price,
       priceCurrency: listing.currency === 'FCFA' ? 'XAF' : (listing.currency || 'XAF'),
       availability: listing.status === 'active' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       seller: { '@type': 'Person', name: listing.seller?.full_name || 'Vendeur' },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'CG',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 3,
+        returnMethod: 'https://schema.org/ReturnInStore',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: '0',
+          currency: 'XAF',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'CG',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'DAY' },
+        },
+      },
     },
   };
 
