@@ -1,5 +1,6 @@
 import React, { useEffect, useState, Suspense, lazy, memo } from 'react';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core';
 
 const SplashAnimationOverlay = lazy(() => import('@/components/common/SplashAnimationOverlay'));
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -78,6 +79,7 @@ const TesterDashboardPage = lazy(() => import('@/pages/TesterDashboardPage'));
 const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const BoutiquesOfficiellesPage = lazy(() => import('@/pages/BoutiquesOfficiellesPage'));
+const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -289,6 +291,7 @@ const AppContent = () => {
                     <Route path="/testeurs" element={<TestersLandingPage />} />
                     <Route path="/boost-shop" element={<ShopBoostPage />} />
                     <Route path="/boutiques-officielles" element={<BoutiquesOfficiellesPage />} />
+                    <Route path="/unsubscribe" element={<UnsubscribePage />} />
                     <Route element={<TesterProtectedRoute />}>
                         <Route path="/dashboard/tester" element={<TesterDashboardPage />} />
                     </Route>
@@ -299,7 +302,9 @@ const AppContent = () => {
 }
 
 function App() {
-  const [splashDone, setSplashDone] = useState(false);
+  // Sur web, pas de splash — AppContent s'affiche immédiatement.
+  // Sur iOS natif uniquement, on attend la fin de l'animation Lottie.
+  const [splashDone, setSplashDone] = useState(Capacitor.getPlatform() !== 'ios');
 
   return (
     <HelmetProvider>

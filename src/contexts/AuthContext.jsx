@@ -358,7 +358,7 @@ export const AuthProvider = ({ children }) => {
             location: location,
             avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2EB565&color=fff&size=150`,
           },
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
