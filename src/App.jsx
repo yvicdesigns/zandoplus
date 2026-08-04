@@ -80,6 +80,7 @@ const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const BoutiquesOfficiellesPage = lazy(() => import('@/pages/BoutiquesOfficiellesPage'));
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
+const BecomeSellerPage = lazy(() => import('@/pages/BecomeSellerPage'));
 
 const FullPageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -250,7 +251,7 @@ const AppContent = () => {
                     <Route path="/edit-ad/:id" element={<EditAdPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/verification" element={<VerificationPage />} />
-                    <Route path="/become-seller" element={<Navigate to="/verification" replace />} />
+                    <Route path="/become-seller" element={<BecomeSellerPage />} />
                     <Route path="/suivi" element={<TrackingPage />} />
                     <Route path="/data-deletion" element={<DataDeletionPage />} />
                     <Route path="/changelog" element={<ChangelogPage />} />
