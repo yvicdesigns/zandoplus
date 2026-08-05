@@ -243,7 +243,7 @@ const AdminVerificationsTab = () => {
                   index={index}
                   formatDate={formatDate}
                   DocumentLink={DocumentLink}
-                  onApprove={() => handleAction(request.id, request.user_id, 'approved')}
+                  onApprove={() => handleAction(request.id, request.user?.id || request.user_id, 'approved')}
                   onReject={() => openRejectionModal(request)}
                   isActionLoading={isActionLoading}
                   selectedRequest={selectedRequest}
@@ -268,7 +268,7 @@ const AdminVerificationsTab = () => {
                     index={index}
                     formatDate={formatDate}
                     DocumentLink={DocumentLink}
-                    onSync={() => handleSync(request.user_id, request.user?.full_name)}
+                    onSync={() => handleSync(request.user?.id || request.user_id, request.user?.full_name)}
                     readonly
                   />
                 ))}
@@ -309,7 +309,7 @@ const AdminVerificationsTab = () => {
             <Button variant="outline" onClick={() => setIsRejectionModalOpen(false)}>Annuler</Button>
             <Button
               variant="destructive"
-              onClick={() => handleAction(selectedRequest.id, selectedRequest.user_id, 'rejected', rejectionReason)}
+              onClick={() => handleAction(selectedRequest.id, selectedRequest.user?.id || selectedRequest.user_id, 'rejected', rejectionReason)}
               disabled={isActionLoading || !rejectionReason.trim()}
             >
               {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
