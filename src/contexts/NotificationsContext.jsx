@@ -53,6 +53,16 @@ export const NotificationsProvider = ({ children }) => {
     fetchNotifications();
   }, [fetchNotifications]);
 
+  // Badge PWA sur l'icône de l'application
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return;
+    if (unreadCount > 0) {
+      navigator.setAppBadge(unreadCount).catch(() => {});
+    } else {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }, [unreadCount]);
+
   // Request browser notification permission once user is logged in
   useEffect(() => {
     if (!user) return;
@@ -70,16 +80,14 @@ export const NotificationsProvider = ({ children }) => {
       gain.connect(ctx.destination);
       gain.gain.setValueAtTime(0, ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-
-      // Deux notes : sol (784Hz) puis si (988Hz) — chime court et doux
-      [784, 988].forEach((freq, i) => {
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      [659, 784, 988].forEach((freq, i) => {
         const osc = ctx.createOscillator();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        osc.frequency.value = freq;
         osc.connect(gain);
-        osc.start(ctx.currentTime + i * 0.12);
-        osc.stop(ctx.currentTime + i * 0.12 + 0.35);
+        osc.start(ctx.currentTime + i * 0.13);
+        osc.stop(ctx.currentTime + i * 0.13 + 0.4);
       });
     } catch (_) {}
   };

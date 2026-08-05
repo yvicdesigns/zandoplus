@@ -16,7 +16,7 @@ export const SiteSettingsProvider = ({ children }) => {
     try {
       const { data, error } = await supabase
         .from('site_settings')
-        .select('whatsapp_number, logo_url, favicon_url, footer_logo_url, good_example_image_url, bad_example_image_url, watermark_logo_url, launch_date')
+        .select('whatsapp_number, logo_url, favicon_url, footer_logo_url, good_example_image_url, bad_example_image_url, watermark_logo_url, launch_date, zando_delivery_fee')
         .eq('id', 1)
         .single();
 
@@ -46,7 +46,7 @@ export const SiteSettingsProvider = ({ children }) => {
         .from('site_settings')
         .update(newSettings)
         .eq('id', 1)
-        .select('whatsapp_number, logo_url, favicon_url, footer_logo_url, good_example_image_url, bad_example_image_url, watermark_logo_url, launch_date')
+        .select('whatsapp_number, logo_url, favicon_url, footer_logo_url, good_example_image_url, bad_example_image_url, watermark_logo_url, launch_date, zando_delivery_fee')
         .single();
 
       if (error) {

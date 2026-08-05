@@ -508,7 +508,7 @@ const HeroBuilderV22 = ({ isOpen, onClose, slide, onSave }) => {
       {/* V22 iframe — full area | ?v=24 force rechargement du cache */}
       <iframe
         ref={iframeRef}
-        src="/editor.html?v=27"
+        src="/editor.html?v=29"
         style={{ flex: 1, border: 'none', display: 'block', width: '100%' }}
         title="Zando Hero Builder V22"
         allow="clipboard-write"

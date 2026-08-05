@@ -2,18 +2,52 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { supabase } from '@/lib/customSupabaseClient';
-import { fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
+import { fetchCityDeliveryConfig, extractCity } from '@/lib/deliveryUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { Helmet } from 'react-helmet-async';
 import {
   ShieldCheck, CheckCircle, Loader2, Truck,
   Copy, UploadCloud, Headphones, RotateCcw, Lock,
-  Plus, MapPin, Pencil, Home, Building2,
+  Plus, MapPin, Pencil, Home, Building2, Package, Globe,
 } from 'lucide-react';
 
 const COMMISSION_RATE = 0.10;
 const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');
+
+const ALL_DELIVERY_MODES = [
+  {
+    id: 'zando',
+    label: 'Livraison Zando+',
+    sub: 'Livraison à domicile dans votre ville',
+    configKey: 'zando_delivery_enabled',
+    Icon: Truck,
+    iconColor: 'text-custom-green-500',
+    iconBg: 'bg-green-100',
+    feeLabel: (fee) => `${fmt(fee)} FCFA/vendeur`,
+  },
+  {
+    id: 'seller',
+    label: 'Livraison par le vendeur',
+    sub: 'Le vendeur livre directement chez vous',
+    configKey: 'seller_delivery_enabled',
+    Icon: Package,
+    iconColor: 'text-purple-500',
+    iconBg: 'bg-purple-100',
+    feeLabel: () => 'Variable',
+  },
+  {
+    id: 'pickup',
+    label: 'Retrait en personne',
+    sub: 'Récupérez votre commande chez le vendeur',
+    configKey: 'pickup_enabled',
+    Icon: MapPin,
+    iconColor: 'text-blue-500',
+    iconBg: 'bg-blue-100',
+    feeLabel: () => 'Gratuit',
+  },
+];
 
 /* ── Logos paiement ── */
 const LogoVisa = () => (
@@ -66,7 +100,7 @@ const Step = ({ n, label, status }) => (
 );
 
 /* ── Formulaire adresse ── */
-const AddressForm = ({ initial = {}, onSave, onCancel, loading }) => {
+const AddressForm = ({ initial = {}, onSave, onCancel, loading, onCityChange }) => {
   const [form, setForm] = useState({
     label: initial.label || 'Maison',
     full_name: initial.full_name || '',
@@ -75,7 +109,10 @@ const AddressForm = ({ initial = {}, onSave, onCancel, loading }) => {
     city: initial.city || 'Brazzaville',
     is_default: initial.is_default || false,
   });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    if (k === 'city' && onCityChange) onCityChange(v);
+  };
 
   return (
     <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50 mt-3">
@@ -147,7 +184,9 @@ const CartCheckoutPage = () => {
   const navigate = useNavigate();
   const { user, openAuthModal } = useAuth();
   const { toast } = useToast();
-  const { items, itemsBySeller, subtotal, clearCart, ZANDO_DELIVERY_FEE } = useCart();
+  const { siteSettings } = useSiteSettings();
+  const { items, itemsBySeller, subtotal, clearCart, ZANDO_DELIVERY_FEE: FALLBACK_FEE } = useCart();
+  const ZANDO_DELIVERY_FEE = siteSettings?.zando_delivery_fee ?? FALLBACK_FEE;
   const fileInputRef = useRef(null);
 
   const [addresses, setAddresses] = useState([]);
@@ -162,10 +201,80 @@ const CartCheckoutPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('mtn');
   const [promoCode, setPromoCode] = useState('');
-  const [cityConfig, setCityConfig] = useState(null);
+  const [cityConfig, setCityConfig] = useState(null);       // ville acheteur → pour le COD
+  const [sellerConfigs, setSellerConfigs] = useState([]);   // villes vendeurs → pour les modes de livraison
+  const [deliveryMode, setDeliveryMode] = useState('zando');
 
   const sellerGroups = Object.values(itemsBySeller);
-  const deliveryTotal = sellerGroups.length * ZANDO_DELIVERY_FEE;
+
+  // Charger les configs des villes des vendeurs dès que les items sont connus
+  useEffect(() => {
+    const loadSellerConfigs = async () => {
+      let resolvedItems = items;
+
+      // Fallback DB pour les anciens items en localStorage sans champ location
+      const missingIds = items.filter(i => !i.location).map(i => i.id);
+      if (missingIds.length > 0) {
+        const { data } = await supabase
+          .from('listings')
+          .select('id, location')
+          .in('id', missingIds);
+        if (data) {
+          const locationMap = Object.fromEntries(data.map(l => [l.id, l.location]));
+          resolvedItems = items.map(i => ({ ...i, location: i.location || locationMap[i.id] || null }));
+        }
+      }
+
+      const cities = [...new Set(resolvedItems.map(i => extractCity(i.location)).filter(Boolean))];
+      if (cities.length === 0) return;
+      const configs = await Promise.all(cities.map(city => fetchCityDeliveryConfig(supabase, city)));
+      setSellerConfigs(configs);
+    };
+
+    if (items.length > 0) loadSellerConfigs();
+  }, [items]);
+
+  // Livraison nationale : visible si tous les items l'ont activée (bypass filtre ville)
+  const nationalDeliveryItem = items.find(i => i.national_delivery_enabled);
+  const nationalMode = nationalDeliveryItem ? [{
+    id: 'national',
+    label: 'Livraison nationale',
+    sub: 'Le vendeur envoie via un transporteur (La Poste, Chrono Express…)',
+    configKey: null,
+    Icon: Globe,
+    iconColor: 'text-blue-500',
+    iconBg: 'bg-blue-100',
+    feeLabel: () => nationalDeliveryItem.national_delivery_fee > 0
+      ? `${fmt(nationalDeliveryItem.national_delivery_fee)} FCFA`
+      : 'Variable',
+  }] : [];
+
+  const cityAllows = (key) => sellerConfigs.every(conf => !conf || conf[key] !== false);
+  const allItemsOffer = (field) => items.length > 0 && items.every(i => i[field]);
+
+  const availableDeliveryModes = [
+    // Zando : toujours proposé par le vendeur (admin décide)
+    ...(cityAllows('zando_delivery_enabled') ? [ALL_DELIVERY_MODES[0]] : []),
+    // Livraison vendeur : vendeur doit l'avoir activé ET admin l'autorise
+    ...(allItemsOffer('offers_seller_delivery') && cityAllows('seller_delivery_enabled') ? [ALL_DELIVERY_MODES[1]] : []),
+    // Retrait : vendeur doit l'avoir activé ET admin l'autorise
+    ...(allItemsOffer('offers_pickup') && cityAllows('pickup_enabled') ? [ALL_DELIVERY_MODES[2]] : []),
+    // Livraison nationale : bypass ville
+    ...nationalMode,
+  ];
+
+  // Si le mode sélectionné disparaît (ex: changement de vendeur), reset au premier disponible
+  useEffect(() => {
+    if (availableDeliveryModes.length > 0 && !availableDeliveryModes.find(m => m.id === deliveryMode)) {
+      setDeliveryMode(availableDeliveryModes[0].id);
+    }
+  }, [sellerConfigs]);
+
+  const deliveryTotal = deliveryMode === 'zando'
+    ? sellerGroups.length * ZANDO_DELIVERY_FEE
+    : deliveryMode === 'national' && nationalDeliveryItem?.national_delivery_fee > 0
+      ? nationalDeliveryItem.national_delivery_fee
+      : 0;
   const total = subtotal + deliveryTotal;
 
   const totalSavings = items.reduce((acc, item) =>
@@ -181,6 +290,13 @@ const CartCheckoutPage = () => {
 
     loadAddresses();
   }, [user, items]);
+
+  // Fetch city config dès qu'on connaît la ville (même via le formulaire)
+  const handleCityChange = async (city) => {
+    if (!city || city.trim().length < 3) return;
+    const conf = await fetchCityDeliveryConfig(supabase, city.trim());
+    setCityConfig(conf);
+  };
 
   const loadAddresses = async () => {
     if (!user) return;
@@ -198,7 +314,12 @@ const CartCheckoutPage = () => {
         const conf = await fetchCityDeliveryConfig(supabase, def.city);
         setCityConfig(conf);
       }
-      if (data.length === 0) setShowAddForm(true);
+      if (data.length === 0) {
+        setShowAddForm(true);
+        // Pas d'adresse sauvegardée → charger config pour la ville par défaut du formulaire
+        const conf = await fetchCityDeliveryConfig(supabase, 'Brazzaville');
+        setCityConfig(conf);
+      }
     }
   };
 
@@ -285,8 +406,8 @@ const CartCheckoutPage = () => {
           vendeur_id: group.seller_id,
           montant: sellerTotal,
           commission_amount: Math.round(itemsTotal * COMMISSION_RATE),
-          delivery_choice: 'zando',
-          delivery_fee_paid: ZANDO_DELIVERY_FEE,
+          delivery_choice: deliveryMode,
+          delivery_fee_paid: deliveryMode === 'zando' ? ZANDO_DELIVERY_FEE : 0,
           statut: paymentMethod === 'cod' ? 'cod_pending' : 'fonds_bloques',
           preuve_paiement_url: publicUrl,
           date_limite_confirmation: dateLimit.toISOString(),
@@ -433,6 +554,7 @@ const CartCheckoutPage = () => {
                       onSave={handleSaveAddress}
                       onCancel={addresses.length > 0 ? () => setShowAddForm(false) : null}
                       loading={savingAddress}
+                      onCityChange={handleCityChange}
                     />
                   )}
                 </div>
@@ -440,22 +562,45 @@ const CartCheckoutPage = () => {
                 {/* Colonne 2 — Mode de livraison */}
                 <div className="bg-white rounded-xl border border-gray-100 p-5">
                   <h2 className="text-[15px] font-black text-gray-900 mb-4">Mode de livraison</h2>
-                  <label className="flex items-center justify-between p-3 rounded-xl border-2 border-custom-green-500 bg-green-50 cursor-default">
-                    <div className="flex items-center gap-3">
-                      <input type="radio" checked readOnly className="accent-custom-green-500 w-4 h-4" />
-                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                        <Truck className="w-4 h-4 text-custom-green-500" />
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-semibold text-gray-900">Livraison Zando+</p>
-                        <p className="text-[11px] text-gray-500">Livraison à domicile dans votre ville</p>
-                      </div>
-                    </div>
-                    <span className="text-[12px] font-bold text-gray-900 text-right leading-tight">
-                      {fmt(ZANDO_DELIVERY_FEE)}<br/>
-                      <span className="text-[10px] font-normal text-gray-400">FCFA/vendeur</span>
-                    </span>
-                  </label>
+                  <div className="space-y-2">
+                    {availableDeliveryModes.map(({ id, label, sub, Icon, iconColor, iconBg, feeLabel }) => {
+                      const isSelected = deliveryMode === id;
+                      const feeStr = id === 'zando' ? feeLabel(ZANDO_DELIVERY_FEE) : feeLabel();
+                      return (
+                        <label
+                          key={id}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                            isSelected ? 'border-custom-green-500 bg-green-50' : 'border-gray-100 hover:border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="deliveryMode"
+                              checked={isSelected}
+                              onChange={() => setDeliveryMode(id)}
+                              className="accent-custom-green-500 w-4 h-4"
+                            />
+                            <div className={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                              <Icon className={`w-4 h-4 ${iconColor}`} />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-semibold text-gray-900">{label}</p>
+                              <p className="text-[11px] text-gray-500">{sub}</p>
+                            </div>
+                          </div>
+                          <span className="text-[12px] font-bold text-gray-700 text-right leading-tight whitespace-nowrap ml-2">
+                            {feeStr}
+                          </span>
+                        </label>
+                      );
+                    })}
+                    {availableDeliveryModes.length === 0 && (
+                      <p className="text-[12px] text-gray-400 text-center py-4">
+                        Aucun mode de livraison disponible pour cette ville.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -592,7 +737,12 @@ const CartCheckoutPage = () => {
                   </div>
                   <div className="flex justify-between text-[13px] text-gray-600">
                     <span>Livraison</span>
-                    <span className="font-semibold">{fmt(deliveryTotal)} FCFA</span>
+                    <span className="font-semibold">
+                      {deliveryMode === 'zando' ? `${fmt(deliveryTotal)} FCFA`
+                        : deliveryMode === 'pickup' ? 'Gratuit'
+                        : deliveryMode === 'national' ? (deliveryTotal > 0 ? `${fmt(deliveryTotal)} FCFA` : 'Variable')
+                        : 'Variable'}
+                    </span>
                   </div>
                   {totalSavings > 0 && (
                     <div className="flex justify-between text-[13px] text-red-500">

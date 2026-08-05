@@ -20,19 +20,22 @@ export const emailFooter = (email = '') => `
           </td>
         </tr>`;
 
-export const emailHeader = (title: string, subtitle: string) => `
+export const emailHeader = (title: string, subtitle: string, logoUrl?: string) => `
         <tr>
           <td style="background:linear-gradient(160deg,${Z_DARK} 0%,${Z_DARKER} 100%);padding:40px 40px 32px;text-align:center;">
-            <p style="color:${Z_BRIGHT};font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 16px;">Zando+ Congo</p>
+            ${logoUrl
+              ? `<div style="display:inline-block;background:#ffffff;border-radius:16px;padding:10px 20px;margin-bottom:20px;"><img src="${logoUrl}" alt="Zando+" style="height:48px;width:auto;object-fit:contain;display:block;" /></div>`
+              : `<p style="color:${Z_BRIGHT};font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 16px;">Zando+ Congo</p>`
+            }
             <h1 style="color:#ffffff;font-size:26px;font-weight:800;margin:0 0 10px;line-height:1.2;">${title}</h1>
             <p style="color:rgba(255,255,255,0.75);font-size:15px;margin:0;">${subtitle}</p>
           </td>
         </tr>`;
 
-export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: string, email: string) => string }> = {
+export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: string, email: string, logoUrl?: string) => string }> = {
   reengagement: {
     subject: 'Zando+ — des nouvelles annonces vous attendent',
-    html: (name, email) => `
+    html: (name, email, logoUrl) => `
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -40,7 +43,7 @@ export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: 
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.10);">
-        ${emailHeader('Des annonces vous attendent', 'La marketplace congolaise est toujours active')}
+        ${emailHeader('Des annonces vous attendent', 'La marketplace congolaise est toujours active', logoUrl)}
         <tr>
           <td style="padding:36px 40px;">
             <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Bonjour <strong>${name}</strong>,</p>
@@ -71,7 +74,7 @@ export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: 
 
   new_seller: {
     subject: 'Vendez sur Zando+ — inscription et publication sans frais',
-    html: (name, email) => `
+    html: (name, email, logoUrl) => `
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -79,7 +82,7 @@ export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: 
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.10);">
-        ${emailHeader('Vendez vos articles en ligne', 'Sans frais d\'inscription, sans abonnement')}
+        ${emailHeader('Vendez vos articles en ligne', 'Sans frais d\'inscription, sans abonnement', logoUrl)}
         <tr>
           <td style="padding:36px 40px;">
             <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">Bonjour <strong>${name}</strong>,</p>

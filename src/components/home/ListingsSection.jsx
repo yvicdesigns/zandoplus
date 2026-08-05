@@ -187,7 +187,6 @@ const ListingsSection = () => {
                     viewMode="grid"
                     isFavorite={favorites.has(listing.id)}
                     toggleFavorite={toggleFavorite}
-                    codEnabled={cityConfigMap[normalizeCity(extractCity(listing.location))] !== false}
                   />
                 ))}
               </motion.div>

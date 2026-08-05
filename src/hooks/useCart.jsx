@@ -25,20 +25,28 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addItem = useCallback((listing, onAdded) => {
+  const addItem = useCallback((listing, onAdded, customPrice) => {
     setItems(prev => {
       if (prev.find(i => i.id === listing.id)) return prev;
+      const basePrice = Number(listing.price) || 0;
+      const bestPrice = listing.negotiated_price ? Number(listing.negotiated_price) : basePrice;
       const newItem = {
         id: listing.id,
         listing_slug: listing.listing_slug || null,
         title: listing.title,
-        price: Number(listing.price) || 0,
+        price: customPrice != null ? Number(customPrice) : bestPrice,
+        original_price: basePrice,
         currency: listing.currency || 'FCFA',
         image: listing.images?.[0] || null,
         seller_id: listing.user_id || listing.seller_id,
         seller_name: listing.seller?.full_name || listing.seller_name || 'Vendeur',
         delivery_method: listing.delivery_method || 'zando_delivery',
         delivery_fee: listing.delivery_fee || 0,
+        location: listing.location || null,
+        national_delivery_enabled: listing.national_delivery_enabled || false,
+        national_delivery_fee: listing.national_delivery_fee || 0,
+        offers_seller_delivery: listing.offers_seller_delivery || false,
+        offers_pickup: listing.offers_pickup || false,
       };
       if (onAdded) onAdded(newItem.title);
       return [...prev, newItem];

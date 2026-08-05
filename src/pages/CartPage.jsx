@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
@@ -12,7 +13,9 @@ const formatAmount = (n) => (n ?? 0).toLocaleString('fr-FR');
 const CartPage = () => {
   const navigate = useNavigate();
   const { user, openAuthModal } = useAuth();
-  const { items, removeItem, clearCart, itemsBySeller, subtotal, totalItems, ZANDO_DELIVERY_FEE } = useCart();
+  const { siteSettings } = useSiteSettings();
+  const { items, removeItem, clearCart, itemsBySeller, subtotal, totalItems, ZANDO_DELIVERY_FEE: FALLBACK_FEE } = useCart();
+  const ZANDO_DELIVERY_FEE = siteSettings?.zando_delivery_fee ?? FALLBACK_FEE;
 
   const sellerGroups = Object.values(itemsBySeller);
   const deliveryTotal = sellerGroups.length * ZANDO_DELIVERY_FEE;
@@ -67,7 +70,12 @@ const CartPage = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <Link to={`/listings/${item.listing_slug || item.id}`} className="font-semibold text-gray-800 text-sm hover:text-custom-green-600 line-clamp-2">{item.title}</Link>
-                        <p className="text-custom-green-600 font-bold mt-1">{formatAmount(item.price)} {item.currency}</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <p className="text-custom-green-600 font-bold">{formatAmount(item.price)} {item.currency}</p>
+                          {item.original_price > item.price && (
+                            <span className="text-gray-400 text-xs line-through tabular-nums">{formatAmount(item.original_price)}</span>
+                          )}
+                        </div>
                       </div>
                       <button onClick={() => removeItem(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />

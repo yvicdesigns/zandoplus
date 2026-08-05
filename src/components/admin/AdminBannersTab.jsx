@@ -111,7 +111,6 @@ const BannerSlot = ({ slot, data, onSave }) => {
           .select());
       }
 
-      console.log('[banners upsert]', { data, error, status, statusText });
 
       if (error) throw error;
       toast({ title: 'Sauvegardé', description: `${slot.label} mis à jour avec succès.` });
@@ -129,17 +128,9 @@ const BannerSlot = ({ slot, data, onSave }) => {
   };
 
   const handleDiag = async () => {
-    console.log('[diag] test SELECT...');
     const sel = await supabase.from('site_visuals').select('*').limit(5);
-    console.log('[diag] SELECT result:', sel);
-
-    console.log('[diag] test INSERT...');
     const ins = await supabase.from('site_visuals').insert({ key: `__test_${Date.now()}`, image_url: null });
-    console.log('[diag] INSERT result:', ins);
-
-    console.log('[diag] test UPDATE...');
     const upd = await supabase.from('site_visuals').update({ title: 'test' }).eq('key', slot.key);
-    console.log('[diag] UPDATE result:', upd);
 
     const status = `SELECT: ${sel.error ? sel.error.message : 'OK'} | INSERT: ${ins.error ? ins.error.message : 'OK'} | UPDATE: ${upd.error ? upd.error.message : 'OK'}`;
     toast({ title: 'Diagnostic terminé', description: status });

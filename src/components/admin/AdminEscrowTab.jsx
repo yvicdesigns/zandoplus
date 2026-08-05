@@ -8,7 +8,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Search, ShieldCheck, Loader2, CheckCircle, XCircle,
-  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote,
+  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote, RefreshCw, Zap,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -44,6 +44,25 @@ const StatusBadge = ({ statut }) => {
   );
 };
 
+const PAYOUT_STATUS_CONFIG = {
+  processing: { label: 'Virement en cours…', color: 'bg-blue-100 text-blue-800' },
+  sent:       { label: 'Virement envoyé auto',  color: 'bg-green-100 text-green-800' },
+  failed:     { label: 'Virement auto échoué', color: 'bg-red-100 text-red-800' },
+};
+
+const PayoutBadge = ({ tx }) => {
+  if (!tx.payout_status) return null;
+  const cfg = PAYOUT_STATUS_CONFIG[tx.payout_status] || { label: tx.payout_status, color: 'bg-gray-100 text-gray-600' };
+  const providerLabel = tx.payout_provider === 'mtn' ? 'MTN' : tx.payout_provider === 'airtel' ? 'Airtel' : '';
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>
+      <Zap className="w-3 h-3" />
+      {cfg.label}{providerLabel ? ` (${providerLabel})` : ''}
+      {tx.payout_attempts > 0 ? ` — tentative ${tx.payout_attempts}/5` : ''}
+    </span>
+  );
+};
+
 const AdminEscrowTab = memo(() => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -63,6 +82,8 @@ const AdminEscrowTab = memo(() => {
         id, statut, montant, created_at, preuve_paiement_url, notes_litige,
         date_livraison_declaree, date_confirmation, paiement_valide_at,
         withdrawal_requested_at, vendeur_momo_number,
+        payout_status, payout_provider, payout_attempts, payout_failure_reason,
+        collection_status, collection_provider,
         annonce:annonce_id(id, title, images),
         acheteur:acheteur_id(full_name, phone),
         vendeur:vendeur_id(full_name, phone, momo_number)
@@ -83,6 +104,15 @@ const AdminEscrowTab = memo(() => {
     setValidateTarget(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
     toast({ title: '✅ Paiement validé', description: 'Le vendeur peut maintenant préparer la livraison.' });
+    fetchData();
+  };
+
+  const handleRetryPayout = async (tx) => {
+    setActionLoading({ id: tx.id, type: 'retry_payout' });
+    const { error } = await supabase.rpc('admin_retry_payout', { p_transaction_id: tx.id });
+    setActionLoading(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: '🔄 Reversement remis en file — sera retenté au prochain passage automatique.' });
     fetchData();
   };
 
@@ -266,8 +296,17 @@ const AdminEscrowTab = memo(() => {
                       <p className="text-xs text-gray-500">Vendeur : <strong>{tx.vendeur?.full_name}</strong></p>
                       <p className="text-xs text-gray-400">Demandé le {formatDate(tx.withdrawal_requested_at)}</p>
                     </div>
-                    <StatusBadge statut={tx.statut} />
+                    <div className="flex flex-col items-end gap-1">
+                      <StatusBadge statut={tx.statut} />
+                      <PayoutBadge tx={tx} />
+                    </div>
                   </div>
+
+                  {tx.payout_status === 'failed' && tx.payout_failure_reason && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+                      <AlertTriangle className="w-3.5 h-3.5 inline mr-1" /> {tx.payout_failure_reason}
+                    </div>
+                  )}
 
                   {/* Infos MoMo */}
                   <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 space-y-1">
@@ -278,14 +317,28 @@ const AdminEscrowTab = memo(() => {
                     </p>
                   </div>
 
-                  <Button
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                    onClick={() => setCompleteWithdrawTarget(tx)}
-                    disabled={actionLoading?.id === tx.id}
-                  >
-                    {actionLoading?.id === tx.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <CheckCircle className="w-4 h-4 mr-2" /> Marquer comme envoyé
-                  </Button>
+                  <div className="flex gap-2">
+                    {tx.payout_status === 'failed' && (
+                      <Button
+                        variant="outline"
+                        className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                        onClick={() => handleRetryPayout(tx)}
+                        disabled={actionLoading?.id === tx.id}
+                      >
+                        {actionLoading?.id === tx.id && actionLoading?.type === 'retry_payout'
+                          ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                        Réessayer
+                      </Button>
+                    )}
+                    <Button
+                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                      onClick={() => setCompleteWithdrawTarget(tx)}
+                      disabled={actionLoading?.id === tx.id}
+                    >
+                      {actionLoading?.id === tx.id && actionLoading?.type !== 'retry_payout' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      <CheckCircle className="w-4 h-4 mr-2" /> Marquer comme envoyé (manuel)
+                    </Button>
+                  </div>
                 </div>
               );
             })}
@@ -341,7 +394,10 @@ const AdminEscrowTab = memo(() => {
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">Le {formatDate(tx.created_at)}</p>
                         </div>
-                        <StatusBadge statut={tx.statut} />
+                        <div className="flex flex-col items-end gap-1">
+                          <StatusBadge statut={tx.statut} />
+                          <PayoutBadge tx={tx} />
+                        </div>
                       </div>
 
                       {/* Note litige */}

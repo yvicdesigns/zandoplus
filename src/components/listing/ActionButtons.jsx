@@ -51,22 +51,14 @@ const ActionButtons = ({ listing }) => {
   const categoryType = CATEGORY_DEFS[listing.category]?.type ?? 'product';
   const isProduct = !['job', 'service'].includes(categoryType);
 
-  const handleEscrowPayment = () => {
+  const goToCheckout = () => {
     if (!user) {
       openAuthModal();
-      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour utiliser l'achat sécurisé.", variant: "destructive" });
+      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour continuer.", variant: "destructive" });
       return;
     }
-    navigate(`/escrow/${listing.id}`);
-  };
-
-  const handleCodPayment = () => {
-    if (!user) {
-      openAuthModal();
-      toast({ title: "Connexion requise", description: "Veuillez vous connecter pour commander.", variant: "destructive" });
-      return;
-    }
-    navigate(`/cod/${listing.id}`);
+    if (!inCart) addItem(listing, () => {});
+    navigate('/cart/checkout');
   };
 
   return (
@@ -76,12 +68,12 @@ const ActionButtons = ({ listing }) => {
 
         {isProduct && (
           <>
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" size="lg" onClick={handleEscrowPayment}>
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" size="lg" onClick={goToCheckout}>
               <Lock className="mr-2 h-5 w-5" />
               Achat Sécurisé Zando ✅
             </Button>
             {listing.accepts_cash_on_delivery && (
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg" onClick={handleCodPayment}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg" onClick={goToCheckout}>
                 <Banknote className="mr-2 h-5 w-5" />
                 Payer à la livraison 💵
               </Button>

@@ -10,7 +10,6 @@ import { Loader2, MessageSquare } from 'lucide-react';
 const MessagesInline = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading]             = useState(true);
   const [selected, setSelected]           = useState(null);
@@ -47,42 +46,52 @@ const MessagesInline = () => {
   }, [user, fetchConversations]);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full">
+    <div className="flex items-center justify-center h-64">
       <Loader2 className="w-8 h-8 animate-spin text-custom-green-500" />
     </div>
   );
 
-  return (
-    <div className="flex h-full">
-      {/* Colonne 1 : liste conversations */}
-      <div className={`w-[260px] flex-shrink-0 border-r border-gray-100 flex flex-col ${selected ? 'hidden md:flex' : 'flex'}`}>
-        <ConversationList
-          conversations={conversations}
-          selectedConversation={selected}
-          onSelect={setSelected}
-        />
-      </div>
+  const ListPanel = (
+    <ConversationList
+      conversations={conversations}
+      selectedConversation={selected}
+      onSelect={setSelected}
+    />
+  );
 
-      {/* Colonne 2 : chat */}
-      <div className={`flex-1 flex flex-col min-w-0 ${selected ? 'flex' : 'hidden md:flex'}`}>
-        {selected ? (
-          <ChatWindow
-            key={selected.id}
-            conversation={selected}
-            onMessageSent={fetchConversations}
-            onBack={() => setSelected(null)}
-          />
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-8 text-gray-300">
-            <MessageSquare className="w-12 h-12" />
-            <p className="text-[13px] font-semibold text-gray-400">Sélectionnez une conversation</p>
-          </div>
+  const ChatPanel = selected ? (
+    <ChatWindow
+      key={selected.id}
+      conversation={selected}
+      onMessageSent={fetchConversations}
+      onBack={() => setSelected(null)}
+    />
+  ) : (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-8 text-gray-300">
+      <MessageSquare className="w-12 h-12" />
+      <p className="text-[13px] font-semibold text-gray-400">Sélectionnez une conversation</p>
+    </div>
+  );
+
+  return (
+    <div className="flex h-full min-h-[500px]">
+
+      {/* ── MOBILE : soit liste soit chat, jamais les deux ── */}
+      <div className="flex flex-col w-full md:hidden">
+        {!selected ? ListPanel : (
+          <div className="flex flex-col flex-1">{ChatPanel}</div>
         )}
       </div>
 
-      {/* Colonne 3 : détails (masquée sur les petits écrans) */}
+      {/* ── DESKTOP : liste + chat côte à côte ── */}
+      <div className="hidden md:flex w-[260px] flex-shrink-0 border-r border-gray-100 flex-col">
+        {ListPanel}
+      </div>
+      <div className="hidden md:flex flex-1 flex-col min-w-0">
+        {ChatPanel}
+      </div>
       {selected && (
-        <div className="hidden xl:block w-[240px] flex-shrink-0 border-l border-gray-100 overflow-y-auto">
+        <div className="hidden xl:flex w-[240px] flex-shrink-0 border-l border-gray-100 flex-col overflow-y-auto">
           <ConversationDetails conversation={selected} />
         </div>
       )}

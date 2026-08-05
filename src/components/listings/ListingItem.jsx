@@ -96,9 +96,21 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                 {listing.title}
               </h3>
             </Link>
-            <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 mb-0.5 sm:mb-2 leading-tight">
-              {(listing.price || 0).toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
-            </p>
+            {listing.negotiated_price ? (
+              <div className="mb-0.5 sm:mb-2 leading-tight">
+                <p className="text-[9px] sm:text-sm text-gray-400 line-through leading-none">
+                  {(listing.price || 0).toLocaleString()} {listing.currency || 'FCFA'}
+                </p>
+                <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 leading-tight">
+                  {listing.negotiated_price.toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
+                  <span className="ml-1 text-[8px] sm:text-[10px] bg-green-100 text-green-700 font-bold px-1 py-0.5 rounded">Meilleur prix</span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 mb-0.5 sm:mb-2 leading-tight">
+                {(listing.price || 0).toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
+              </p>
+            )}
           </div>
           <div>
             {ratingInfo.review_count > 0 && (

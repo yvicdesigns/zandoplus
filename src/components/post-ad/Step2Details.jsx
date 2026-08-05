@@ -1,18 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import FormError from './FormError';
-import { conditions, currencies, deliveryMethods } from './postAdConstants';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { conditions, currencies } from './postAdConstants';
 import { Info } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import PriceEstimator from '@/components/ai/PriceEstimator';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectChange, handleRadioChange, onAIPrice }) => {
   const { categoriesMap } = useCategories();
+  const [cities, setCities] = useState([]);
+  const [neighborhood, setNeighborhood] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const initialized = useRef(false);
+
+  // Fetch available cities from delivery_city_config
+  useEffect(() => {
+    supabase
+      .from('delivery_city_config')
+      .select('city')
+      .order('city', { ascending: true })
+      .then(({ data }) => {
+        if (data) setCities(data.map(r => r.city));
+      });
+  }, []);
+
+  // Parse formData.location into city + neighborhood once it's available (handles EditAd async load)
+  useEffect(() => {
+    if (initialized.current || !formData.location) return;
+    initialized.current = true;
+    const parts = formData.location.split(' - ');
+    setSelectedCity(parts[0]?.trim() || '');
+    setNeighborhood(parts.slice(1).join(' - ').trim() || '');
+  }, [formData.location]);
+
+  const updateLocation = (city, hood) => {
+    const combined = hood.trim() ? `${city} - ${hood.trim()}` : city;
+    handleSelectChange('location', combined);
+  };
+
+  const handleCityChange = (city) => {
+    setSelectedCity(city);
+    updateLocation(city, neighborhood);
+  };
+
+  const handleNeighborhoodChange = (e) => {
+    const hood = e.target.value;
+    setNeighborhood(hood);
+    if (selectedCity) updateLocation(selectedCity, hood);
+  };
   const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
   const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
 
@@ -75,17 +115,30 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="location">Localisation *</Label>
-          <Input
-            id="location"
-            name="location"
-            placeholder="Ex: Brazzaville, Poto-Poto"
-            value={formData.location}
-            onChange={handleInputChange}
-            className={`mt-1 ${formErrors.location ? 'border-red-500' : ''}`}
-          />
-          <FormError message={formErrors.location} />
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="city">Ville *</Label>
+            <Select value={selectedCity} onValueChange={handleCityChange}>
+              <SelectTrigger id="city" className={`mt-1 ${formErrors.location ? 'border-red-500' : ''}`}>
+                <SelectValue placeholder="Sélectionnez votre ville" />
+              </SelectTrigger>
+              <SelectContent>
+                {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <FormError message={formErrors.location} />
+          </div>
+          <div>
+            <Label htmlFor="neighborhood">Quartier / Zone <span className="text-gray-400 font-normal">(optionnel)</span></Label>
+            <Input
+              id="neighborhood"
+              name="neighborhood"
+              placeholder="Ex: Poto-Poto, Bacongo, Loandjili…"
+              value={neighborhood}
+              onChange={handleNeighborhoodChange}
+              className="mt-1"
+            />
+          </div>
         </div>
         <div>
           <Label htmlFor="phone">Numéro de téléphone</Label>
@@ -121,69 +174,148 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
             <FormError message={formErrors.quantity} />
           </div>
 
-          <div className="space-y-4 pt-4 border-t">
-            <Label>Mode de livraison</Label>
-            <RadioGroup name="delivery_method" value={formData.delivery_method} onValueChange={(value) => handleRadioChange('delivery_method', value)}>
-              {deliveryMethods.map(method => (
-                <div key={method.value} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
-                  <RadioGroupItem value={method.value} id={method.value} className="mt-1"/>
-                  <div className="grid gap-1.5 leading-none">
-                    <Label htmlFor={method.value} className="font-bold cursor-pointer">
-                      {method.label}
-                    </Label>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Info className="w-3 h-3" /> {method.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </RadioGroup>
-            {formData.delivery_method === 'seller_delivery' && (
-              <div className="mt-3 space-y-1">
-                <Label htmlFor="delivery_fee">Frais de livraison (FCFA)</Label>
-                <Input
-                  id="delivery_fee"
-                  name="delivery_fee"
-                  type="number"
-                  min="0"
-                  placeholder="Ex: 1000"
-                  value={formData.delivery_fee}
-                  onChange={handleInputChange}
-                />
-                <p className="text-xs text-gray-500">Montant que vous facturez pour livrer chez l'acheteur.</p>
-                <FormError message={formErrors.delivery_fee} />
-              </div>
-            )}
+          <div className="space-y-3 pt-4 border-t">
+            <Label>Modes de livraison proposés</Label>
+            <p className="text-xs text-gray-500">Cochez tout ce que vous êtes prêt à offrir. L'administrateur décide ce qui est disponible dans votre ville.</p>
 
-            {formData.delivery_method !== 'pickup' && (
-              <div className="flex items-start space-x-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <Checkbox
-                  id="accepts_cash_on_delivery"
-                  name="accepts_cash_on_delivery"
-                  checked={!!formData.accepts_cash_on_delivery}
-                  onCheckedChange={(checked) => handleSelectChange('accepts_cash_on_delivery', checked)}
-                  className="mt-0.5"
-                />
-                <div>
-                  <Label htmlFor="accepts_cash_on_delivery" className="cursor-pointer font-semibold">
-                    Accepter le paiement à la livraison 💵
-                  </Label>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    Zando livre le produit et collecte le cash sur place. Vous recevez votre paiement après livraison (commission 7% + 1 500 FCFA frais Zando Delivery).
-                  </p>
-                </div>
+            {/* Zando Delivery — toujours actif, non modifiable */}
+            <div className="flex items-start space-x-3 p-3 border rounded-lg bg-green-50 border-green-200 opacity-80 cursor-not-allowed">
+              <Checkbox checked={true} disabled className="mt-0.5" />
+              <div>
+                <Label className="font-bold text-green-800">Zando Delivery</Label>
+                <p className="text-xs text-green-700 mt-0.5 flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Activé par défaut sur toutes les annonces. L'admin décide si Zando est disponible dans votre ville.
+                </p>
               </div>
-            )}
+            </div>
+
+            {/* J'ai mon propre livreur */}
+            <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+              <Checkbox
+                id="offers_seller_delivery"
+                checked={!!formData.offers_seller_delivery}
+                onCheckedChange={(checked) => handleSelectChange('offers_seller_delivery', checked)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <Label htmlFor="offers_seller_delivery" className="font-bold cursor-pointer">J'ai mon propre livreur</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Vous gérez la livraison vous-même avec votre propre livreur.
+                </p>
+                {formData.offers_seller_delivery && (
+                  <div className="mt-2">
+                    <Input
+                      name="delivery_fee"
+                      type="number"
+                      min="0"
+                      placeholder="Frais de livraison (FCFA)"
+                      value={formData.delivery_fee}
+                      onChange={handleInputChange}
+                      className="text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Montant que vous facturez pour livrer chez l'acheteur.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Retrait en boutique */}
+            <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+              <Checkbox
+                id="offers_pickup"
+                checked={!!formData.offers_pickup}
+                onCheckedChange={(checked) => handleSelectChange('offers_pickup', checked)}
+                className="mt-0.5"
+              />
+              <div>
+                <Label htmlFor="offers_pickup" className="font-bold cursor-pointer">Retrait en boutique / en personne</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <Info className="w-3 h-3" /> L'acheteur vient récupérer la commande chez vous.
+                </p>
+              </div>
+            </div>
+
+            {/* COD — lié à Zando (toujours disponible) */}
+            <div className="flex items-start space-x-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <Checkbox
+                id="accepts_cash_on_delivery"
+                checked={!!formData.accepts_cash_on_delivery}
+                onCheckedChange={(checked) => handleSelectChange('accepts_cash_on_delivery', checked)}
+                className="mt-0.5"
+              />
+              <div>
+                <Label htmlFor="accepts_cash_on_delivery" className="cursor-pointer font-semibold">
+                  Accepter le paiement à la livraison 💵
+                </Label>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Zando livre le produit et collecte le cash sur place. Commission 7% + 1 500 FCFA frais Zando Delivery.
+                </p>
+              </div>
+            </div>
+
+            {/* Livraison nationale */}
+            <div className="flex items-start space-x-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <Checkbox
+                id="national_delivery"
+                name="national_delivery"
+                checked={!!formData.national_delivery}
+                onCheckedChange={(checked) => handleSelectChange('national_delivery', checked)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <Label htmlFor="national_delivery" className="cursor-pointer font-semibold">
+                  Livraison nationale 🚚
+                </Label>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Je peux envoyer ce produit dans d'autres villes (via La Poste, Chrono Express, etc.). L'acheteur et moi nous mettons d'accord sur le transporteur.
+                </p>
+                {formData.national_delivery && (
+                  <div className="mt-2">
+                    <Input
+                      name="national_delivery_fee"
+                      type="number"
+                      min="0"
+                      placeholder="Frais d'envoi (FCFA) — laisser vide si variable"
+                      value={formData.national_delivery_fee}
+                      onChange={handleInputChange}
+                      className="text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </>
       )}
 
       <div className="space-y-4 pt-4 border-t">
         {!isJobCategory && (
+          <div className="space-y-3">
             <div className="flex items-center space-x-2">
-            <Checkbox id="negotiable" name="negotiable" checked={formData.negotiable} onCheckedChange={(checked) => handleSelectChange('negotiable', checked)} />
-            <Label htmlFor="negotiable" className="cursor-pointer">Le prix est négociable</Label>
+              <Checkbox id="negotiable" name="negotiable" checked={formData.negotiable} onCheckedChange={(checked) => handleSelectChange('negotiable', checked)} />
+              <Label htmlFor="negotiable" className="cursor-pointer">Le prix est négociable</Label>
             </div>
+            {formData.negotiable && (
+              <div className="ml-6 p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                <Label htmlFor="negotiated_price" className="text-sm font-semibold text-green-800">
+                  Meilleur prix (FCFA)
+                </Label>
+                <Input
+                  id="negotiated_price"
+                  name="negotiated_price"
+                  type="number"
+                  min="0"
+                  placeholder="Ex: 8000 (votre prix final accepté)"
+                  value={formData.negotiated_price || ''}
+                  onChange={handleInputChange}
+                  className="text-sm"
+                />
+                <p className="text-xs text-green-700">
+                  Ce prix sera affiché aux acheteurs à côté du prix normal. Laissez vide si vous préférez négocier au cas par cas.
+                </p>
+              </div>
+            )}
+          </div>
         )}
         
         <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-xl opacity-70">

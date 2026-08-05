@@ -34,7 +34,7 @@ radial-gradient(circle at 86% 23%,rgba(255,105,190,.78),transparent 23%),
 radial-gradient(circle at 74% 24%,rgba(116,72,242,.66),transparent 31%),
 linear-gradient(135deg,#101657,#211569 52%,#9f368f);box-shadow:var(--shadow);transform-origin:top left}
 .item{position:absolute;user-select:none;touch-action:none;cursor:move}.item.hidden{display:none}.item.locked{cursor:not-allowed}.item.selected{outline:2px solid #3787ff;outline-offset:2px}
-.item-text{width:100%;height:100%;white-space:pre-wrap;word-break:break-word}.item-button{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.item-image{width:100%;height:100%;display:grid;place-items:center;overflow:hidden}.item-image img{width:100%;height:100%;object-fit:cover}
+.item-text{width:100%;height:100%;white-space:pre-wrap;word-break:break-word;overflow:hidden}.item-button{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}.item-image{width:100%;height:100%;display:grid;place-items:center;overflow:hidden}.item-image img{width:100%;height:100%;object-fit:cover}
 .handle{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #3787ff;z-index:40}.nw{left:-7px;top:-7px;cursor:nwse-resize}.n{left:50%;top:-7px;transform:translateX(-50%);cursor:ns-resize}.ne{right:-7px;top:-7px;cursor:nesw-resize}.e{right:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}.se{right:-7px;bottom:-7px;cursor:nwse-resize}.s{left:50%;bottom:-7px;transform:translateX(-50%);cursor:ns-resize}.sw{left:-7px;bottom:-7px;cursor:nesw-resize}.w{left:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 .selection-bar{position:absolute;top:-44px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:#fff;border:1px solid var(--line);padding:5px;border-radius:10px;box-shadow:0 10px 28px rgba(30,32,55,.18);z-index:60}.selection-bar button{border:0;background:transparent;width:30px;height:28px;border-radius:7px;color:#555a70;display:grid;place-items:center}.selection-bar button:hover{background:#f1edff;color:var(--accent)}.selection-bar button[data-act="delete"]:hover{background:#fff0f1;color:var(--danger)}
 .type-tag{position:absolute;left:0;top:-38px;padding:7px 10px;border-radius:7px;color:#fff;background:var(--accent);font-size:10px;font-weight:750;z-index:65}.tag-image{background:#ff864b}.tag-button{background:#eb5c83}.tag-shape{background:#34a878}
@@ -992,8 +992,9 @@ document.addEventListener('pointerdown',e=>{
 },true);
 
 window.addEventListener('pointermove',e=>{
- if(drag){drag.l.x=drag.x+e.clientX-drag.sx;drag.l.y=drag.y+e.clientY-drag.sy;render()}
- if(resize){const dx=e.clientX-resize.sx,dy=e.clientY-resize.sy,l=resize.l,s=resize.start,p=resize.pos;
+ const _z=window.__zandoZoom||1;
+ if(drag){drag.l.x=drag.x+(e.clientX-drag.sx)/_z;drag.l.y=drag.y+(e.clientY-drag.sy)/_z;render()}
+ if(resize){const dx=(e.clientX-resize.sx)/_z,dy=(e.clientY-resize.sy)/_z,l=resize.l,s=resize.start,p=resize.pos;
   if(p.includes('e'))l.w=Math.max(20,s.w+dx);if(p.includes('s'))l.h=Math.max(20,s.h+dy);
   if(p.includes('w')){l.x=s.x+dx;l.w=Math.max(20,s.w-dx)}if(p.includes('n')){l.y=s.y+dy;l.h=Math.max(20,s.h-dy)}render()}
 });
@@ -1128,9 +1129,8 @@ layerRows=function(){
 render=function(){
  oldRender();
  const d=DEV[device], shell=$('#canvasShell'), canvas=$('#canvas');
- const effZoom=(typeof editorZoomV22!=='undefined')?editorZoomV22:zoomLevel;
- shell.style.width=(d.w*effZoom)+'px';shell.style.height=(d.h*effZoom)+'px';
- canvas.style.transform=`scale(${effZoom})`;
+ shell.style.width=(d.w*zoomLevel)+'px';shell.style.height=(d.h*zoomLevel)+'px';
+ canvas.style.transform=`scale(${zoomLevel})`;
  canvas.style.transformOrigin='top left';
  if(!canvas.querySelector('#guideV')){
    const gv=document.createElement('div');gv.id='guideV';gv.className='guide v';
@@ -1847,7 +1847,8 @@ const originalPointerMoveForGroups = null;
 window.addEventListener('pointermove',e=>{
   if(!drag||!drag.z?.groupId)return;
   const gid=drag.z.groupId;
-  const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+  const _gz=editorZoomV22||1;
+  const dx=(e.clientX-drag.sx)/_gz,dy=(e.clientY-drag.sy)/_gz;
   if(!drag.groupStarts){
     drag.groupStarts={};
     state.elements.filter(x=>x.groupId===gid).forEach(x=>drag.groupStarts[x.id]=clone(layoutOf(x)));
@@ -3971,6 +3972,8 @@ function renderHistoryV22(){
 }
 function setZoomV22(percent){
   editorZoomV22=Math.max(.25,Math.min(2,percent/100));
+  zoomLevel=editorZoomV22;            // sync old system → render() reste correct
+  window.__zandoZoom=editorZoomV22;   // accessible depuis le script block 1 (drag/resize)
   const canvas=$('#canvas');
   const shell=$('#canvasShell');
   if(canvas){

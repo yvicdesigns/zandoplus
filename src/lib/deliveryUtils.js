@@ -1,7 +1,12 @@
-// Extrait la ville depuis un champ location du type "Brazzaville - Poto-Poto"
+// Extrait la ville depuis un champ location, compatible avec tous les anciens formats :
+// "Brazzaville - Poto-Poto", "Pointe noire, Loandjili", "Brazzaville", "PointeNoire"
 export function extractCity(location) {
   if (!location) return null;
-  return location.split(' - ')[0].trim() || null;
+  // Coupe au premier séparateur trouvé : " - " puis "," puis ";"
+  for (const sep of [' - ', ', ', ',', ';']) {
+    if (location.includes(sep)) return location.split(sep)[0].trim() || null;
+  }
+  return location.trim() || null;
 }
 
 // Normalise un nom de ville pour comparaison floue :
@@ -19,7 +24,7 @@ export async function fetchCityDeliveryConfig(supabase, city) {
   const normTarget = normalizeCity(city);
   const { data } = await supabase
     .from('delivery_city_config')
-    .select('city, zando_delivery_enabled, cod_enabled, seller_delivery_enabled');
+    .select('city, zando_delivery_enabled, cod_enabled, seller_delivery_enabled, pickup_enabled');
   if (!data) return null;
   return data.find(c => normalizeCity(c.city) === normTarget) ?? null;
 }

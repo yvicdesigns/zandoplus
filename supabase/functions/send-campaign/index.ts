@@ -25,17 +25,21 @@ serve(async (req) => {
     const template = CAMPAIGN_TEMPLATES[template_id];
     if (!template) throw new Error(`Template "${template_id}" inconnu`);
 
-    // Preview mode: return HTML without sending
-    if (preview) {
-      return new Response(
-        JSON.stringify({ success: true, html: template.html('Prénom', 'exemple@email.com'), subject: template.subject }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error('Supabase non configuré');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Fetch brand logo from site settings
+    const { data: siteData } = await supabase.from('site_settings').select('logo_url').single();
+    const logoUrl: string | undefined = siteData?.logo_url || undefined;
+
+    // Preview mode: return HTML without sending
+    if (preview) {
+      return new Response(
+        JSON.stringify({ success: true, html: template.html('Prénom', 'exemple@email.com', logoUrl), subject: template.subject }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get recipients based on segment
     let userIds: string[] = [];
@@ -135,7 +139,7 @@ serve(async (req) => {
         from: 'Zando+ <noreply@zandopluscg.com>',
         to: [r.email],
         subject,
-        html: template.html(r.name, r.email),
+        html: template.html(r.name, r.email, logoUrl),
         tags: [{ name: 'campaign', value: template_id }],
       }));
 

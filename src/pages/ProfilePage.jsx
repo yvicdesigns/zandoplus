@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import imageCompression from 'browser-image-compression';
 import {
   Loader2, LayoutDashboard, Package, Heart, MapPin, CreditCard,
-  MessageSquare, Bell, Star, Users, Settings, ChevronRight,
+  MessageSquare, Bell, Star, Users, Settings, ChevronRight, ChevronLeft,
   Camera, Pencil, Check, X, ShoppingBag, LogOut, Store,
   Shield, Eye, BadgeCheck,
 } from 'lucide-react';
@@ -419,99 +419,209 @@ const ProfilePage = () => {
         <title>Mon profil — {user.full_name || user.email} — Zando+</title>
       </Helmet>
 
-      <div className="bg-page-bg min-h-screen py-8">
-        <div className="max-w-[1280px] mx-auto px-6">
+      <div className="bg-page-bg min-h-screen">
 
-          {/* Fil d'Ariane */}
-          <nav className="flex items-center gap-1.5 text-[12px] text-gray-400 mb-6">
-            <button onClick={() => navigate('/')} className="hover:text-custom-green-500">Accueil</button>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-500">Mon compte</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-800 font-medium">Mon profil</span>
-          </nav>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-            {/* ── SIDEBAR ── */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden sticky top-24">
-                <div className="px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-[14px] font-black text-gray-900">Mon compte</h2>
-                </div>
-                <nav className="py-2">
-                  {NAV.map(item => {
-                    const Icon = item.icon;
-                    const isActive = activeSection === item.id && !item.action;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => handleNav(item)}
-                        className={`w-full flex items-center gap-3 px-5 py-3 text-[13px] font-medium transition-colors text-left ${
-                          isActive
-                            ? 'bg-green-50 text-custom-green-600 font-semibold border-r-2 border-custom-green-500'
-                            : item.disabled
-                              ? 'text-gray-300 cursor-default'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 flex-shrink-0" />
-                        {item.label}
-                        {item.disabled && (
-                          <span className="ml-auto text-[9px] font-bold text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
-                            Bientôt
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  <div className="border-t border-gray-100 mt-2 pt-2">
-                    <button
-                      onClick={() => { signOut?.(); navigate('/'); }}
-                      className="w-full flex items-center gap-3 px-5 py-3 text-[13px] font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 flex-shrink-0" />
-                      Se déconnecter
+        {/* ══════════════ MOBILE ══════════════ */}
+        <div className="lg:hidden">
+          {activeSection === 'dashboard' ? (
+            /* ── Menu principal mobile ── */
+            <div>
+              {/* Header profil */}
+              <div className="bg-custom-green-600 px-4 pt-6 pb-10">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30">
+                      {user.avatar_url
+                        ? <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center bg-white/20 text-white text-[26px] font-black">{user.full_name?.charAt(0)?.toUpperCase() || '?'}</div>
+                      }
+                    </div>
+                    <button onClick={() => avatarInputRef.current?.click()} disabled={isUploadingAvatar}
+                      className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow">
+                      {isUploadingAvatar ? <Loader2 className="w-3 h-3 text-custom-green-600 animate-spin" /> : <Camera className="w-3 h-3 text-custom-green-600" />}
                     </button>
                   </div>
-                </nav>
-
-                {/* CTA Vendeur */}
-                <div className="m-3 bg-gradient-to-br from-custom-green-500 to-green-700 rounded-xl p-4 text-white">
-                  {user.is_seller ? (
-                    <>
-                      <p className="text-[13px] font-black mb-1">Mon espace vendeur</p>
-                      <p className="text-[11px] opacity-80 mb-3">Gérez votre boutique et suivez vos ventes.</p>
-                      <button
-                        onClick={() => navigate('/espace-vendeur')}
-                        className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors"
-                      >
-                        Accéder à mon espace
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-[13px] font-black mb-1">Vendez sur Zando+</p>
-                      <p className="text-[11px] opacity-80 mb-3">Devenez vendeur et développez votre activité en ligne.</p>
-                      <button
-                        onClick={() => navigate('/become-seller')}
-                        className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors"
-                      >
-                        Devenir vendeur
-                      </button>
-                    </>
-                  )}
+                  <div>
+                    <p className="text-white font-black text-[17px] leading-tight">{user.full_name || 'Utilisateur'}</p>
+                    <p className="text-white/70 text-[12px]">{user.email}</p>
+                    <span className="inline-flex items-center gap-1 mt-1 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <BadgeCheck className="w-3 h-3" /> Client vérifié
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* ── CONTENU PRINCIPAL ── */}
-            <div className="lg:col-span-9">
-              {renderMain()}
-            </div>
+              {/* Stats */}
+              <div className="mx-4 -mt-5 grid grid-cols-3 gap-2 mb-4">
+                {[
+                  { icon: ShoppingBag, count: stats.commandes, label: 'Commandes', section: 'commandes', color: 'text-custom-green-600' },
+                  { icon: Heart,       count: favorites.size,  label: 'Favoris',   section: 'favoris',   color: 'text-pink-500' },
+                  { icon: Star,        count: stats.avis,      label: 'Avis',      section: 'avis',      color: 'text-yellow-500' },
+                ].map(({ icon: Icon, count, label, section, color }) => (
+                  <button key={label} onClick={() => setActiveSection(section)}
+                    className="bg-white rounded-xl p-3 flex flex-col items-center shadow-sm border border-gray-100 active:bg-gray-50">
+                    <Icon className={`w-4 h-4 ${color} mb-1`} />
+                    <p className="text-[18px] font-black text-gray-900 leading-none">{count}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{label}</p>
+                  </button>
+                ))}
+              </div>
 
+              {/* Espace vendeur */}
+              {user.is_seller ? (
+                <button onClick={() => navigate('/espace-vendeur')}
+                  className="mx-4 mb-4 w-[calc(100%-2rem)] flex items-center gap-3 bg-gradient-to-r from-[#0d1f12] to-custom-green-600 rounded-xl p-4 text-left">
+                  <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Store className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-black text-[13px]">Mon espace vendeur</p>
+                    <p className="text-white/60 text-[11px]">Gérer ma boutique</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-white/50" />
+                </button>
+              ) : (
+                <button onClick={() => navigate('/become-seller')}
+                  className="mx-4 mb-4 w-[calc(100%-2rem)] flex items-center gap-3 bg-custom-green-600 rounded-xl p-4 text-left">
+                  <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Store className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-black text-[13px]">Devenir vendeur</p>
+                    <p className="text-white/60 text-[11px]">Vendez sur Zando+</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-white/50" />
+                </button>
+              )}
+
+              {/* Navigation sections */}
+              <div className="mx-4 bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4">
+                {NAV.filter(i => i.id !== 'dashboard').map((item, idx, arr) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={item.id} onClick={() => handleNav(item)}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-gray-50 ${idx < arr.length - 1 ? 'border-b border-gray-100' : ''} ${item.disabled ? 'opacity-40' : ''}`}>
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <span className="flex-1 text-[13px] font-semibold text-gray-800">{item.label}</span>
+                      {item.disabled
+                        ? <span className="text-[9px] font-bold text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">Bientôt</span>
+                        : <ChevronRight className="w-4 h-4 text-gray-300" />
+                      }
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Déconnexion */}
+              <div className="mx-4 mb-8">
+                <button onClick={() => { signOut?.(); navigate('/'); }}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-100 rounded-xl text-[13px] font-semibold text-red-400 active:bg-red-50">
+                  <LogOut className="w-4 h-4" /> Se déconnecter
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ── Section active mobile ── */
+            <div className="min-h-screen">
+              {/* Header section */}
+              <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-[60px] z-10">
+                <button onClick={() => setActiveSection('dashboard')}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
+                  <ChevronLeft className="w-5 h-5 text-gray-700" />
+                </button>
+                <h1 className="text-[15px] font-black text-gray-900">
+                  {NAV.find(n => n.id === activeSection)?.label || 'Mon compte'}
+                </h1>
+              </div>
+              <div className="p-4">
+                {renderMain()}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ══════════════ DESKTOP ══════════════ */}
+        <div className="hidden lg:block py-8">
+          <div className="max-w-[1280px] mx-auto px-6">
+            <nav className="flex items-center gap-1.5 text-[12px] text-gray-400 mb-6">
+              <button onClick={() => navigate('/')} className="hover:text-custom-green-500">Accueil</button>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-gray-500">Mon compte</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-gray-800 font-medium">Mon profil</span>
+            </nav>
+
+            <div className="grid lg:grid-cols-12 gap-6 items-start">
+
+              {/* Sidebar */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden sticky top-24">
+                  <div className="px-5 py-4 border-b border-gray-100">
+                    <h2 className="text-[14px] font-black text-gray-900">Mon compte</h2>
+                  </div>
+                  <nav className="py-2">
+                    {NAV.map(item => {
+                      const Icon = item.icon;
+                      const isActive = activeSection === item.id;
+                      return (
+                        <button key={item.id} onClick={() => handleNav(item)}
+                          className={`w-full flex items-center gap-3 px-5 py-3 text-[13px] font-medium transition-colors text-left ${
+                            isActive
+                              ? 'bg-green-50 text-custom-green-600 font-semibold border-r-2 border-custom-green-500'
+                              : item.disabled
+                                ? 'text-gray-300 cursor-default'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}>
+                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          {item.label}
+                          {item.disabled && (
+                            <span className="ml-auto text-[9px] font-bold text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">Bientôt</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <button onClick={() => { signOut?.(); navigate('/'); }}
+                        className="w-full flex items-center gap-3 px-5 py-3 text-[13px] font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                        <LogOut className="w-4 h-4 flex-shrink-0" /> Se déconnecter
+                      </button>
+                    </div>
+                  </nav>
+                  <div className="m-3 bg-gradient-to-br from-custom-green-500 to-green-700 rounded-xl p-4 text-white">
+                    {user.is_seller ? (
+                      <>
+                        <p className="text-[13px] font-black mb-1">Mon espace vendeur</p>
+                        <p className="text-[11px] opacity-80 mb-3">Gérez votre boutique et suivez vos ventes.</p>
+                        <button onClick={() => navigate('/espace-vendeur')}
+                          className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors">
+                          Accéder à mon espace
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[13px] font-black mb-1">Vendez sur Zando+</p>
+                        <p className="text-[11px] opacity-80 mb-3">Devenez vendeur et développez votre activité en ligne.</p>
+                        <button onClick={() => navigate('/become-seller')}
+                          className="w-full h-8 bg-white text-custom-green-600 rounded-lg text-[12px] font-bold hover:bg-green-50 transition-colors">
+                          Devenir vendeur
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenu */}
+              <div className="lg:col-span-9">
+                {renderMain()}
+              </div>
+
+            </div>
           </div>
         </div>
+
       </div>
 
       {cropFile && (

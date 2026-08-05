@@ -53,6 +53,10 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Fetch brand logo from site settings
+    const { data: siteData } = await supabase.from('site_settings').select('logo_url').single();
+    const logoUrl: string | undefined = siteData?.logo_url || undefined;
+
     // Get next 50 pending jobs, ordered by oldest first
     const { data: jobs, error: fetchErr } = await supabase
       .from('campaign_jobs')
@@ -85,7 +89,7 @@ serve(async (req) => {
         from: 'Zando+ <noreply@zandopluscg.com>',
         to: [job.email],
         subject: template.subject,
-        html: template.html(job.name, job.email),
+        html: template.html(job.name, job.email, logoUrl),
         tags: [{ name: 'campaign', value: job.campaign_id }],
       };
     });

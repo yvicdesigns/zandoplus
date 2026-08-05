@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import {
   Users, UserX, ShoppingBag, CheckCircle, Loader2,
   CalendarClock, Clock, Zap, RefreshCw, Play, ExternalLink,
-  MessageCircle, AlertTriangle,
+  MessageCircle, AlertTriangle, FlaskConical,
 } from 'lucide-react';
 
 const SEGMENTS = [
@@ -40,6 +40,9 @@ const AdminWhatsAppTab = () => {
   const [result, setResult] = useState(null);
   const [queueStats, setQueueStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState(null);
 
   const fetchQueueStats = useCallback(async () => {
     setLoadingStats(true);
@@ -90,6 +93,27 @@ const AdminWhatsAppTab = () => {
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally { setLoading(false); }
+  };
+
+  const handleTestSend = async () => {
+    if (!testPhone.trim()) {
+      toast({ title: 'Numéro requis', variant: 'destructive' });
+      return;
+    }
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      const { data } = await supabase.functions.invoke('send-whatsapp-campaign', {
+        body: { template_name: templateName.trim() || 'zandoplus_rappel', test_phone: testPhone.trim() },
+      });
+      const res = data || {};
+      if (!res.success) throw new Error(res.error || 'Erreur inconnue');
+      setTestResult({ success: true, to: res.to });
+      toast({ title: 'Message envoyé ✅', description: `Envoyé au ${res.to}`, className: 'bg-green-100 text-green-800' });
+    } catch (err) {
+      setTestResult({ success: false, error: err.message });
+      toast({ title: 'Erreur envoi test', description: err.message, variant: 'destructive' });
+    } finally { setTestLoading(false); }
   };
 
   const handleProcessNow = async () => {
@@ -203,6 +227,36 @@ const AdminWhatsAppTab = () => {
           </div>
         </div>
       )}
+
+      {/* Test rapide */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+        <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+          <FlaskConical className="w-4 h-4" />
+          Test rapide — envoyer à moi-même
+        </h3>
+        <div className="flex gap-3">
+          <Input
+            placeholder="Ex: 06 123 45 67 ou +242 06 123 45 67"
+            value={testPhone}
+            onChange={e => setTestPhone(e.target.value)}
+            className="bg-white border-blue-200 flex-1"
+          />
+          <Button
+            onClick={handleTestSend}
+            disabled={testLoading || !testPhone.trim()}
+            className="bg-blue-600 hover:bg-blue-700 text-white shrink-0"
+          >
+            {testLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4 mr-1" />}
+            {testLoading ? 'Envoi...' : 'Tester'}
+          </Button>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">Utilise le template sélectionné ci-dessous. Ton numéro doit être dans la liste des testeurs Meta.</p>
+        {testResult && (
+          <div className={`mt-3 text-sm px-3 py-2 rounded-lg ${testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {testResult.success ? `✅ Message envoyé au ${testResult.to}` : `❌ ${testResult.error}`}
+          </div>
+        )}
+      </div>
 
       {/* Template & segment */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">

@@ -37,8 +37,8 @@ serve(async (req) => {
   }
 
   try {
-    const { template_name, template_params_fn, segment, mode, preview } = await req.json();
-    // mode: 'immediate' (default) | 'drip'
+    const { template_name, template_params_fn, segment, mode, preview, test_phone } = await req.json();
+    // mode: 'immediate' (default) | 'drip' | test_phone bypasses segment entirely
 
     const WHATSAPP_TOKEN        = Deno.env.get('WHATSAPP_TOKEN');
     const WHATSAPP_PHONE_ID     = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
@@ -48,6 +48,36 @@ serve(async (req) => {
     if (!WHATSAPP_TOKEN)   throw new Error('WHATSAPP_TOKEN non configuré dans Supabase secrets');
     if (!WHATSAPP_PHONE_ID) throw new Error('WHATSAPP_PHONE_NUMBER_ID non configuré');
     if (!template_name)    throw new Error('template_name requis');
+
+    // ── TEST MODE — envoyer à un seul numéro ─────────────────────
+    if (test_phone) {
+      const phone = normalizePhone(test_phone);
+      if (!phone) throw new Error('Numéro de téléphone invalide');
+
+      const WA_URL = `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_ID}/messages`;
+      const res = await fetch(WA_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: phone,
+          type: 'template',
+          template: {
+            name: template_name,
+            language: { code: 'fr' },
+            components: [{ type: 'body', parameters: [{ type: 'text', text: 'Test' }] }],
+          },
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message || `Erreur Meta ${res.status}`);
+
+      return new Response(
+        JSON.stringify({ success: true, mode: 'test', sent: 1, to: phone }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Preview: just return what a message would look like
     if (preview) {

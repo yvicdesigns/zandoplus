@@ -54,8 +54,11 @@ const PostAdPage = () => {
       title: '', description: '', price: '', currency: 'FCFA',
       category: '', subcategory: '', categoryName: '', categoryType: '',
       condition: '', location: '', negotiable: false, images: [],
-      delivery_method: 'pickup', delivery_fee: '', is_urgent: false,
-      phone: '', quantity: '', accepts_cash_on_delivery: false
+      delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false,
+      phone: '', quantity: '', accepts_cash_on_delivery: false,
+      national_delivery: false, national_delivery_fee: '',
+      offers_seller_delivery: false, offers_pickup: false,
+      negotiated_price: ''
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -258,6 +261,11 @@ const PostAdPage = () => {
         delivery_method: isJobOrService ? 'none' : formData.delivery_method,
         delivery_fee: (formData.delivery_fee && !isNaN(parseFloat(formData.delivery_fee))) ? parseFloat(formData.delivery_fee) : null,
         accepts_cash_on_delivery: isJobOrService ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
+        national_delivery_enabled: isJobOrService ? false : !!formData.national_delivery,
+        national_delivery_fee: (!isJobOrService && formData.national_delivery && formData.national_delivery_fee && !isNaN(parseFloat(formData.national_delivery_fee))) ? parseFloat(formData.national_delivery_fee) : 0,
+        offers_seller_delivery: isJobOrService ? false : !!formData.offers_seller_delivery,
+        offers_pickup: isJobOrService ? false : !!formData.offers_pickup,
+        negotiated_price: (formData.negotiable && formData.negotiated_price && !isNaN(parseFloat(formData.negotiated_price))) ? parseFloat(formData.negotiated_price) : null,
       };
 
       const newListing = await addListing(listingData);
@@ -310,7 +318,7 @@ const PostAdPage = () => {
               className="underline font-medium hover:text-amber-900"
               onClick={() => {
                 localStorage.removeItem(DRAFT_KEY);
-                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'pickup', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '' });
+                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false });
                 setDraftRestored(false);
               }}
             >

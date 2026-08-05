@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -393,7 +394,7 @@ const HeroSection = () => {
                 )}
                 <h1 className="text-[26px] sm:text-[38px] lg:text-[48px] font-black leading-tight mb-3 text-white">
                   {titleLine
-                    ? <span dangerouslySetInnerHTML={{ __html: titleLine }} />
+                    ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
                     : <><span>Achetez malin,</span><br /><span className="text-accent-yellow">économisez plus !</span></>
                   }
                 </h1>
@@ -471,7 +472,7 @@ const HeroSection = () => {
 
                   <h1 className="text-[24px] sm:text-[34px] lg:text-[40px] font-black leading-[1.08] mb-2 sm:mb-3" style={{ color: titleColor || '#111827' }}>
                     {titleLine
-                      ? <span dangerouslySetInnerHTML={{ __html: titleLine }} />
+                      ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
                       : <>Achetez malin,<br /><span className="text-custom-green-500">économisez plus !</span></>
                     }
                   </h1>
@@ -539,7 +540,7 @@ const HeroSection = () => {
             {decoUrl && deviceKey !== 'desktop' && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: 50, pointerEvents: 'none',
+                zIndex: 10, pointerEvents: 'none',
                 display: 'flex',
                 alignItems: decoFlexAlign.alignItems,
                 justifyContent: decoFlexAlign.justifyContent,

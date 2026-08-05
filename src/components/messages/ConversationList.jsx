@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, Inbox } from 'lucide-react';
+import { Search, Edit, Inbox } from 'lucide-react';
 import ConversationItem from './ConversationItem';
-
-const TABS = ['Toutes', 'Non lus', 'Favoris'];
 
 const ConversationList = ({ conversations, selectedConversation, onSelect }) => {
   const [search, setSearch] = useState('');
@@ -20,50 +18,55 @@ const ConversationList = ({ conversations, selectedConversation, onSelect }) => 
 
   return (
     <div className="flex flex-col h-full">
-      {/* En-tête */}
-      <div className="px-4 pt-5 pb-3 border-b border-gray-100">
-        <h2 className="text-[18px] font-black text-gray-900 mb-3">Messages</h2>
-        {/* Search */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher une conversation..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 border border-gray-200 rounded-xl text-[12px] focus:outline-none focus:border-custom-green-500 bg-gray-50"
-            />
-          </div>
-          <button className="w-9 h-9 border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors flex-shrink-0">
-            <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+      {/* Header vert WhatsApp */}
+      <div className="px-4 pt-4 pb-3 flex-shrink-0" style={{ background: '#075E54' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[20px] font-black text-white">Messages</h2>
+          <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+            <Edit className="w-5 h-5 text-white" />
           </button>
         </div>
-        {/* Tabs */}
-        <div className="flex gap-1 mt-3">
-          {TABS.map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-3 h-7 rounded-full text-[12px] font-semibold transition-colors ${
-                tab === t
-                  ? 'bg-custom-green-500 text-white'
-                  : 'text-gray-500 hover:bg-gray-100'
-              }`}
-            >
-              {t}
-              {t === 'Non lus' && unreadCount > 0 && (
-                <span className={`w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center ${tab === t ? 'bg-white text-custom-green-600' : 'bg-custom-green-500 text-white'}`}>
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          ))}
+
+        {/* Search pill */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-9 pl-9 pr-4 rounded-full text-[13px] focus:outline-none bg-white text-gray-700 placeholder-gray-400"
+          />
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 px-4 py-2 border-b border-gray-100 bg-white flex-shrink-0">
+        {['Toutes', 'Non lus'].map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex items-center gap-1.5 px-3 h-7 rounded-full text-[12px] font-semibold transition-colors ${
+              tab === t
+                ? 'text-white'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+            style={tab === t ? { background: '#075E54' } : {}}
+          >
+            {t}
+            {t === 'Non lus' && unreadCount > 0 && (
+              <span className={`w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center ${
+                tab === t ? 'bg-white text-[#075E54]' : 'bg-custom-green-500 text-white'
+              }`}>
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       {/* Liste */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-white">
         {filtered.length > 0 ? (
           filtered.map(c => (
             <ConversationItem

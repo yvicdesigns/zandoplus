@@ -35,18 +35,24 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [momoNumber, setMomoNumber] = useState('');
+  const [momoProvider, setMomoProvider] = useState('');
   const [savingMomo, setSavingMomo] = useState(false);
   const [momoSaved, setMomoSaved] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('momo_number').eq('id', user.id).single()
-      .then(({ data }) => { if (data?.momo_number) setMomoNumber(data.momo_number); });
+    supabase.from('profiles').select('momo_number, momo_provider').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data?.momo_number) setMomoNumber(data.momo_number);
+        if (data?.momo_provider) setMomoProvider(data.momo_provider);
+      });
   }, [user]);
 
   const handleSaveMomo = async () => {
     setSavingMomo(true);
-    const { error } = await supabase.from('profiles').update({ momo_number: momoNumber.trim() }).eq('id', user.id);
+    const { error } = await supabase.from('profiles')
+      .update({ momo_number: momoNumber.trim(), momo_provider: momoProvider || null })
+      .eq('id', user.id);
     setSavingMomo(false);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
     setMomoSaved(true);
@@ -156,8 +162,29 @@ const SettingsPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-600">
-                Ce numéro sera utilisé pour vous envoyer l'argent de vos ventes. Sans numéro enregistré, le bouton de retrait sera désactivé.
+                Ce numéro sera utilisé pour vous envoyer l'argent de vos ventes. Sans numéro et opérateur enregistrés, le reversement automatique sera désactivé et le bouton de retrait le sera aussi.
               </p>
+              <div>
+                <p className="text-xs text-gray-500 mb-1.5">Opérateur</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={momoProvider === 'mtn' ? 'default' : 'outline'}
+                    className={momoProvider === 'mtn' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : ''}
+                    onClick={() => setMomoProvider('mtn')}
+                  >
+                    MTN Money
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={momoProvider === 'airtel' ? 'default' : 'outline'}
+                    className={momoProvider === 'airtel' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}
+                    onClick={() => setMomoProvider('airtel')}
+                  >
+                    Airtel Money
+                  </Button>
+                </div>
+              </div>
               <div className="flex gap-2">
                 <Input
                   placeholder="Ex: 06XXXXXXXX"
@@ -165,14 +192,14 @@ const SettingsPage = () => {
                   onChange={e => setMomoNumber(e.target.value)}
                   className="max-w-xs"
                 />
-                <Button onClick={handleSaveMomo} disabled={savingMomo || !momoNumber.trim()} className="gradient-bg">
+                <Button onClick={handleSaveMomo} disabled={savingMomo || !momoNumber.trim() || !momoProvider} className="gradient-bg">
                   {savingMomo ? <Loader2 className="w-4 h-4 animate-spin" /> : momoSaved ? <CheckCircle className="w-4 h-4" /> : 'Enregistrer'}
                 </Button>
               </div>
-              {momoNumber && (
+              {momoNumber && momoProvider && (
                 <p className="text-xs text-gray-500 flex items-center gap-1">
                   <CheckCircle className="w-3.5 h-3.5 text-custom-green-500" />
-                  Numéro actuel : <span className="font-mono font-semibold">{momoNumber}</span>
+                  Numéro actuel : <span className="font-mono font-semibold">{momoNumber}</span> ({momoProvider === 'mtn' ? 'MTN Money' : 'Airtel Money'})
                 </p>
               )}
             </CardContent>

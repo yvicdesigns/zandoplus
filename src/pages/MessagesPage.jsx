@@ -31,12 +31,9 @@ const MessagesPage = () => {
         return db - da;
       });
       setConversations(sorted);
-      if (conversationId) {
-        const found = sorted.find(c => c.id === conversationId);
-        setSelectedConversation(found || null);
-      } else {
-        setSelectedConversation(null);
-      }
+      setSelectedConversation(
+        conversationId ? (sorted.find(c => c.id === conversationId) || null) : null
+      );
     } catch {
       toast({ title: 'Erreur', description: 'Impossible de charger vos conversations.', variant: 'destructive' });
     } finally {
@@ -61,31 +58,65 @@ const MessagesPage = () => {
     navigate(`/messages/${conv.id}`);
   };
 
+  const ConvList = loadingConversations ? (
+    <div className="flex-1 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-custom-green-500" />
+    </div>
+  ) : (
+    <ConversationList
+      conversations={conversations}
+      selectedConversation={selectedConversation}
+      onSelect={handleSelect}
+    />
+  );
+
   return (
     <>
       <Helmet>
         <title>Messages — Zando+</title>
       </Helmet>
 
-      <div className="h-[calc(100vh-130px)] flex bg-page-bg">
-
-        {/* ── Liste des conversations ── */}
-        <div className={`w-full md:w-[300px] flex-shrink-0 bg-white border-r border-gray-100 flex flex-col ${conversationId ? 'hidden md:flex' : 'flex'}`}>
-          {loadingConversations ? (
+      {/* ══════════════════════════════════════════
+          MOBILE : flow normal, hauteur exacte
+          marginBottom: -96px annule le pb-24 du <main>
+          ══════════════════════════════════════════ */}
+      <div
+        className="md:hidden bg-white flex flex-col overflow-hidden"
+        style={{
+          height: 'calc(100dvh - 102px - 64px)',
+          marginBottom: '-96px',
+        }}
+      >
+        {!conversationId ? (
+          ConvList
+        ) : (
+          selectedConversation ? (
+            <ChatWindow
+              key={selectedConversation.id}
+              conversation={selectedConversation}
+              onMessageSent={fetchConversations}
+              onBack={() => navigate('/messages')}
+            />
+          ) : (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-custom-green-500" />
             </div>
-          ) : (
-            <ConversationList
-              conversations={conversations}
-              selectedConversation={selectedConversation}
-              onSelect={handleSelect}
-            />
-          )}
+          )
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════
+          DESKTOP : flex côte à côte
+          ══════════════════════════════════════════ */}
+      <div className="hidden md:flex h-[calc(100dvh-130px)] overflow-hidden bg-page-bg">
+
+        {/* Liste */}
+        <div className="w-[320px] flex-shrink-0 border-r border-gray-100 flex flex-col overflow-hidden bg-white">
+          {ConvList}
         </div>
 
-        {/* ── Chat ── */}
-        <div className={`flex-1 flex flex-col min-w-0 ${conversationId ? 'flex' : 'hidden md:flex'}`}>
+        {/* Chat */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {selectedConversation ? (
             <ChatWindow
               key={selectedConversation.id}
@@ -104,7 +135,7 @@ const MessagesPage = () => {
           )}
         </div>
 
-        {/* ── Détails ── */}
+        {/* Détails (xl) */}
         {selectedConversation && (
           <div className="hidden xl:block w-[280px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
             <ConversationDetails conversation={selectedConversation} />
