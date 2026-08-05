@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
 
-const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
+const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite, codEnabled = true }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem, isInCart } = useCart();
@@ -128,7 +128,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               <div className="hidden sm:flex mt-3 flex-col gap-1.5">
                 <div className="flex gap-2">
                   <button
-                    onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                    onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
                   >
                     Acheter
@@ -141,9 +141,9 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                     {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
                   </button>
                 </div>
-                {listing.accepts_cash_on_delivery && (
+                {listing.accepts_cash_on_delivery && codEnabled && (
                   <button
-                    onClick={(e) => { e.preventDefault(); navigate(`/cod/${listing.id}`); }}
+                    onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
                     className="w-full flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
                   >
                     <Banknote className="w-3.5 h-3.5" /> Payer à la livraison
@@ -224,14 +224,14 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               {isProduct && (
                 <div className="flex gap-1.5">
                   <button
-                    onClick={(e) => { e.preventDefault(); navigate(`/escrow/${listing.id}`); }}
+                    onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
                     className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" /> Acheter
                   </button>
-                  {listing.accepts_cash_on_delivery && (
+                  {listing.accepts_cash_on_delivery && codEnabled && (
                     <button
-                      onClick={(e) => { e.preventDefault(); navigate(`/cod/${listing.id}`); }}
+                      onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
                       className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-2 py-1.5 rounded-lg transition-colors"
                       title="Payer à la livraison"
                     >
