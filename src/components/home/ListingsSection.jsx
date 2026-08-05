@@ -33,7 +33,7 @@ const ListingsSection = () => {
         const to = from + itemsPerPage - 1;
         const { data, error, count } = await supabase
           .from('listings')
-          .select('*, seller:profiles(id, full_name, avatar_url)', { count: 'exact' })
+          .select('*, seller:profiles(id, full_name, avatar_url, verified)', { count: 'exact' })
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .range(from, to);
