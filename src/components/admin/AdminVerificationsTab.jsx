@@ -35,10 +35,11 @@ const ManualCertificationSection = () => {
     if (q.trim().length < 2) { setResults([]); return; }
 
     setSearching(true);
+    // profiles n'a pas de colonne email — on cherche uniquement par full_name
     const { data } = await supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, verified')
-      .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
+      .select('id, full_name, avatar_url, verified')
+      .ilike('full_name', `%${q}%`)
       .limit(8);
     setResults(data || []);
     setSearching(false);
@@ -155,13 +156,25 @@ const AdminVerificationsTab = () => {
     fetchRequests();
   }, [fetchRequests]);
 
-  const handleAction = async (requestId, newStatus, reason = null) => {
+  const handleAction = async (requestId, userId, newStatus, reason = null) => {
     setIsActionLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('admin-actions', {
-        body: { type: 'verification', payload: { action: 'update-status', requestId, status: newStatus, reason } },
-      });
-      if (error) throw error;
+      // 1. Mettre à jour le statut de la demande
+      const { error: reqError } = await supabase
+        .from('verification_requests')
+        .update({ status: newStatus, reviewed_at: new Date().toISOString(), ...(reason ? { rejection_reason: reason } : {}) })
+        .eq('id', requestId);
+      if (reqError) throw reqError;
+
+      // 2. Si approuvé, marquer le profil comme vérifié
+      if (newStatus === 'approved' && userId) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ verified: true })
+          .eq('id', userId);
+        if (profileError) throw profileError;
+      }
+
       toast({ title: 'Succès', description: `La demande a été ${newStatus === 'approved' ? 'approuvée' : 'rejetée'}.`, className: 'bg-green-100 text-green-800' });
       fetchRequests();
     } catch (error) {
@@ -171,6 +184,15 @@ const AdminVerificationsTab = () => {
       setIsRejectionModalOpen(false);
       setRejectionReason('');
       setSelectedRequest(null);
+    }
+  };
+
+  const handleSync = async (userId, userName) => {
+    const { error } = await supabase.from('profiles').update({ verified: true }).eq('id', userId);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Badge synchronisé ✅', description: `${userName} est maintenant Vendeur Certifié.`, className: 'bg-green-100 text-green-800' });
     }
   };
 
@@ -221,7 +243,7 @@ const AdminVerificationsTab = () => {
                   index={index}
                   formatDate={formatDate}
                   DocumentLink={DocumentLink}
-                  onApprove={() => handleAction(request.id, 'approved')}
+                  onApprove={() => handleAction(request.id, request.user_id, 'approved')}
                   onReject={() => openRejectionModal(request)}
                   isActionLoading={isActionLoading}
                   selectedRequest={selectedRequest}
@@ -232,7 +254,7 @@ const AdminVerificationsTab = () => {
         )}
 
         {processed.length > 0 && (
-          <details className="group">
+          <details className="group" open>
             <summary className="cursor-pointer text-sm font-semibold text-gray-500 hover:text-gray-700 list-none flex items-center gap-2 py-2">
               <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
               Historique ({processed.length} traitée{processed.length > 1 ? 's' : ''})
@@ -246,6 +268,7 @@ const AdminVerificationsTab = () => {
                     index={index}
                     formatDate={formatDate}
                     DocumentLink={DocumentLink}
+                    onSync={() => handleSync(request.user_id, request.user?.full_name)}
                     readonly
                   />
                 ))}
@@ -286,7 +309,7 @@ const AdminVerificationsTab = () => {
             <Button variant="outline" onClick={() => setIsRejectionModalOpen(false)}>Annuler</Button>
             <Button
               variant="destructive"
-              onClick={() => handleAction(selectedRequest.id, 'rejected', rejectionReason)}
+              onClick={() => handleAction(selectedRequest.id, selectedRequest.user_id, 'rejected', rejectionReason)}
               disabled={isActionLoading || !rejectionReason.trim()}
             >
               {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
@@ -299,7 +322,7 @@ const AdminVerificationsTab = () => {
   );
 };
 
-const RequestCard = ({ request, index, formatDate, DocumentLink, onApprove, onReject, isActionLoading, selectedRequest, readonly }) => (
+const RequestCard = ({ request, index, formatDate, DocumentLink, onApprove, onReject, onSync, isActionLoading, selectedRequest, readonly }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -347,6 +370,11 @@ const RequestCard = ({ request, index, formatDate, DocumentLink, onApprove, onRe
                 <XCircle className="w-4 h-4 mr-2" /> Rejeter
               </Button>
             </>
+          )}
+          {request.status === 'approved' && onSync && (
+            <Button variant="outline" size="sm" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50" onClick={onSync}>
+              <ShieldCheck className="w-4 h-4 mr-1" /> Sync badge
+            </Button>
           )}
         </div>
       </CardContent>
