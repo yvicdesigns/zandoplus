@@ -47,7 +47,7 @@ const ListingBadges = ({ listing, seller, className }) => {
   if (listing.featured) badges.push('approved');
   if (listing.views_count > 100 && !listing.featured) badges.push('popular');
   if (listing.is_urgent) badges.push('urgent');
-  if (listing.seller_verified || seller?.verified || listing.seller?.verified) badges.push('verified');
+  if (listing.seller_verified) badges.push('verified');
 
   if (badges.length === 0) return null;
 

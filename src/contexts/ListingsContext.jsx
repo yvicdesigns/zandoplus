@@ -68,24 +68,10 @@ export const ListingsProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // Récupère les vendeurs vérifiés : RPC d'abord, puis verification_requests en fallback
-      let verifiedSet = new Set();
-      const { data: verifiedIds, error: rpcError } = await supabase.rpc('get_verified_seller_ids');
-      if (!rpcError && verifiedIds?.length > 0) {
-        verifiedIds.forEach(r => verifiedSet.add(r.user_id));
-      } else {
-        // Fallback : utilise verification_requests (données déjà correctes en DB)
-        const { data: approvedReqs } = await supabase
-          .from('verification_requests')
-          .select('user_id')
-          .eq('status', 'approved');
-        (approvedReqs || []).forEach(r => verifiedSet.add(r.user_id));
-      }
-
       const enriched = (data || []).map(l => ({
         ...l,
         seller: l.seller || null,
-        seller_verified: verifiedSet.has(l.user_id),
+        seller_verified: l.seller?.verified === true,
       }));
 
       // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
@@ -95,8 +81,8 @@ export const ListingsProvider = ({ children }) => {
       let sorted = enriched;
 
       if (shouldGeoSort) {
-        const local = data.filter(l => l.location?.toLowerCase().includes(userCity));
-        const rest  = data.filter(l => !l.location?.toLowerCase().includes(userCity));
+        const local = enriched.filter(l => l.location?.toLowerCase().includes(userCity));
+        const rest  = enriched.filter(l => !l.location?.toLowerCase().includes(userCity));
         sorted = [...local, ...rest];
       }
 
