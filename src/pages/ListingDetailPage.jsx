@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { fetchCityDeliveryConfig, extractCity } from '@/lib/deliveryUtils';
 import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
@@ -63,6 +64,7 @@ const ListingDetailPage = () => {
   const { categoriesMap } = useCategories();
 
   const [listing, setListing] = useState(null);
+  const [cityConfig, setCityConfig] = useState(null);
   const [relatedListings, setRelatedListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingRelated, setLoadingRelated] = useState(true);
@@ -95,6 +97,9 @@ const ListingDetailPage = () => {
         description: sanitizeHtml(data.description),
       };
       setListing(sanitizedListing);
+      const city = extractCity(data.location);
+      const conf = await fetchCityDeliveryConfig(supabase, city);
+      setCityConfig(conf);
       if (user?.id !== data.user_id) {
         await supabase.rpc('increment_listing_view', { p_listing_id: data.id });
         // Pixels — ViewContent
@@ -464,7 +469,7 @@ const ListingDetailPage = () => {
                       Acheter maintenant
                     </button>
                   </div>
-                  {listing.accepts_cash_on_delivery && (
+                  {listing.accepts_cash_on_delivery && (!cityConfig || cityConfig.cod_enabled) && (
                     <button
                       onClick={handleCod}
                       className="w-full h-[46px] rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 bg-orange-500 text-white hover:bg-orange-600 transition-colors"

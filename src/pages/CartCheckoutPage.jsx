@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -161,6 +162,7 @@ const CartCheckoutPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('mtn');
   const [promoCode, setPromoCode] = useState('');
+  const [cityConfig, setCityConfig] = useState(null);
 
   const sellerGroups = Object.values(itemsBySeller);
   const deliveryTotal = sellerGroups.length * ZANDO_DELIVERY_FEE;
@@ -191,7 +193,11 @@ const CartCheckoutPage = () => {
     if (data) {
       setAddresses(data);
       const def = data.find(a => a.is_default) || data[0];
-      if (def) setSelectedAddressId(def.id);
+      if (def) {
+        setSelectedAddressId(def.id);
+        const conf = await fetchCityDeliveryConfig(supabase, def.city);
+        setCityConfig(conf);
+      }
       if (data.length === 0) setShowAddForm(true);
     }
   };
@@ -383,7 +389,7 @@ const CartCheckoutPage = () => {
                           >
                             <input
                               type="radio" name="address" checked={isSelected}
-                              onChange={() => setSelectedAddressId(addr.id)}
+                              onChange={async () => { setSelectedAddressId(addr.id); const conf = await fetchCityDeliveryConfig(supabase, addr.city); setCityConfig(conf); }}
                               className="accent-custom-green-500 w-4 h-4 mt-0.5 flex-shrink-0"
                             />
                             <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -457,7 +463,7 @@ const CartCheckoutPage = () => {
               <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 className="text-[15px] font-black text-gray-900 mb-4">Méthode de paiement</h2>
                 <div className="space-y-3">
-                  {PAYMENT_METHODS.map(({ id, label, sub, Logo, disabled }) => (
+                  {PAYMENT_METHODS.filter(m => m.id !== 'cod' || !cityConfig || cityConfig.cod_enabled).map(({ id, label, sub, Logo, disabled }) => (
                     <label
                       key={id}
                       className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
