@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,16 +53,16 @@ async function registerNativePush(userId) {
 }
 
 // ── Web Push (PWA installée ou navigateur) ────────────────────────────────────
+// Ne demande JAMAIS la permission automatiquement — uniquement si déjà accordée
+// (pour renouveler l'abonnement) ou via requestWebPushPermission() sur action user.
 async function registerWebPush(userId) {
   if (!VAPID_PUBLIC_KEY) return;
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission !== 'granted') return;
 
   try {
     const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     await navigator.serviceWorker.ready;
-
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return;
 
     let subscription = await reg.pushManager.getSubscription();
     if (!subscription) {
@@ -78,21 +78,59 @@ async function registerWebPush(userId) {
   }
 }
 
+// Appeler cette fonction sur une action utilisateur explicite (bouton "Activer les notifications")
+export async function requestWebPushPermission(userId) {
+  if (!VAPID_PUBLIC_KEY) return false;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return false;
+    await registerWebPush(userId);
+    return true;
+  } catch (err) {
+    console.debug('[Push] Permission request failed:', err.message);
+    return false;
+  }
+}
+
 // ── Hook principal ────────────────────────────────────────────────────────────
 export function usePushNotifications() {
   const { user } = useAuth();
+  const [updateAvailable, setUpdateAvailable] = useState(false);
 
   const register = useCallback(async () => {
     if (!user?.id) return;
 
     if (Capacitor.isNativePlatform()) {
-      // Android ou iOS natif
       await registerNativePush(user.id).catch(console.debug);
     } else {
-      // PWA / navigateur
       await registerWebPush(user.id).catch(console.debug);
     }
   }, [user?.id]);
+
+  // Détection de mise à jour du Service Worker
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(reg => {
+      // Déjà un SW en attente au chargement
+      if (reg.waiting) {
+        setUpdateAvailable(true);
+        return;
+      }
+      // Nouveau SW trouvé pendant la session
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            setUpdateAvailable(true);
+          }
+        });
+      });
+    }).catch(() => {});
+  }, []);
 
   // Navigation depuis message SW (app déjà ouverte)
   useEffect(() => {
@@ -109,4 +147,6 @@ export function usePushNotifications() {
   useEffect(() => {
     if (user) register();
   }, [user, register]);
+
+  return { updateAvailable };
 }
