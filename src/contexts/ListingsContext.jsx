@@ -68,11 +68,27 @@ export const ListingsProvider = ({ children }) => {
 
       if (error) throw error;
 
+      // Enrichir chaque listing avec les données seller depuis profiles
+      // (ne dépend pas du FK Supabase — requête directe)
+      const userIds = [...new Set((data || []).map(l => l.user_id).filter(Boolean))];
+      let sellerMap = {};
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug')
+          .in('id', userIds);
+        (profilesData || []).forEach(p => { sellerMap[p.id] = p; });
+      }
+      const enriched = (data || []).map(l => ({
+        ...l,
+        seller: sellerMap[l.user_id] || l.seller || null,
+      }));
+
       // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
       const userCity = user?.location?.trim().toLowerCase();
       const shouldGeoSort = userCity && !filters.location && filters.sortBy === 'newest';
 
-      let sorted = data;
+      let sorted = enriched;
 
       if (shouldGeoSort) {
         const local = data.filter(l => l.location?.toLowerCase().includes(userCity));
