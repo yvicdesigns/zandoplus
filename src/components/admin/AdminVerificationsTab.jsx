@@ -48,10 +48,10 @@ const ManualCertificationSection = () => {
   const handleToggle = async (profile) => {
     setActionLoading(profile.id);
     const newVerified = !profile.verified;
-    const { error } = await supabase
-      .from('profiles')
-      .update({ verified: newVerified })
-      .eq('id', profile.id);
+    const { error } = await supabase.rpc('admin_set_verified', {
+      target_user_id: profile.id,
+      is_verified: newVerified,
+    });
 
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
@@ -166,12 +166,12 @@ const AdminVerificationsTab = () => {
         .eq('id', requestId);
       if (reqError) throw reqError;
 
-      // 2. Si approuvé, marquer le profil comme vérifié
+      // 2. Si approuvé, marquer le profil comme vérifié via RPC (bypasse RLS)
       if (newStatus === 'approved' && userId) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ verified: true })
-          .eq('id', userId);
+        const { error: profileError } = await supabase.rpc('admin_set_verified', {
+          target_user_id: userId,
+          is_verified: true,
+        });
         if (profileError) throw profileError;
       }
 
@@ -188,7 +188,7 @@ const AdminVerificationsTab = () => {
   };
 
   const handleSync = async (userId, userName) => {
-    const { error } = await supabase.from('profiles').update({ verified: true }).eq('id', userId);
+    const { error } = await supabase.rpc('admin_set_verified', { target_user_id: userId, is_verified: true });
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
