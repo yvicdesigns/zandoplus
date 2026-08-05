@@ -9,7 +9,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useListings } from '@/contexts/ListingsContext';
 import { Link } from 'react-router-dom';
 import PaginationControls from '@/components/common/PaginationControls';
-import { extractCity, normalizeCity } from '@/lib/deliveryUtils';
 
 const ListingsSection = () => {
   const { user } = useAuth();
@@ -20,22 +19,10 @@ const ListingsSection = () => {
   const [loadingPaginated, setLoadingPaginated] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [cityConfigMap, setCityConfigMap] = useState({});
   const itemsPerPage = 10;
 
   const sectionRef = useRef(null);
   const scrollRef = useRef(null);
-
-  // Charge les configs ville une seule fois
-  useEffect(() => {
-    supabase.from('delivery_city_config').select('city, cod_enabled').then(({ data }) => {
-      if (data) {
-        const map = {};
-        data.forEach(c => { map[normalizeCity(c.city)] = c.cod_enabled; });
-        setCityConfigMap(map);
-      }
-    });
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -149,7 +136,6 @@ const ListingsSection = () => {
                       viewMode="grid"
                       isFavorite={favorites.has(listing.id)}
                       toggleFavorite={toggleFavorite}
-                      codEnabled={cityConfigMap[normalizeCity(extractCity(listing.location))] !== false}
                     />
                   </div>
                 ))}

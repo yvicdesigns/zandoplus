@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle, Banknote } from 'lucide-react';
+import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle } from 'lucide-react';
 import ListingBadges from '@/components/common/ListingBadges';
 import StarRating from '@/components/reviews/StarRating';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
 
-const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite, codEnabled = true }) => {
+const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem, isInCart } = useCart();
@@ -141,14 +141,6 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite, codEnabled
                     {inCart ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
                   </button>
                 </div>
-                {listing.accepts_cash_on_delivery && codEnabled && (
-                  <button
-                    onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
-                    className="w-full flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
-                  >
-                    <Banknote className="w-3.5 h-3.5" /> Payer à la livraison
-                  </button>
-                )}
               </div>
             )}
             {/* Mobile : bouton panier vert — icône seule */}
@@ -229,15 +221,6 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite, codEnabled
                   >
                     <ShoppingCart className="w-3.5 h-3.5" /> Acheter
                   </button>
-                  {listing.accepts_cash_on_delivery && codEnabled && (
-                    <button
-                      onClick={(e) => { e.preventDefault(); if (!inCart) addItem(listing, () => {}); navigate('/cart/checkout'); }}
-                      className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-2 py-1.5 rounded-lg transition-colors"
-                      title="Payer à la livraison"
-                    >
-                      <Banknote className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                 </div>
               )}
             </div>
