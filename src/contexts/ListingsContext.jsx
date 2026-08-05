@@ -68,21 +68,16 @@ export const ListingsProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // Enrichir chaque listing avec les données seller depuis profiles
-      // (ne dépend pas du FK Supabase — requête directe)
-      const userIds = [...new Set((data || []).map(l => l.user_id).filter(Boolean))];
-      let sellerMap = {};
-      if (userIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug')
-          .in('id', userIds);
-        (profilesData || []).forEach(p => { sellerMap[p.id] = p; });
-      }
+      // Récupère les IDs des vendeurs vérifiés via RPC SECURITY DEFINER
+      // → bypasse le RLS sur profiles, garanti de fonctionner comme is_urgent/is_boosted
+      let verifiedSet = new Set();
+      const { data: verifiedIds } = await supabase.rpc('get_verified_seller_ids');
+      (verifiedIds || []).forEach(r => verifiedSet.add(r.user_id));
+
       const enriched = (data || []).map(l => ({
         ...l,
-        seller: sellerMap[l.user_id] || l.seller || null,
-        seller_verified: sellerMap[l.user_id]?.verified === true,
+        seller: l.seller || null,
+        seller_verified: verifiedSet.has(l.user_id),
       }));
 
       // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
@@ -99,8 +94,8 @@ export const ListingsProvider = ({ children }) => {
 
       // Vendeurs vérifiés flottent en haut sur tri par défaut
       if (filters.sortBy === 'newest' || filters.sortBy === 'popularity') {
-        const verified = sorted.filter(l => l.seller?.verified);
-        const others   = sorted.filter(l => !l.seller?.verified);
+        const verified = sorted.filter(l => l.seller_verified);
+        const others   = sorted.filter(l => !l.seller_verified);
         sorted = [...verified, ...others];
       }
 
