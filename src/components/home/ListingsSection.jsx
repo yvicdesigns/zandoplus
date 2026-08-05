@@ -31,7 +31,7 @@ const ListingsSection = () => {
     supabase.from('delivery_city_config').select('city, cod_enabled').then(({ data }) => {
       if (data) {
         const map = {};
-        data.forEach(c => { map[c.city] = c.cod_enabled; });
+        data.forEach(c => { map[c.city.toLowerCase()] = c.cod_enabled; });
         setCityConfigMap(map);
       }
     });
@@ -149,7 +149,7 @@ const ListingsSection = () => {
                       viewMode="grid"
                       isFavorite={favorites.has(listing.id)}
                       toggleFavorite={toggleFavorite}
-                      codEnabled={cityConfigMap[extractCity(listing.location)] !== false}
+                      codEnabled={cityConfigMap[extractCity(listing.location)?.toLowerCase()] !== false}
                     />
                   </div>
                 ))}
@@ -201,7 +201,7 @@ const ListingsSection = () => {
                     viewMode="grid"
                     isFavorite={favorites.has(listing.id)}
                     toggleFavorite={toggleFavorite}
-                    codEnabled={cityConfigMap[extractCity(listing.location)] !== false}
+                    codEnabled={cityConfigMap[extractCity(listing.location)?.toLowerCase()] !== false}
                   />
                 ))}
               </motion.div>

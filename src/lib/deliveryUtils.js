@@ -11,7 +11,7 @@ export async function fetchCityDeliveryConfig(supabase, city) {
   const { data } = await supabase
     .from('delivery_city_config')
     .select('zando_delivery_enabled, cod_enabled, seller_delivery_enabled')
-    .eq('city', city)
+    .ilike('city', city)
     .maybeSingle();
   return data ?? null;
 }
