@@ -82,6 +82,7 @@ export const ListingsProvider = ({ children }) => {
       const enriched = (data || []).map(l => ({
         ...l,
         seller: sellerMap[l.user_id] || l.seller || null,
+        seller_verified: sellerMap[l.user_id]?.verified === true,
       }));
 
       // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
