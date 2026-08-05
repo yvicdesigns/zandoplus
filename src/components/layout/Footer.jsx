@@ -32,8 +32,7 @@ const Footer = () => {
 
   const about = [
     { label: 'Qui sommes-nous ?', href: '/about' },
-    { label: 'Devenir vendeur',   href: '/post-ad' },
-    { label: 'Changelog',         href: '/changelog' },
+    { label: 'Devenir vendeur',   href: '/become-seller' },
     { label: 'Contact',           href: '/contact' },
   ];
 
@@ -49,7 +48,6 @@ const Footer = () => {
     { label: 'Conditions générales',          href: '/terms' },
     { label: 'Politique de confidentialité',  href: '/privacy' },
     { label: 'Mentions légales',              href: '/terms' },
-    { label: 'Rapport d\'audit',              href: '/audit-report' },
   ];
 
   const socials = [
