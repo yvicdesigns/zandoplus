@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useListings } from '@/contexts/ListingsContext';
 import { Link } from 'react-router-dom';
 import PaginationControls from '@/components/common/PaginationControls';
-import { extractCity } from '@/lib/deliveryUtils';
+import { extractCity, normalizeCity } from '@/lib/deliveryUtils';
 
 const ListingsSection = () => {
   const { user } = useAuth();
@@ -31,7 +31,7 @@ const ListingsSection = () => {
     supabase.from('delivery_city_config').select('city, cod_enabled').then(({ data }) => {
       if (data) {
         const map = {};
-        data.forEach(c => { map[c.city.toLowerCase()] = c.cod_enabled; });
+        data.forEach(c => { map[normalizeCity(c.city)] = c.cod_enabled; });
         setCityConfigMap(map);
       }
     });
@@ -149,7 +149,7 @@ const ListingsSection = () => {
                       viewMode="grid"
                       isFavorite={favorites.has(listing.id)}
                       toggleFavorite={toggleFavorite}
-                      codEnabled={cityConfigMap[extractCity(listing.location)?.toLowerCase()] !== false}
+                      codEnabled={cityConfigMap[normalizeCity(extractCity(listing.location))] !== false}
                     />
                   </div>
                 ))}
@@ -201,7 +201,7 @@ const ListingsSection = () => {
                     viewMode="grid"
                     isFavorite={favorites.has(listing.id)}
                     toggleFavorite={toggleFavorite}
-                    codEnabled={cityConfigMap[extractCity(listing.location)?.toLowerCase()] !== false}
+                    codEnabled={cityConfigMap[normalizeCity(extractCity(listing.location))] !== false}
                   />
                 ))}
               </motion.div>
