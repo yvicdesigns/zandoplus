@@ -68,11 +68,19 @@ export const ListingsProvider = ({ children }) => {
 
       if (error) throw error;
 
-      // Récupère les IDs des vendeurs vérifiés via RPC SECURITY DEFINER
-      // → bypasse le RLS sur profiles, garanti de fonctionner comme is_urgent/is_boosted
+      // Récupère les vendeurs vérifiés : RPC d'abord, puis verification_requests en fallback
       let verifiedSet = new Set();
-      const { data: verifiedIds } = await supabase.rpc('get_verified_seller_ids');
-      (verifiedIds || []).forEach(r => verifiedSet.add(r.user_id));
+      const { data: verifiedIds, error: rpcError } = await supabase.rpc('get_verified_seller_ids');
+      if (!rpcError && verifiedIds?.length > 0) {
+        verifiedIds.forEach(r => verifiedSet.add(r.user_id));
+      } else {
+        // Fallback : utilise verification_requests (données déjà correctes en DB)
+        const { data: approvedReqs } = await supabase
+          .from('verification_requests')
+          .select('user_id')
+          .eq('status', 'approved');
+        (approvedReqs || []).forEach(r => verifiedSet.add(r.user_id));
+      }
 
       const enriched = (data || []).map(l => ({
         ...l,
