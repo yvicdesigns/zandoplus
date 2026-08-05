@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Award, Zap, ShieldCheck, Clock, Sparkles, PackageX, Flame } from 'lucide-react';
+import { Award, ShieldCheck, Sparkles, PackageX, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const badgeConfig = {
@@ -24,13 +24,6 @@ const badgeConfig = {
     tooltip: 'Vente urgente — offre limitée.',
     customClasses: 'bg-red-500 text-white animate-pulse text-[0.6rem] px-1.5 py-0.5 md:text-xs md:px-2.5 md:py-0.5 shadow-sm shadow-red-200',
   },
-  new: {
-    label: 'Nouveau',
-    icon: <Clock className="w-3 h-3 md:w-4 md:h-4" />,
-    variant: 'new',
-    tooltip: 'Annonce publiée récemment.',
-    customClasses: 'text-[0.6rem] px-1.5 py-0.5 md:text-xs md:px-2.5 md:py-0.5'
-  },
   verified: {
     label: 'Vérifié',
     icon: <ShieldCheck className="w-3 h-3 md:w-4 md:h-4" />,
@@ -49,21 +42,11 @@ const badgeConfig = {
 const ListingBadges = ({ listing, seller, className }) => {
   if (!listing) return null;
 
-  const isNew = () => {
-    const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-    return new Date() - new Date(listing.created_at) < ONE_WEEK;
-  };
-
-  const isPopular = () => {
-    return listing.views_count > 100;
-  };
-  
   const badges = [];
   if (listing.quantity === 0) badges.push('outOfStock');
   if (listing.featured) badges.push('approved');
-  if (isPopular() && !listing.featured) badges.push('popular');
+  if (listing.views_count > 100 && !listing.featured) badges.push('popular');
   if (listing.is_urgent) badges.push('urgent');
-  if (isNew()) badges.push('new');
   if (seller?.verified || listing.seller?.verified) badges.push('verified');
 
   if (badges.length === 0) return null;
