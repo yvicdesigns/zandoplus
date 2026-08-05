@@ -7,9 +7,10 @@ import {
   Search, 
   MoreVertical, 
   Trash2, 
-  Shield, 
-  Loader2, 
-  Users as UsersIcon 
+  Shield,
+  ShieldCheck,
+  Loader2,
+  Users as UsersIcon
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,6 +96,22 @@ const AdminUsersTab = memo(() => {
 
   const closeDialog = () => {
     setDialogState({ isOpen: false, action: null, userId: null, userName: '' });
+  };
+
+  const handleToggleVerified = async (userId, currentVerified) => {
+    const newVerified = !currentVerified;
+    try {
+      const { error } = await supabase.from('profiles').update({ verified: newVerified }).eq('id', userId);
+      if (error) throw error;
+      toast({
+        title: newVerified ? 'Compte vérifié ✅' : 'Vérification retirée',
+        description: newVerified ? 'Le badge Vérifié est maintenant actif.' : 'Le badge Vérifié a été retiré.',
+        className: newVerified ? 'bg-green-100 text-green-800' : undefined,
+      });
+      fetchUsers();
+    } catch (err) {
+      toast({ title: 'Erreur', description: translateAdminError(err), variant: 'destructive' });
+    }
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -214,6 +231,11 @@ const AdminUsersTab = memo(() => {
                           <Button size="icon" variant="ghost"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleToggleVerified(userItem.id, userItem.verified)}>
+                            <ShieldCheck className="mr-2 h-4 w-4 text-blue-600" />
+                            {userItem.verified ? 'Retirer la vérification' : 'Marquer comme vérifié'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                            <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                               <Shield className="mr-2 h-4 w-4" />
