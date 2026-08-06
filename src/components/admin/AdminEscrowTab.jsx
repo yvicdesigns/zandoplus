@@ -8,7 +8,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Search, ShieldCheck, Loader2, CheckCircle, XCircle,
-  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote, RefreshCw, Zap,
+  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote, RefreshCw, Zap, Eye,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -426,14 +426,26 @@ const AdminEscrowTab = memo(() => {
 
                       {/* Preuve paiement */}
                       {tx.preuve_paiement_url && (
-                        <a
-                          href={tx.preuve_paiement_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={async () => {
+                            try {
+                              const urlObj = new URL(tx.preuve_paiement_url);
+                              const parts = urlObj.pathname.split('/payment_proofs/');
+                              const filePath = parts[1];
+                              if (!filePath) throw new Error('Chemin introuvable');
+                              const { data, error } = await supabase.storage
+                                .from('payment_proofs')
+                                .createSignedUrl(filePath, 120);
+                              if (error) throw error;
+                              window.open(data.signedUrl, '_blank');
+                            } catch (e) {
+                              toast({ title: 'Erreur', description: "Impossible d'ouvrir la preuve.", variant: 'destructive' });
+                            }
+                          }}
                           className="flex items-center gap-1 text-custom-green-600 hover:underline text-xs w-fit"
                         >
-                          <LinkIcon className="w-3.5 h-3.5" /> Preuve de paiement
-                        </a>
+                          <Eye className="w-3.5 h-3.5" /> Voir preuve de paiement
+                        </button>
                       )}
 
                       {/* Actions admin */}
