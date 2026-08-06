@@ -7,10 +7,11 @@ const PwaInstallFlowManager = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem('hasVisitedPwaPage');
+    const hasVisitedThisSession = sessionStorage.getItem('hasVisitedPwaPage');
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-    if (isMobile && !hasVisited && !isStandalone && location.pathname !== '/installer-app') {
+    if (isMobile && !hasVisitedThisSession && !isStandalone && location.pathname !== '/installer-app') {
+      sessionStorage.setItem('hasVisitedPwaPage', 'true');
       navigate('/installer-app', { replace: true });
     }
   }, [location, navigate]);

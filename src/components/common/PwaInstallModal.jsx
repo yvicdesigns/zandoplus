@@ -13,13 +13,13 @@ const PwaInstallModal = () => {
 
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const alreadyShown = localStorage.getItem('pwaModalShown');
+    const shownThisSession = sessionStorage.getItem('pwaModalShown');
 
-    if (!isMobile || isStandalone || alreadyShown) return;
+    if (!isMobile || isStandalone || shownThisSession) return;
 
     const timer = setTimeout(() => {
       setIsVisible(true);
-      localStorage.setItem('pwaModalShown', 'true');
+      sessionStorage.setItem('pwaModalShown', 'true');
     }, 4000);
 
     return () => clearTimeout(timer);
