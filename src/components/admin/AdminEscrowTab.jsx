@@ -90,8 +90,13 @@ const AdminEscrowTab = memo(() => {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    else setTransactions(data || []);
+    if (error) {
+      console.error('AdminEscrowTab error:', JSON.stringify(error));
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      console.log('AdminEscrowTab data:', data?.length, 'transactions');
+      setTransactions(data || []);
+    }
     setLoading(false);
   }, [toast]);
 
