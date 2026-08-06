@@ -207,6 +207,8 @@ const AdminUsersTab = memo(() => {
                         <div className="flex items-center space-x-2">
                           <h3 className="font-semibold text-gray-900">{userItem.full_name || 'Sans Nom'}</h3>
                           {userItem.is_admin && <Badge className="bg-purple-100 text-purple-800 border-none">Admin</Badge>}
+                          {userItem.role === 'monetisation' && <Badge className="bg-amber-100 text-amber-800 border-none">Monétisation</Badge>}
+                          {userItem.role === 'gestion' && <Badge className="bg-indigo-100 text-indigo-800 border-none">Gestion</Badge>}
                           {userItem.role === 'editor' && <Badge className="bg-blue-100 text-blue-800 border-none">Éditeur</Badge>}
                           {userItem.role === 'viewer' && <Badge variant="outline" className="text-gray-600">Lecteur</Badge>}
                           {userItem.verified && <Badge className="bg-green-100 text-green-800 border-none ml-1">Vérifié</Badge>}
@@ -236,6 +238,8 @@ const AdminUsersTab = memo(() => {
                             <DropdownMenuSubContent>
                               <DropdownMenuRadioGroup value={userItem.role || 'viewer'} onValueChange={(val) => handleRoleChange(userItem.id, val)}>
                                 <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="monetisation">Monétisation</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="gestion">Gestion</DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="editor">Éditeur</DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="viewer">Lecteur</DropdownMenuRadioItem>
                               </DropdownMenuRadioGroup>

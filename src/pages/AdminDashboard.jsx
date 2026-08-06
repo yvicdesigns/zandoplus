@@ -41,6 +41,30 @@ import { useNavigate } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+/* ─── Role permissions ─────────────────────────────────────── */
+const ROLE_TABS = {
+  admin:        null,
+  monetisation: new Set(['overview', 'escrow', 'payments', 'withdrawals', 'ads', 'boosts']),
+  gestion:      new Set(['overview', 'users', 'listings', 'deliveries', 'categories', 'reports', 'verifications', 'delivery-config']),
+  editor:       null,
+  viewer:       new Set(['overview', 'listings']),
+};
+
+const ROLE_LABELS = {
+  admin:        'Administrateur',
+  monetisation: 'Monétisation',
+  gestion:      'Gestion',
+  editor:       'Éditeur',
+  viewer:       'Lecteur',
+};
+
+const canAccessTab = (tabId, userRole, isAdmin) => {
+  if (isAdmin) return true;
+  const allowed = ROLE_TABS[userRole];
+  if (allowed === null || allowed === undefined) return true;
+  return allowed.has(tabId);
+};
+
 /* ─── Nav ───────────────────────────────────────────────────── */
 const NAV_GROUPS = [
   {
@@ -96,7 +120,16 @@ const TAB_LABELS = {
 };
 
 /* ─── Tab renderer ──────────────────────────────────────────── */
-const renderTabContent = (t) => {
+const renderTabContent = (t, userRole, isAdmin) => {
+  if (!canAccessTab(t, userRole, isAdmin)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+        <Shield className="w-14 h-14 mb-4 text-gray-300" />
+        <p className="text-lg font-bold text-gray-700">Accès non autorisé</p>
+        <p className="text-sm mt-1 text-gray-400">Vous n'avez pas accès à cette section.</p>
+      </div>
+    );
+  }
   switch (t) {
     case 'users':           return <AdminUsersTab />;
     case 'listings':        return <AdminListingsTab />;
@@ -606,7 +639,7 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
 const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, onNavigate, signOut }) => {
   const navigate = useNavigate();
   const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin';
-  const role = userRole === 'admin' ? 'Administrateur' : userRole === 'editor' ? 'Éditeur' : 'Lecteur';
+  const role = ROLE_LABELS[userRole] || 'Lecteur';
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const avatarUrl = user?.user_metadata?.avatar_url;
 
@@ -641,7 +674,7 @@ const SidebarNav = ({ activeTab, setActiveTab, isAdmin, userRole, user, counts, 
       {/* Groups */}
       <div className="flex-1 overflow-y-auto py-1 px-3 scrollbar-thin scrollbar-thumb-gray-200">
         {NAV_GROUPS.map((group) => {
-          const visible = group.items.filter(i => !i.adminOnly || isAdmin);
+          const visible = group.items.filter(i => canAccessTab(i.id, userRole, isAdmin) && (!i.adminOnly || isAdmin));
           if (!visible.length) return null;
           return (
             <div key={group.label} className="mb-3">
@@ -824,11 +857,13 @@ const AdminDashboard = () => {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
             <span className={`hidden sm:inline-flex text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-              userRole === 'admin' ? 'bg-red-50 text-red-600 border-red-200'
-              : userRole === 'editor' ? 'bg-blue-50 text-blue-600 border-blue-200'
+              userRole === 'admin'        ? 'bg-red-50 text-red-600 border-red-200'
+              : userRole === 'monetisation' ? 'bg-amber-50 text-amber-700 border-amber-200'
+              : userRole === 'gestion'    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+              : userRole === 'editor'     ? 'bg-blue-50 text-blue-600 border-blue-200'
               : 'bg-gray-50 text-gray-500 border-gray-200'
             }`}>
-              {userRole === 'admin' ? 'Admin' : userRole === 'editor' ? 'Éditeur' : 'Lecteur'}
+              {ROLE_LABELS[userRole] || 'Lecteur'}
             </span>
           </div>
         </div>
@@ -841,7 +876,7 @@ const AdminDashboard = () => {
               transition={{ duration: 0.15 }}>
               {activeTab === 'overview'
                 ? <OverviewTab counts={counts} loading={loading} setActiveTab={setActiveTab} />
-                : renderTabContent(activeTab)}
+                : renderTabContent(activeTab, userRole, isAdmin)}
             </motion.div>
           </AnimatePresence>
         </div>
