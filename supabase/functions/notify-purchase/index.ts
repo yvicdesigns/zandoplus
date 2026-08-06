@@ -6,6 +6,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function normalizePhone(raw: string, countryCode = '242'): string | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/[\s\-\.\(\)]/g, '');
+  if (cleaned.length < 6) return null;
+  if (cleaned.startsWith('+')) return cleaned.slice(1);
+  if (cleaned.startsWith('00')) return cleaned.slice(2);
+  if (cleaned.startsWith('0') && cleaned.length <= 10) return countryCode + cleaned.slice(1);
+  if (cleaned.startsWith(countryCode)) return cleaned;
+  if (cleaned.length >= 8 && cleaned.length <= 9) return countryCode + cleaned;
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -25,23 +37,28 @@ serve(async (req) => {
       throw new Error('Paramètres requis manquants');
     }
 
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const RESEND_API_KEY             = Deno.env.get('RESEND_API_KEY');
+    const SUPABASE_URL               = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const WHATSAPP_TOKEN             = Deno.env.get('WHATSAPP_TOKEN');
+    const WHATSAPP_PHONE_ID          = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
 
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY non configuré');
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error('Supabase non configuré');
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fetch both emails in parallel
-    const [buyerRes, sellerRes] = await Promise.all([
+    // Fetch emails + seller profile (phone) in parallel
+    const [buyerRes, sellerRes, sellerProfileRes] = await Promise.all([
       admin.auth.admin.getUserById(buyer_id),
       admin.auth.admin.getUserById(seller_id),
+      admin.from('profiles').select('full_name, phone').eq('id', seller_id).single(),
     ]);
 
-    const buyerEmail = buyerRes.data?.user?.email;
-    const sellerEmail = sellerRes.data?.user?.email;
+    const buyerEmail   = buyerRes.data?.user?.email;
+    const sellerEmail  = sellerRes.data?.user?.email;
+    const sellerName   = sellerProfileRes.data?.full_name?.split(' ')[0] || 'Vendeur';
+    const sellerPhone  = normalizePhone(sellerProfileRes.data?.phone || '');
 
     const formatPrice = (n: number, cur: string) =>
       `${(n || 0).toLocaleString('fr-FR')} ${cur || 'FCFA'}`;
@@ -250,6 +267,35 @@ serve(async (req) => {
     }
 
     await Promise.all(sends);
+
+    // --- WhatsApp au VENDEUR (non-bloquant si pas configuré) ---
+    if (WHATSAPP_TOKEN && WHATSAPP_PHONE_ID && sellerPhone) {
+      try {
+        await fetch(`https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_ID}/messages`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: sellerPhone,
+            type: 'template',
+            template: {
+              name: 'zandoplus_nouvelle_vente',
+              language: { code: 'fr' },
+              components: [{
+                type: 'body',
+                parameters: [
+                  { type: 'text', text: sellerName },
+                  { type: 'text', text: listing_title },
+                  { type: 'text', text: String(listing_price || 0) },
+                ],
+              }],
+            },
+          }),
+        });
+      } catch (waErr) {
+        console.error('WhatsApp seller notify error (non-fatal):', waErr);
+      }
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
