@@ -100,7 +100,7 @@ const AdminUsersTab = memo(() => {
 
   const handleToggleSeller = async (userId, currentValue) => {
     try {
-      const { error } = await supabase.from('profiles').update({ is_seller: !currentValue }).eq('id', userId);
+      const { error } = await supabase.rpc('admin_toggle_seller', { p_user_id: userId, p_is_seller: !currentValue });
       if (error) throw error;
       await logAuditAction(currentUser?.id, 'TOGGLE_SELLER', 'user', userId, { is_seller: !currentValue });
       toast({ title: !currentValue ? 'Vendeur activé ✅' : 'Vendeur désactivé', className: 'bg-green-100 text-green-800' });
@@ -112,7 +112,7 @@ const AdminUsersTab = memo(() => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+      const { error } = await supabase.rpc('admin_update_user_role', { p_user_id: userId, p_role: newRole });
       if (error) throw error;
 
       await logAuditAction(currentUser?.id, 'UPDATE_ROLE', 'user', userId, { new_role: newRole });
