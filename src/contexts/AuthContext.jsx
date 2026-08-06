@@ -156,10 +156,13 @@ export const AuthProvider = ({ children }) => {
         resetSafety();
         setSession(newSession);
         if (newSession?.user) {
-            // Same user already fully loaded — just clear loading flags, no re-fetch.
-            // Check BEFORE setUserSafe so userRef hasn't been overwritten yet.
+            // Same user already in memory — clear loading flags immediately but still
+            // re-fetch the profile in background to pick up role/profile changes.
             if (userRef.current?.id === newSession.user.id) {
                 if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
+                fetchUserProfile(newSession.user).then(fullUser => {
+                    if (mounted) setUserSafe(fullUser);
+                }).catch(() => {});
                 return;
             }
             // Show user IMMEDIATELY from session metadata (no network needed).
@@ -462,6 +465,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshProfile = useCallback(async () => {
+    if (!session?.user) return;
+    const fullUser = await fetchUserProfile(session.user);
+    setUserSafe(fullUser);
+  }, [session, fetchUserProfile]);
+
   const value = {
     user,
     session,
@@ -474,6 +483,7 @@ export const AuthProvider = ({ children }) => {
     updatePassword,
     signInWithProvider,
     deleteAccount,
+    refreshProfile,
     ...authService,
     isAuthenticated: !!user,
     isAdmin: !!user?.user_metadata?.is_admin || user?.role === 'admin',

@@ -41,7 +41,7 @@ const AdminUsersTab = memo(() => {
   const [dialogState, setDialogState] = useState({ isOpen: false, action: null, userId: null, userName: '' });
   const [isActionLoading, setIsActionLoading] = useState(false);
   const { toast } = useToast();
-  const { user: currentUser } = useAuth(); 
+  const { user: currentUser, refreshProfile } = useAuth(); 
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -114,11 +114,12 @@ const AdminUsersTab = memo(() => {
     try {
       const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
       if (error) throw error;
-      
+
       await logAuditAction(currentUser?.id, 'UPDATE_ROLE', 'user', userId, { new_role: newRole });
-      
+
       toast({ title: "Succès", description: `Rôle mis à jour: ${newRole}`, className: "bg-green-100 text-green-800" });
       fetchUsers();
+      if (userId === currentUser?.id) refreshProfile?.();
     } catch (err) {
       toast({ title: "Erreur", description: translateAdminError(err), variant: "destructive" });
     }
