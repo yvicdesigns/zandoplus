@@ -89,14 +89,14 @@ const FullPageLoader = () => (
 );
 
 const AdminProtectedRoute = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, profileReady } = useAuth();
 
-  if (isLoading) {
+  if (isLoading || !profileReady) {
     return <FullPageLoader />;
   }
 
   const isAdmin = user?.user_metadata?.is_admin === true || ['admin', 'editor', 'monetisation', 'gestion'].includes(user?.role);
-  
+
   if (!user || !isAdmin) {
     return <Navigate to="/" replace />;
   }

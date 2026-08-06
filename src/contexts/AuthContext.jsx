@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileReady, setProfileReady] = useState(false);
   // True while a PKCE/OAuth exchange is in progress (?code= or #access_token= was in the URL).
   // Prevents the header from flashing "Se connecter" if the safety timer fires before the exchange
   // completes. Clears when getSession() resolves (exchange done, success or failure).
@@ -161,8 +162,8 @@ export const AuthProvider = ({ children }) => {
             if (userRef.current?.id === newSession.user.id) {
                 if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
                 fetchUserProfile(newSession.user).then(fullUser => {
-                    if (mounted) setUserSafe(fullUser);
-                }).catch(() => {});
+                    if (mounted) { setUserSafe(fullUser); setProfileReady(true); }
+                }).catch(() => { if (mounted) setProfileReady(true); });
                 return;
             }
             // Show user IMMEDIATELY from session metadata (no network needed).
@@ -177,10 +178,10 @@ export const AuthProvider = ({ children }) => {
             if (mounted) setUserSafe(immediateUser);
             if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
             const fullUser = await fetchUserProfile(newSession.user);
-            if (mounted) setUserSafe(fullUser);
+            if (mounted) { setUserSafe(fullUser); setProfileReady(true); }
         } else {
             if (mounted) setUserSafe(null); // resets userRef so re-login re-fetches profile
-            if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
+            if (mounted) { setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
         }
     };
 
@@ -486,6 +487,7 @@ export const AuthProvider = ({ children }) => {
     refreshProfile,
     ...authService,
     isAuthenticated: !!user,
+    profileReady,
     isAdmin: !!user?.user_metadata?.is_admin || user?.role === 'admin',
     userRole: user?.role || 'viewer',
     isAuthModalOpen,
