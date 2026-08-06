@@ -156,7 +156,7 @@ const Header = memo(({ onLoginClick }) => {
   const userName = user?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur';
   const userEmail = user?.email || '';
   const userAvatar = user?.avatar_url || user?.user_metadata?.avatar_url || '';
-  const isAdmin = user?.user_metadata?.is_admin || user?.role === 'admin' || false;
+  const isAdmin = user?.user_metadata?.is_admin || ['admin', 'editor', 'monetisation', 'gestion'].includes(user?.role);
   const initials = userName.charAt(0).toUpperCase();
 
   const handleLoginClick = useCallback(() => {
