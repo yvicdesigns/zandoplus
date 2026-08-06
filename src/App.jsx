@@ -95,7 +95,7 @@ const AdminProtectedRoute = () => {
     return <FullPageLoader />;
   }
 
-  const isAdmin = user?.user_metadata?.is_admin === true || user?.role === 'admin' || user?.role === 'editor';
+  const isAdmin = user?.user_metadata?.is_admin === true || ['admin', 'editor', 'monetisation', 'gestion'].includes(user?.role);
   
   if (!user || !isAdmin) {
     return <Navigate to="/" replace />;
