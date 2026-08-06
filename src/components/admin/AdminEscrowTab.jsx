@@ -467,8 +467,8 @@ const AdminEscrowTab = memo(() => {
                           </Button>
                         )}
 
-                        {/* Libérer les fonds (litige / confirme / livre) */}
-                        {['livre', 'confirme', 'litige'].includes(tx.statut) && (
+                        {/* Libérer les fonds — uniquement si pas encore libéré */}
+                        {['livre', 'litige'].includes(tx.statut) && (
                           <Button
                             size="sm"
                             className="bg-custom-green-600 hover:bg-custom-green-700 text-white"
@@ -480,7 +480,7 @@ const AdminEscrowTab = memo(() => {
                         )}
 
                         {/* Rembourser l'acheteur */}
-                        {['fonds_bloques', 'paiement_valide', 'livre', 'confirme', 'litige'].includes(tx.statut) && (
+                        {['fonds_bloques', 'paiement_valide', 'livre', 'litige'].includes(tx.statut) && (
                           <Button
                             size="sm"
                             variant="outline"
