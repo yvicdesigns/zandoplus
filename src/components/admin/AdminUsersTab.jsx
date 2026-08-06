@@ -3,13 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  Search, 
-  MoreVertical, 
-  Trash2, 
+import {
+  Search,
+  MoreVertical,
+  Trash2,
   Shield,
   Loader2,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Store,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,6 +96,18 @@ const AdminUsersTab = memo(() => {
 
   const closeDialog = () => {
     setDialogState({ isOpen: false, action: null, userId: null, userName: '' });
+  };
+
+  const handleToggleSeller = async (userId, currentValue) => {
+    try {
+      const { error } = await supabase.from('profiles').update({ is_seller: !currentValue }).eq('id', userId);
+      if (error) throw error;
+      await logAuditAction(currentUser?.id, 'TOGGLE_SELLER', 'user', userId, { is_seller: !currentValue });
+      toast({ title: !currentValue ? 'Vendeur activé ✅' : 'Vendeur désactivé', className: 'bg-green-100 text-green-800' });
+      fetchUsers();
+    } catch (err) {
+      toast({ title: 'Erreur', description: translateAdminError(err), variant: 'destructive' });
+    }
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -197,6 +210,7 @@ const AdminUsersTab = memo(() => {
                           {userItem.role === 'editor' && <Badge className="bg-blue-100 text-blue-800 border-none">Éditeur</Badge>}
                           {userItem.role === 'viewer' && <Badge variant="outline" className="text-gray-600">Lecteur</Badge>}
                           {userItem.verified && <Badge className="bg-green-100 text-green-800 border-none ml-1">Vérifié</Badge>}
+                          {userItem.is_seller && <Badge className="bg-amber-100 text-amber-800 border-none ml-1">Vendeur</Badge>}
                         </div>
                         <p className="text-sm text-gray-500">{userItem.email}</p>
                         {userItem.phone && <p className="text-xs text-gray-400 mt-0.5">{userItem.phone}</p>}
@@ -227,6 +241,11 @@ const AdminUsersTab = memo(() => {
                               </DropdownMenuRadioGroup>
                             </DropdownMenuSubContent>
                           </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleToggleSeller(userItem.id, userItem.is_seller)}>
+                            <Store className="mr-2 h-4 w-4 text-amber-600" />
+                            {userItem.is_seller ? 'Désactiver Vendeur' : 'Activer Vendeur'}
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600" onClick={() => openDialog('delete', userItem.id, userItem.full_name)}>
                             <Trash2 className="mr-2 h-4 w-4" />
