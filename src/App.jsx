@@ -89,9 +89,9 @@ const FullPageLoader = () => (
 );
 
 const AdminProtectedRoute = () => {
-  const { user, isLoading, profileReady } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (isLoading || !profileReady) {
+  if (isLoading) {
     return <FullPageLoader />;
   }
 

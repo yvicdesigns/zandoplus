@@ -166,19 +166,8 @@ export const AuthProvider = ({ children }) => {
                 }).catch(() => { if (mounted) setProfileReady(true); });
                 return;
             }
-            // Show user IMMEDIATELY from session metadata (no network needed).
-            // Google OAuth provides full_name + avatar_url in user_metadata.
-            const meta = newSession.user.user_metadata || {};
-            const immediateUser = {
-                ...newSession.user,
-                full_name: meta.full_name || meta.name || newSession.user.email?.split('@')[0] || 'Utilisateur',
-                avatar_url: meta.avatar_url || meta.picture || null,
-                role: 'viewer',
-            };
-            if (mounted) setUserSafe(immediateUser);
-            if (mounted) { setIsLoading(false); clearTimeout(safetyTimer); }
             const fullUser = await fetchUserProfile(newSession.user);
-            if (mounted) { setUserSafe(fullUser); setProfileReady(true); }
+            if (mounted) { setUserSafe(fullUser); setIsLoading(false); clearTimeout(safetyTimer); }
         } else {
             if (mounted) setUserSafe(null); // resets userRef so re-login re-fetches profile
             if (mounted) { setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
