@@ -85,7 +85,7 @@ const WalletPage = () => {
         .from('transactions_escrow')
         .select('id, montant, commission_amount, created_at, annonce:annonce_id(title, images), acheteur:acheteur_id(full_name, avatar_url)')
         .eq('vendeur_id', user.id)
-        .eq('statut', 'fonds_liberes')
+        .in('statut', ['confirme', 'complete'])
         .order('created_at', { ascending: false }),
       supabase
         .from('wallet_withdrawals')
