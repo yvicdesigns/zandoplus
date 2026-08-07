@@ -88,6 +88,7 @@ const AdminEscrowTab = memo(() => {
   const [refundTarget, setRefundTarget]   = useState(null);
   const [validateTarget, setValidateTarget] = useState(null);
   const [completeWithdrawTarget, setCompleteWithdrawTarget] = useState(null);
+  const [zandroDeclareTarget, setZandoDeclareTarget] = useState(null);
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -97,7 +98,7 @@ const AdminEscrowTab = memo(() => {
       .select(`
         id, statut, montant, created_at, preuve_paiement_url, notes_litige,
         date_livraison_declaree, date_confirmation, paiement_valide_at,
-        withdrawal_requested_at, vendeur_momo_number,
+        withdrawal_requested_at, vendeur_momo_number, delivery_choice,
         payout_status, payout_provider, payout_attempts, payout_failure_reason,
         collection_status, collection_provider,
         annonce:annonce_id(id, title, images),
@@ -179,6 +180,16 @@ const AdminEscrowTab = memo(() => {
     fetchData();
   };
 
+  const handleZandoDeclareDelivery = async (tx) => {
+    setActionLoading({ id: tx.id, type: 'zando_declare' });
+    const { error } = await supabase.rpc('admin_declare_delivery', { p_transaction_id: tx.id });
+    setActionLoading(null);
+    setZandoDeclareTarget(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Livraison Zando déclarée — acheteur notifié.' });
+    fetchData();
+  };
+
   const handleCodCancel = async (tx) => {
     setActionLoading({ id: tx.id, type: 'cod_cancel' });
     const { error } = await supabase.from('transactions_escrow').update({ statut: 'cod_annule' }).eq('id', tx.id);
@@ -242,14 +253,14 @@ const AdminEscrowTab = memo(() => {
         {/* Filtres cliquables */}
         <div className="flex gap-2 flex-wrap">
           {[
-            { id: null,              label: 'Tout',      icon: null,          count: transactions.length,  base: 'bg-gray-100 text-gray-700 border-gray-200',       act: 'bg-gray-700 text-white border-gray-700' },
-            { id: 'fonds_bloques',   label: 'À valider', icon: ShieldCheck,   count: counts.pending,       base: 'bg-blue-50 text-blue-700 border-blue-200',        act: 'bg-blue-600 text-white border-blue-600' },
-            { id: 'livre',           label: 'Livré',     icon: Truck,         count: counts.livre,         base: 'bg-purple-50 text-purple-700 border-purple-200',  act: 'bg-purple-600 text-white border-purple-600' },
-            { id: 'litige',          label: 'Litige',    icon: AlertTriangle, count: counts.litiges,       base: 'bg-red-50 text-red-700 border-red-200',           act: 'bg-red-600 text-white border-red-600' },
-            { id: 'confirme',        label: 'Libéré',    icon: CheckCircle,   count: counts.libere,        base: 'bg-green-50 text-green-700 border-green-200',     act: 'bg-green-600 text-white border-green-600' },
-            { id: 'retrait_demande', label: 'Retrait',   icon: Wallet,        count: counts.retraits,      base: 'bg-orange-50 text-orange-700 border-orange-200',  act: 'bg-orange-600 text-white border-orange-600' },
-            { id: 'cod_en_attente',  label: 'COD',       icon: Banknote,      count: counts.cod,           base: 'bg-yellow-50 text-yellow-700 border-yellow-200',  act: 'bg-yellow-500 text-white border-yellow-500' },
-            { id: 'complete',        label: 'Terminé',   icon: null,          count: counts.complete,      base: 'bg-gray-50 text-gray-500 border-gray-200',        act: 'bg-gray-500 text-white border-gray-500' },
+            { id: null,              label: 'Toutes',              icon: null,          count: transactions.length,  base: 'bg-gray-100 text-gray-700 border-gray-200',       act: 'bg-gray-700 text-white border-gray-700' },
+            { id: 'fonds_bloques',   label: 'Paiement à valider',  icon: ShieldCheck,   count: counts.pending,       base: 'bg-blue-50 text-blue-700 border-blue-200',        act: 'bg-blue-600 text-white border-blue-600' },
+            { id: 'livre',           label: 'Livré — à libérer',   icon: Truck,         count: counts.livre,         base: 'bg-purple-50 text-purple-700 border-purple-200',  act: 'bg-purple-600 text-white border-purple-600' },
+            { id: 'litige',          label: 'En litige',            icon: AlertTriangle, count: counts.litiges,       base: 'bg-red-50 text-red-700 border-red-200',           act: 'bg-red-600 text-white border-red-600' },
+            { id: 'confirme',        label: 'Fonds libérés',        icon: CheckCircle,   count: counts.libere,        base: 'bg-green-50 text-green-700 border-green-200',     act: 'bg-green-600 text-white border-green-600' },
+            { id: 'retrait_demande', label: 'Retrait à envoyer',    icon: Wallet,        count: counts.retraits,      base: 'bg-orange-50 text-orange-700 border-orange-200',  act: 'bg-orange-600 text-white border-orange-600' },
+            { id: 'cod_en_attente',  label: 'COD à livrer',         icon: Banknote,      count: counts.cod,           base: 'bg-yellow-50 text-yellow-700 border-yellow-200',  act: 'bg-yellow-500 text-white border-yellow-500' },
+            { id: 'complete',        label: 'Terminé ✓',            icon: null,          count: counts.complete,      base: 'bg-gray-50 text-gray-500 border-gray-200',        act: 'bg-gray-500 text-white border-gray-500' },
           ].map(f => {
             const isActive = statusFilter === f.id;
             const Icon = f.icon;
@@ -430,7 +441,18 @@ const AdminEscrowTab = memo(() => {
                             Vendeur : <strong>{tx.vendeur?.full_name}</strong>
                             {tx.vendeur?.phone ? ` — ${tx.vendeur.phone}` : ''}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">Le {formatDate(tx.created_at)}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-gray-400">Le {formatDate(tx.created_at)}</p>
+                            {tx.delivery_choice === 'zando' && (
+                              <span className="text-xs bg-custom-green-100 text-custom-green-700 px-2 py-0.5 rounded-full font-medium">🛵 Zando livre</span>
+                            )}
+                            {tx.delivery_choice === 'seller' && (
+                              <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">📦 Vendeur livre</span>
+                            )}
+                            {tx.delivery_choice === 'pickup' && (
+                              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">🏪 Retrait boutique</span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <StatusBadge statut={tx.statut} />
@@ -497,6 +519,18 @@ const AdminEscrowTab = memo(() => {
                             disabled={!!actionLoading}
                           >
                             <ShieldCheck className="w-4 h-4 mr-1.5" /> Valider paiement reçu
+                          </Button>
+                        )}
+
+                        {/* Déclarer livraison Zando (admin livre) */}
+                        {tx.statut === 'paiement_valide' && tx.delivery_choice === 'zando' && (
+                          <Button
+                            size="sm"
+                            className="bg-custom-green-600 hover:bg-custom-green-700 text-white"
+                            onClick={() => setZandoDeclareTarget(tx)}
+                            disabled={!!actionLoading}
+                          >
+                            <Truck className="w-4 h-4 mr-1.5" /> Déclarer livraison Zando
                           </Button>
                         )}
 
@@ -620,6 +654,32 @@ const AdminEscrowTab = memo(() => {
             >
               {actionLoading?.type === 'release' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Confirmer la libération
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog : Déclarer livraison Zando */}
+      <Dialog open={!!zandroDeclareTarget} onOpenChange={() => setZandoDeclareTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la livraison Zando+</DialogTitle>
+            <DialogDescription>
+              Confirmez que Zando+ a bien livré la commande{' '}
+              <strong>{zandroDeclareTarget?.annonce?.title}</strong> à{' '}
+              <strong>{zandroDeclareTarget?.acheteur?.full_name}</strong>.
+              L'acheteur aura 72h pour confirmer la réception.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setZandoDeclareTarget(null)}>Annuler</Button>
+            <Button
+              className="bg-custom-green-600 hover:bg-custom-green-700 text-white"
+              onClick={() => handleZandoDeclareDelivery(zandroDeclareTarget)}
+              disabled={actionLoading?.id === zandroDeclareTarget?.id}
+            >
+              {actionLoading?.type === 'zando_declare' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <Truck className="w-4 h-4 mr-2" /> Confirmer la livraison
             </Button>
           </DialogFooter>
         </DialogContent>

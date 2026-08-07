@@ -98,7 +98,7 @@ const TransactionsPage = () => {
     const { data, error } = await supabase
       .from('transactions_escrow')
       .select(`
-        id, statut, montant, created_at,
+        id, statut, montant, created_at, delivery_choice,
         date_livraison_declaree, date_confirmation,
         paiement_valide_at, auto_confirm_at,
         withdrawal_available_at, withdrawal_requested_at,
@@ -302,9 +302,25 @@ const TransactionsPage = () => {
                           Paiement reçu — en attente de validation par Zando+.
                         </div>
                       )}
-                      {!isAchats && tx.statut === 'paiement_valide' && (
+                      {!isAchats && tx.statut === 'paiement_valide' && tx.delivery_choice === 'zando' && (
+                        <div className="flex items-center gap-2 text-sm text-custom-green-700 bg-custom-green-50 rounded-lg px-4 py-3">
+                          <Truck className="w-4 h-4 flex-shrink-0" />
+                          Zando+ assure la livraison — préparez l'article, un livreur viendra le collecter.
+                        </div>
+                      )}
+                      {!isAchats && tx.statut === 'paiement_valide' && tx.delivery_choice === 'seller' && (
                         <Button className="w-full gradient-bg" onClick={() => setLivraisonDialog(tx)}>
-                          <Truck className="w-4 h-4 mr-2" /> Préparer & déclarer la livraison
+                          <Truck className="w-4 h-4 mr-2" /> Déclarer la livraison
+                        </Button>
+                      )}
+                      {!isAchats && tx.statut === 'paiement_valide' && tx.delivery_choice === 'pickup' && (
+                        <Button className="w-full gradient-bg" onClick={() => setLivraisonDialog(tx)}>
+                          <Truck className="w-4 h-4 mr-2" /> Confirmer que l'acheteur a récupéré l'article
+                        </Button>
+                      )}
+                      {!isAchats && tx.statut === 'paiement_valide' && !tx.delivery_choice && (
+                        <Button className="w-full gradient-bg" onClick={() => setLivraisonDialog(tx)}>
+                          <Truck className="w-4 h-4 mr-2" /> Déclarer la livraison
                         </Button>
                       )}
                       {!isAchats && tx.statut === 'livre' && (
