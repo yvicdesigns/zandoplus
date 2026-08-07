@@ -224,7 +224,7 @@ const WalletPage = () => {
               icon={Clock}
               label="En attente"
               amount={wallet?.solde_en_attente}
-              sub="Disponible après 24h"
+              sub="Disponible après 48h"
             />
             <BalanceCard
               icon={CheckCircle}

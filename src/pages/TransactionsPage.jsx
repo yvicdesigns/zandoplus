@@ -125,7 +125,7 @@ const TransactionsPage = () => {
     setActionLoading(false);
     setConfirmDialog(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Réception confirmée !', description: 'Le vendeur pourra retirer ses fonds dans 24h.' });
+    toast({ title: 'Réception confirmée !', description: 'Le vendeur pourra retirer ses fonds dans 48h.' });
     fetchTransactions();
   };
 
@@ -158,7 +158,7 @@ const TransactionsPage = () => {
     if (tx.statut !== 'confirme') return false;
     const confirmed = tx.date_confirmation ? new Date(tx.date_confirmation) : null;
     if (!confirmed) return false;
-    return (Date.now() - confirmed.getTime()) / 3_600_000 <= 48;
+    return (Date.now() - confirmed.getTime()) / 3_600_000 <= 24;
   };
 
   return (
