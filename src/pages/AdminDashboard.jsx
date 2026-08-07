@@ -483,7 +483,9 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
     { label: 'Utilisateurs',      sub: 'Total inscrits',           value: counts.total_users,     pctKey: 'users',    icon: Users,       bg: 'bg-blue-50',    ic: 'text-blue-500',    section: 'users' },
     { label: 'Annonces actives',  sub: 'Total annonces',           value: counts.total_listings,  pctKey: 'listings', icon: ShoppingBag, bg: 'bg-emerald-50', ic: 'text-emerald-500', section: 'listings' },
     { label: 'Nouveaux ce mois',  sub: format(new Date(), 'MMMM yyyy', { locale: fr }), value: newUsersMonth, pctKey: 'newUsers', icon: UserPlus, bg: 'bg-violet-50', ic: 'text-violet-500', section: 'users' },
-    { label: 'Signalements',      sub: 'En attente',               value: counts.pending_reports, pctKey: null,       icon: Flag,        bg: 'bg-red-50',     ic: 'text-red-400',     section: 'reports' },
+    { label: 'Boosts actifs',     sub: 'Annonces boostées',        value: counts.active_boosts,   pctKey: null,       icon: Zap,         bg: 'bg-amber-50',   ic: 'text-amber-500',   section: 'boosts' },
+    { label: 'Urgences actives',  sub: 'Badges urgence',           value: counts.active_urgences, pctKey: null,       icon: Star,        bg: 'bg-orange-50',  ic: 'text-orange-500',  section: 'boosts' },
+    { label: 'Signalements',      sub: 'En attente de traitement', value: counts.pending_reports, pctKey: null,       icon: Flag,        bg: 'bg-red-50',     ic: 'text-red-400',     section: 'reports' },
   ];
 
   return (
@@ -503,7 +505,7 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {KPI.map(({ label, sub, value, pctKey, icon: Icon, bg, ic, section }) => {
           const ch = pctDisplay(weekChanges[pctKey]);
           const ChIcon = ch?.icon;
@@ -946,6 +948,7 @@ const AdminDashboard = () => {
   const [counts, setCounts] = useState({
     total_users: 0, total_listings: 0, pending_reports: 0,
     pending_escrow: 0, pending_withdrawals: 0,
+    active_boosts: 0, active_urgences: 0,
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -960,10 +963,12 @@ const AdminDashboard = () => {
   const fetchStats = useCallback(async (silent = false) => {
     if (!silent) setLoading(true); else setRefreshing(true);
     try {
-      const [{ data }, escrowRes, withdrawalRes] = await Promise.all([
+      const [{ data }, escrowRes, withdrawalRes, boostsRes, urgencesRes] = await Promise.all([
         supabase.rpc('get_admin_statistics'),
         supabase.from('transactions_escrow').select('id', { count: 'exact', head: true }).eq('statut', 'retrait_demande'),
         supabase.from('wallet_withdrawals').select('id', { count: 'exact', head: true }).eq('statut', 'pending'),
+        supabase.from('ad_boosts').select('id', { count: 'exact', head: true }).eq('statut', 'active').neq('boost_type', 'urgent'),
+        supabase.from('ad_boosts').select('id', { count: 'exact', head: true }).eq('statut', 'active').eq('boost_type', 'urgent'),
       ]);
       if (data) {
         setCounts({
@@ -972,6 +977,8 @@ const AdminDashboard = () => {
           pending_reports:     data.pending_reports,
           pending_escrow:      escrowRes.count || 0,
           pending_withdrawals: withdrawalRes.count || 0,
+          active_boosts:       boostsRes.count || 0,
+          active_urgences:     urgencesRes.count || 0,
         });
       }
     } catch (err) {

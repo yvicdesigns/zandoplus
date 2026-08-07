@@ -38,6 +38,7 @@ const AdminUsersTab = memo(() => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [dialogState, setDialogState] = useState({ isOpen: false, action: null, userId: null, userName: '' });
   const [isActionLoading, setIsActionLoading] = useState(false);
   const { toast } = useToast();
@@ -154,14 +155,31 @@ const AdminUsersTab = memo(() => {
     }
   };
 
+  const STAFF_ROLES = ['admin', 'monetisation', 'gestion', 'editor', 'viewer'];
+
   const filteredUsers = useMemo(() => {
     if (!users) return [];
-    return users.filter(u => 
-      u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.phone?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [users, searchQuery]);
+    return users.filter(u => {
+      const matchSearch =
+        u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.phone?.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchSearch) return false;
+      if (typeFilter === 'sellers')  return u.is_seller;
+      if (typeFilter === 'verified') return u.verified;
+      if (typeFilter === 'staff')    return STAFF_ROLES.includes(u.role);
+      if (typeFilter === 'buyers')   return !u.is_seller && !STAFF_ROLES.includes(u.role);
+      return true;
+    });
+  }, [users, searchQuery, typeFilter]);
+
+  const counts = useMemo(() => ({
+    all:      users.length,
+    sellers:  users.filter(u => u.is_seller).length,
+    verified: users.filter(u => u.verified).length,
+    staff:    users.filter(u => STAFF_ROLES.includes(u.role)).length,
+    buyers:   users.filter(u => !u.is_seller && !STAFF_ROLES.includes(u.role)).length,
+  }), [users]);
 
   if (loading) return <div className="p-6"><Skeleton className="h-40 w-full" /></div>;
 
@@ -177,15 +195,38 @@ const AdminUsersTab = memo(() => {
         isLoading={isActionLoading}
       />
       <div className="p-4 sm:p-6">
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            type="text"
-            placeholder="Rechercher par nom, email ou téléphone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full md:w-1/3"
-          />
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Nom, email, téléphone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap mb-5">
+          {[
+            { value: 'all',      label: `Tous (${counts.all})` },
+            { value: 'sellers',  label: `Vendeurs (${counts.sellers})` },
+            { value: 'buyers',   label: `Acheteurs (${counts.buyers})` },
+            { value: 'verified', label: `Vérifiés (${counts.verified})` },
+            { value: 'staff',    label: `Staff (${counts.staff})` },
+          ].map(f => (
+            <button
+              key={f.value}
+              onClick={() => setTypeFilter(f.value)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                typeFilter === f.value
+                  ? 'bg-custom-green-600 text-white border-custom-green-600 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-custom-green-400 hover:text-custom-green-600'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         <div className="space-y-4">

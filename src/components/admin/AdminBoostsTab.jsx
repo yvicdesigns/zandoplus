@@ -31,6 +31,8 @@ const AdminBoostsTab = memo(() => {
   const [boosts, setBoosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [loadingAction, setLoadingAction] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { toast } = useToast();
@@ -136,13 +138,28 @@ const AdminBoostsTab = memo(() => {
     fetchBoosts();
   };
 
-  const filtered = useMemo(() =>
-    boosts.filter(b =>
-      b.annonce?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    [boosts, searchQuery]
-  );
+  const boostCounts = useMemo(() => ({
+    all:      boosts.length,
+    pending:  boosts.filter(b => b.statut === 'pending').length,
+    active:   boosts.filter(b => b.statut === 'active').length,
+    expired:  boosts.filter(b => b.statut === 'expired').length,
+    rejected: boosts.filter(b => b.statut === 'rejected').length,
+  }), [boosts]);
+
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return boosts.filter(b => {
+      const matchSearch =
+        b.annonce?.title?.toLowerCase().includes(q) ||
+        b.user?.full_name?.toLowerCase().includes(q);
+      const matchStatus = statusFilter === 'all' || b.statut === statusFilter;
+      const matchType =
+        typeFilter === 'all' ||
+        (typeFilter === 'urgent' && b.boost_type === 'urgent') ||
+        (typeFilter === 'standard' && b.boost_type !== 'urgent');
+      return matchSearch && matchStatus && matchType;
+    });
+  }, [boosts, searchQuery, statusFilter, typeFilter]);
 
   if (loading) {
     return (
@@ -155,14 +172,61 @@ const AdminBoostsTab = memo(() => {
   return (
     <>
       <div className="p-4 sm:p-6">
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input
-            placeholder="Rechercher par annonce ou vendeur..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-10 w-full md:w-1/3"
-          />
+        {/* Search */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Annonce ou vendeur..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Type chips */}
+        <div className="flex gap-2 flex-wrap mb-3">
+          {[
+            { value: 'all',      label: 'Tous les types' },
+            { value: 'standard', label: '⚡ Boost simple' },
+            { value: 'urgent',   label: '🔥 Urgence' },
+          ].map(f => (
+            <button
+              key={f.value}
+              onClick={() => setTypeFilter(f.value)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                typeFilter === f.value
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-amber-400 hover:text-amber-600'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status chips */}
+        <div className="flex gap-2 flex-wrap mb-5">
+          {[
+            { value: 'all',      label: `Tous (${boostCounts.all})` },
+            { value: 'pending',  label: `En attente (${boostCounts.pending})` },
+            { value: 'active',   label: `Actifs (${boostCounts.active})` },
+            { value: 'expired',  label: `Expirés (${boostCounts.expired})` },
+            { value: 'rejected', label: `Rejetés (${boostCounts.rejected})` },
+          ].map(f => (
+            <button
+              key={f.value}
+              onClick={() => setStatusFilter(f.value)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                statusFilter === f.value
+                  ? 'bg-custom-green-600 text-white border-custom-green-600 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-custom-green-400 hover:text-custom-green-600'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         <div className="space-y-4">
