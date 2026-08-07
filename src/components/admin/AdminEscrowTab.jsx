@@ -8,7 +8,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Search, ShieldCheck, Loader2, CheckCircle, XCircle,
-  AlertTriangle, Link as LinkIcon, Clock, Truck, Wallet, Banknote, RefreshCw, Zap, Eye,
+  AlertTriangle, Clock, Truck, Wallet, Banknote, RefreshCw, Zap, Eye,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -63,10 +63,26 @@ const PayoutBadge = ({ tx }) => {
   );
 };
 
+const PRIORITY_ORDER = {
+  fonds_bloques:       0,
+  litige:              1,
+  livre:               2,
+  retrait_demande:     3,
+  cod_en_attente:      4,
+  paiement_valide:     5,
+  confirme:            6,
+  complete:            7,
+  rembourse:           8,
+  cod_livre:           9,
+  cod_annule:          10,
+  en_attente_paiement: 11,
+};
+
 const AdminEscrowTab = memo(() => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [searchQuery, setSearchQuery]   = useState('');
+  const [statusFilter, setStatusFilter] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [releaseTarget, setReleaseTarget] = useState(null);
   const [refundTarget, setRefundTarget]   = useState(null);
@@ -91,10 +107,8 @@ const AdminEscrowTab = memo(() => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('AdminEscrowTab error:', JSON.stringify(error));
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
-      console.log('AdminEscrowTab data:', data?.length, 'transactions');
       setTransactions(data || []);
     }
     setLoading(false);
@@ -174,21 +188,32 @@ const AdminEscrowTab = memo(() => {
     fetchData();
   };
 
-  const filtered = useMemo(() =>
-    transactions.filter(tx =>
+  const counts = useMemo(() => ({
+    litiges:  transactions.filter(t => t.statut === 'litige').length,
+    pending:  transactions.filter(t => t.statut === 'fonds_bloques').length,
+    retraits: transactions.filter(t => t.statut === 'retrait_demande').length,
+    cod:      transactions.filter(t => t.statut === 'cod_en_attente').length,
+    livre:    transactions.filter(t => t.statut === 'livre').length,
+    libere:   transactions.filter(t => t.statut === 'confirme').length,
+    complete: transactions.filter(t => ['complete', 'rembourse', 'cod_livre', 'cod_annule'].includes(t.statut)).length,
+  }), [transactions]);
+
+  const filtered = useMemo(() => {
+    let result = transactions.filter(tx =>
       tx.annonce?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.acheteur?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.vendeur?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    [transactions, searchQuery]
-  );
-
-  const counts = useMemo(() => ({
-    litiges:   transactions.filter(t => t.statut === 'litige').length,
-    pending:   transactions.filter(t => t.statut === 'fonds_bloques').length,
-    retraits:  transactions.filter(t => t.statut === 'retrait_demande').length,
-    cod:       transactions.filter(t => t.statut === 'cod_en_attente').length,
-  }), [transactions]);
+    );
+    if (statusFilter !== null) {
+      if (statusFilter === 'complete') {
+        result = result.filter(tx => ['complete', 'rembourse', 'cod_livre', 'cod_annule'].includes(tx.statut));
+      } else {
+        result = result.filter(tx => tx.statut === statusFilter);
+      }
+    }
+    result.sort((a, b) => (PRIORITY_ORDER[a.statut] ?? 99) - (PRIORITY_ORDER[b.statut] ?? 99));
+    return result;
+  }, [transactions, searchQuery, statusFilter]);
 
   // Commandes COD en attente de livraison
   const codPending = useMemo(() =>
@@ -214,28 +239,36 @@ const AdminEscrowTab = memo(() => {
     <>
       <div className="p-4 sm:p-6 space-y-6">
 
-        {/* Chips résumé */}
-        <div className="flex gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg text-sm text-red-700 font-medium">
-            <AlertTriangle className="w-4 h-4" /> {counts.litiges} litige{counts.litiges !== 1 ? 's' : ''}
-          </div>
-          <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-sm text-blue-700 font-medium">
-            <ShieldCheck className="w-4 h-4" /> {counts.pending} à valider
-          </div>
-          {counts.retraits > 0 && (
-            <div className="flex items-center gap-2 bg-orange-50 border border-orange-300 px-3 py-1.5 rounded-lg text-sm text-orange-700 font-bold animate-pulse">
-              <Wallet className="w-4 h-4" /> {counts.retraits} retrait{counts.retraits !== 1 ? 's' : ''} à envoyer ⚡
-            </div>
-          )}
-          {counts.cod > 0 && (
-            <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-300 px-3 py-1.5 rounded-lg text-sm text-yellow-700 font-bold">
-              <Banknote className="w-4 h-4" /> {counts.cod} livraison{counts.cod !== 1 ? 's' : ''} COD à effectuer
-            </div>
-          )}
+        {/* Filtres cliquables */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { id: null,              label: 'Tout',      icon: null,          count: transactions.length,  base: 'bg-gray-100 text-gray-700 border-gray-200',       act: 'bg-gray-700 text-white border-gray-700' },
+            { id: 'fonds_bloques',   label: 'À valider', icon: ShieldCheck,   count: counts.pending,       base: 'bg-blue-50 text-blue-700 border-blue-200',        act: 'bg-blue-600 text-white border-blue-600' },
+            { id: 'livre',           label: 'Livré',     icon: Truck,         count: counts.livre,         base: 'bg-purple-50 text-purple-700 border-purple-200',  act: 'bg-purple-600 text-white border-purple-600' },
+            { id: 'litige',          label: 'Litige',    icon: AlertTriangle, count: counts.litiges,       base: 'bg-red-50 text-red-700 border-red-200',           act: 'bg-red-600 text-white border-red-600' },
+            { id: 'confirme',        label: 'Libéré',    icon: CheckCircle,   count: counts.libere,        base: 'bg-green-50 text-green-700 border-green-200',     act: 'bg-green-600 text-white border-green-600' },
+            { id: 'retrait_demande', label: 'Retrait',   icon: Wallet,        count: counts.retraits,      base: 'bg-orange-50 text-orange-700 border-orange-200',  act: 'bg-orange-600 text-white border-orange-600' },
+            { id: 'cod_en_attente',  label: 'COD',       icon: Banknote,      count: counts.cod,           base: 'bg-yellow-50 text-yellow-700 border-yellow-200',  act: 'bg-yellow-500 text-white border-yellow-500' },
+            { id: 'complete',        label: 'Terminé',   icon: null,          count: counts.complete,      base: 'bg-gray-50 text-gray-500 border-gray-200',        act: 'bg-gray-500 text-white border-gray-500' },
+          ].map(f => {
+            const isActive = statusFilter === f.id;
+            const Icon = f.icon;
+            return (
+              <button
+                key={String(f.id)}
+                onClick={() => setStatusFilter(f.id)}
+                className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isActive ? f.act : f.base}`}
+              >
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {f.label}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/25' : 'bg-black/10'}`}>{f.count}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ── SECTION COD : Livraisons à effectuer ── */}
-        {codPending.length > 0 && (
+        {codPending.length > 0 && (statusFilter === null || statusFilter === 'cod_en_attente') && (
           <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-4 space-y-3">
             <h3 className="font-bold text-yellow-800 flex items-center gap-2">
               <Banknote className="w-5 h-5" /> Livraisons COD à effectuer (cash à collecter)
@@ -284,7 +317,7 @@ const AdminEscrowTab = memo(() => {
         )}
 
         {/* ── SECTION PRIORITAIRE : Retraits demandés ── */}
-        {withdrawalRequests.length > 0 && (
+        {withdrawalRequests.length > 0 && (statusFilter === null || statusFilter === 'retrait_demande') && (
           <div className="bg-orange-50 border-2 border-orange-300 rounded-2xl p-4 space-y-3">
             <h3 className="font-bold text-orange-800 flex items-center gap-2">
               <Wallet className="w-5 h-5" /> Retraits à envoyer maintenant
