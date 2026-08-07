@@ -32,13 +32,14 @@ import {
   LayoutGrid, Menu, X, ChevronRight, Home, Wallet, MapPin,
   ArrowRight, RefreshCw, Bell, Globe, LogOut, TrendingUp,
   TrendingDown, Minus, Shield, Package, Tag, Star, Image, Layers, Send, MessageCircle,
+  UserPlus, DollarSign, Award,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { format, subDays } from 'date-fns';
+import { format, subDays, startOfMonth, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 /* ─── Role permissions ─────────────────────────────────────── */
@@ -249,6 +250,30 @@ const MultiLineChart = ({ series, labels }) => {
   );
 };
 
+/* ─── BarChart (6-month revenue sparkline) ──────────────────── */
+const BarChart = ({ bars }) => {
+  const max = Math.max(...bars.map(b => b.value), 1);
+  return (
+    <div className="flex items-end gap-1.5 h-14">
+      {bars.map((b, i) => {
+        const isCurrent = i === bars.length - 1;
+        return (
+          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+            <div
+              className="w-full rounded-t transition-all duration-700"
+              style={{
+                height: `${Math.max((b.value / max) * 48, 2)}px`,
+                backgroundColor: isCurrent ? '#005023' : '#86efac',
+              }}
+            />
+            <span className="text-[9px] text-gray-400 font-medium leading-none">{b.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 /* ─── Overview ──────────────────────────────────────────────── */
 const OverviewTab = ({ counts, loading, setActiveTab }) => {
   const [period, setPeriod] = useState('7');
@@ -259,6 +284,11 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
   const [topCategories, setTopCategories] = useState([]);
   const [weekChanges, setWeekChanges] = useState({});
   const [loadingExtra, setLoadingExtra] = useState(true);
+  const [revenueData, setRevenueData] = useState({ ca_mois: 0, zando_mois: 0, ca_prev: 0, zando_prev: 0 });
+  const [topVendeurs, setTopVendeurs] = useState([]);
+  const [monthBars, setMonthBars] = useState([]);
+  const [newUsersMonth, setNewUsersMonth] = useState(0);
+  const [newUsersPrevMonth, setNewUsersPrevMonth] = useState(0);
 
   const { user } = useAuth();
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'Admin';
@@ -271,6 +301,10 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
       const prevFrom = subDays(new Date(), days * 2).toISOString();
 
       try {
+        const thisMonthStart = startOfMonth(new Date()).toISOString();
+        const prevMonthStart = startOfMonth(subMonths(new Date(), 1)).toISOString();
+        const sixMonthsAgo   = startOfMonth(subMonths(new Date(), 5)).toISOString();
+
         const [
           { data: recentProfiles },
           { data: recentListings },
@@ -281,6 +315,9 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
           { data: allProfiles },
           { data: txAll },
           { data: listingsAll },
+          { data: revenueHistory },
+          { count: newUsersThisMonthCount },
+          { count: newUsersPrevMonthCount },
         ] = await Promise.all([
           supabase.from('profiles').select('created_at').gte('created_at', from),
           supabase.from('listings').select('created_at').gte('created_at', from),
@@ -291,6 +328,12 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
           supabase.from('profiles').select('is_seller'),
           supabase.from('transactions_escrow').select('statut'),
           supabase.from('listings').select('category').eq('status', 'active'),
+          supabase.from('transactions_escrow')
+            .select('montant, commission_amount, vendeur_id, created_at, vendeur:vendeur_id(full_name)')
+            .gte('created_at', sixMonthsAgo)
+            .in('statut', ['confirme', 'complete', 'fonds_liberes']),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', thisMonthStart),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', prevMonthStart).lt('created_at', thisMonthStart),
         ]);
 
         /* ── % changes ── */
@@ -299,7 +342,41 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
           users:    pct(recentProfiles?.length || 0,  prevProfiles?.length || 0),
           listings: pct(recentListings?.length || 0,  prevListings?.length || 0),
           orders:   pct(recentTx?.length || 0,        prevTx?.length || 0),
+          newUsers: pct(newUsersThisMonthCount || 0,  newUsersPrevMonthCount || 0),
         });
+
+        /* ── Revenue — 6 months ── */
+        const monthlyMap = {};
+        for (let i = 5; i >= 0; i--) {
+          const key   = format(subMonths(new Date(), i), 'yyyy-MM');
+          const label = format(subMonths(new Date(), i), 'MMM', { locale: fr });
+          monthlyMap[key] = { label, ca: 0, zando: 0 };
+        }
+        const thisMonthKey = format(new Date(), 'yyyy-MM');
+        const prevMonthKey = format(subMonths(new Date(), 1), 'yyyy-MM');
+        const vendorMap = {};
+        (revenueHistory || []).forEach(tx => {
+          const mk = tx.created_at.slice(0, 7);
+          if (monthlyMap[mk]) {
+            monthlyMap[mk].ca     += tx.montant || 0;
+            const commission       = tx.commission_amount ?? Math.round((tx.montant || 0) * 0.07);
+            monthlyMap[mk].zando  += commission;
+          }
+          if (mk === thisMonthKey) {
+            const vid = tx.vendeur_id;
+            if (!vendorMap[vid]) vendorMap[vid] = { name: tx.vendeur?.full_name || 'Vendeur', montant: 0, count: 0 };
+            vendorMap[vid].montant += tx.montant || 0;
+            vendorMap[vid].count++;
+          }
+        });
+        const bars = Object.values(monthlyMap);
+        setMonthBars(bars);
+        const tmRev = monthlyMap[thisMonthKey] || { ca: 0, zando: 0 };
+        const pmRev = monthlyMap[prevMonthKey] || { ca: 0, zando: 0 };
+        setRevenueData({ ca_mois: tmRev.ca, zando_mois: tmRev.zando, ca_prev: pmRev.ca, zando_prev: pmRev.zando });
+        setTopVendeurs(Object.values(vendorMap).sort((a, b) => b.montant - a.montant).slice(0, 5));
+        setNewUsersMonth(newUsersThisMonthCount || 0);
+        setNewUsersPrevMonth(newUsersPrevMonthCount || 0);
 
         /* ── Chart (daily counts) ── */
         const dayMap = {};
@@ -403,10 +480,10 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
   };
 
   const KPI = [
-    { label: 'Utilisateurs',     sub: 'Total utilisateurs',  value: counts.total_users,    pctKey: 'users',    icon: Users,       bg: 'bg-blue-50',    ic: 'text-blue-500',    section: 'users' },
-    { label: 'Annonces actives', sub: 'Total annonces',      value: counts.total_listings, pctKey: 'listings', icon: ShoppingBag, bg: 'bg-emerald-50', ic: 'text-emerald-500', section: 'listings' },
-    { label: 'Boosts actifs',    sub: 'Total boosts',        value: 0,                     pctKey: null,       icon: Zap,         bg: 'bg-amber-50',   ic: 'text-amber-500',   section: 'boosts' },
-    { label: 'Signalements',     sub: 'Total signalements',  value: counts.pending_reports,pctKey: null,       icon: Flag,        bg: 'bg-red-50',     ic: 'text-red-400',     section: 'reports' },
+    { label: 'Utilisateurs',      sub: 'Total inscrits',           value: counts.total_users,     pctKey: 'users',    icon: Users,       bg: 'bg-blue-50',    ic: 'text-blue-500',    section: 'users' },
+    { label: 'Annonces actives',  sub: 'Total annonces',           value: counts.total_listings,  pctKey: 'listings', icon: ShoppingBag, bg: 'bg-emerald-50', ic: 'text-emerald-500', section: 'listings' },
+    { label: 'Nouveaux ce mois',  sub: format(new Date(), 'MMMM yyyy', { locale: fr }), value: newUsersMonth, pctKey: 'newUsers', icon: UserPlus, bg: 'bg-violet-50', ic: 'text-violet-500', section: 'users' },
+    { label: 'Signalements',      sub: 'En attente',               value: counts.pending_reports, pctKey: null,       icon: Flag,        bg: 'bg-red-50',     ic: 'text-red-400',     section: 'reports' },
   ];
 
   return (
@@ -517,6 +594,127 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
                       <p className="text-[11px] text-gray-400 truncate">{a.sub}</p>
                     </div>
                     <p className="text-[11px] text-gray-300 flex-shrink-0 whitespace-nowrap">{timeAgo(a.time)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chiffre d'affaires + Top vendeurs */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* CA */}
+        <div className="col-span-12 lg:col-span-7 bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-custom-green-50 rounded-xl flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-custom-green-600" />
+              </div>
+              <h3 className="text-[14px] font-black text-gray-900">Chiffre d'affaires</h3>
+            </div>
+            <span className="text-[11px] text-gray-400 font-medium capitalize">
+              {format(new Date(), 'MMMM yyyy', { locale: fr })}
+            </span>
+          </div>
+
+          {loadingExtra ? (
+            <div className="h-32 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-custom-green-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {/* CA total */}
+                <div className="bg-gray-50 rounded-xl p-3.5">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">CA total ce mois</p>
+                  <p className="text-[22px] font-black text-gray-900 leading-none tabular-nums">
+                    {(revenueData.ca_mois || 0).toLocaleString('fr-FR')}
+                    <span className="text-[12px] font-semibold text-gray-400 ml-1">FCFA</span>
+                  </p>
+                  {revenueData.ca_prev > 0 ? (
+                    <div className={`flex items-center gap-1 mt-1.5 text-[11px] font-bold ${revenueData.ca_mois >= revenueData.ca_prev ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {revenueData.ca_mois >= revenueData.ca_prev ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {revenueData.ca_mois >= revenueData.ca_prev ? '+' : ''}{Math.round((revenueData.ca_mois - revenueData.ca_prev) / revenueData.ca_prev * 100)}% vs mois dernier
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-gray-300 mt-1">Premier mois de données</p>
+                  )}
+                </div>
+
+                {/* Commissions Zando */}
+                <div className="bg-custom-green-50 rounded-xl p-3.5">
+                  <p className="text-[10px] text-custom-green-600 font-bold uppercase tracking-wider mb-1">Commissions Zando (7%)</p>
+                  <p className="text-[22px] font-black text-custom-green-900 leading-none tabular-nums">
+                    {(revenueData.zando_mois || 0).toLocaleString('fr-FR')}
+                    <span className="text-[12px] font-semibold text-custom-green-500 ml-1">FCFA</span>
+                  </p>
+                  {revenueData.zando_prev > 0 ? (
+                    <div className={`flex items-center gap-1 mt-1.5 text-[11px] font-bold ${revenueData.zando_mois >= revenueData.zando_prev ? 'text-custom-green-700' : 'text-red-500'}`}>
+                      {revenueData.zando_mois >= revenueData.zando_prev ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {revenueData.zando_mois >= revenueData.zando_prev ? '+' : ''}{Math.round((revenueData.zando_mois - revenueData.zando_prev) / revenueData.zando_prev * 100)}% vs mois dernier
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-custom-green-300 mt-1">Premier mois de données</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Bar chart 6 mois */}
+              <div>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Commissions — 6 derniers mois</p>
+                <BarChart bars={monthBars.map(b => ({ label: b.label, value: b.zando }))} />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Top vendeurs */}
+        <div className="col-span-12 lg:col-span-5 bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">
+                <Award className="w-4 h-4 text-amber-500" />
+              </div>
+              <h3 className="text-[14px] font-black text-gray-900">Top vendeurs ce mois</h3>
+            </div>
+            <button onClick={() => setActiveTab('users')} className="text-[11px] text-custom-green-500 font-bold hover:underline">Voir tous →</button>
+          </div>
+
+          {loadingExtra ? (
+            <div className="space-y-3 animate-pulse">
+              {[1,2,3,4,5].map(i => <div key={i} className="h-10 bg-gray-100 rounded-xl" />)}
+            </div>
+          ) : topVendeurs.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-[13px] text-gray-400">Aucune vente confirmée ce mois</p>
+              <p className="text-[11px] text-gray-300 mt-1">Les ventes apparaîtront ici une fois confirmées</p>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {topVendeurs.map((v, i) => {
+                const medals = ['🥇', '🥈', '🥉', '4', '5'];
+                const colors = ['#f59e0b', '#6b7280', '#a16207', '#005023', '#005023'];
+                const maxV = topVendeurs[0].montant || 1;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className={`w-6 text-center flex-shrink-0 font-black ${i < 3 ? 'text-[16px]' : 'text-[11px] text-gray-400'}`}>
+                      {medals[i]}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[12px] font-bold text-gray-800 truncate">{v.name}</span>
+                        <span className="text-[11px] font-black text-gray-900 tabular-nums flex-shrink-0 ml-2">
+                          {(v.montant || 0).toLocaleString('fr-FR')} F
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${Math.round(v.montant / maxV * 100)}%`, backgroundColor: colors[i] }} />
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{v.count} vente{v.count > 1 ? 's' : ''} — {Math.round(v.montant / maxV * 100)}% du top</p>
+                    </div>
                   </div>
                 );
               })}
