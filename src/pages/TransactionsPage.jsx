@@ -150,7 +150,7 @@ const TransactionsPage = () => {
     setActionLoading(false);
     setLivraisonDialog(null);
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Livraison déclarée !', description: "L'acheteur a 48h pour confirmer, sinon confirmation automatique." });
+    toast({ title: 'Livraison déclarée !', description: "L'acheteur a 24h pour confirmer la réception, sinon confirmation automatique." });
     fetchTransactions();
   };
 
@@ -326,7 +326,7 @@ const TransactionsPage = () => {
                       {!isAchats && tx.statut === 'livre' && (
                         <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 rounded-lg px-4 py-3">
                           <Truck className="w-4 h-4 flex-shrink-0" />
-                          Livraison déclarée — en attente de confirmation de l'acheteur (48h max).
+                          Livraison déclarée — en attente de confirmation de l'acheteur (24h max).
                         </div>
                       )}
                       {!isAchats && tx.statut === 'confirme' && (
@@ -407,7 +407,7 @@ const TransactionsPage = () => {
           <DialogHeader>
             <DialogTitle>Déclarer la livraison</DialogTitle>
             <DialogDescription>
-              Confirmez que l'article a été remis à l'acheteur. L'acheteur aura <strong>48h</strong> pour confirmer la réception. Passé ce délai, la commande est confirmée automatiquement et votre retrait sera disponible.
+              Confirmez que l'article a été remis à l'acheteur. L'acheteur aura <strong>24h</strong> pour confirmer la réception. Passé ce délai, la commande est confirmée automatiquement.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

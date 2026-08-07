@@ -668,7 +668,7 @@ const AdminEscrowTab = memo(() => {
               Confirmez que Zando+ a bien livré la commande{' '}
               <strong>{zandroDeclareTarget?.annonce?.title}</strong> à{' '}
               <strong>{zandroDeclareTarget?.acheteur?.full_name}</strong>.
-              L'acheteur aura 72h pour confirmer la réception.
+              L'acheteur aura 24h pour confirmer la réception.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
