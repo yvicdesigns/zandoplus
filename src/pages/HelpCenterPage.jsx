@@ -107,7 +107,7 @@ const HelpCenterPage = () => {
           <>
             Rendez-vous sur la page{' '}
             <Link to="/transactions" className="text-custom-green-600 hover:underline font-semibold">
-              Mes Transactions
+              Mes Commandes
             </Link>{' '}
             (accessible depuis le menu utilisateur). Vous y retrouvez l'état de chaque achat sécurisé, les boutons d'action disponibles et l'historique complet.
           </>
@@ -134,7 +134,7 @@ const HelpCenterPage = () => {
       },
       {
         q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
-        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page Mes Transactions. Une commission de 10% est déduite du montant qui vous est reversé. L'acheteur paie le prix affiché sans surcoût. Les fonds vous sont libérés après confirmation de réception par l'acheteur, ou automatiquement 48h après la déclaration de livraison."
+        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page Mes Commandes. Une commission de 10% est déduite du montant qui vous est reversé. L'acheteur paie le prix affiché sans surcoût. Les fonds vous sont libérés après confirmation de réception par l'acheteur, ou automatiquement 48h après la déclaration de livraison."
       },
       {
         q: "Comment fonctionne la gestion des stocks ?",

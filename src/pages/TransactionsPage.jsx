@@ -82,7 +82,6 @@ const TransactionsPage = () => {
   const [confirmDialog, setConfirmDialog]     = useState(null);
   const [litigeDialog, setLitigeDialog]       = useState(null);
   const [livraisonDialog, setLivraisonDialog] = useState(null);
-  const [withdrawDialog, setWithdrawDialog]   = useState(null);
   const [litigeNote, setLitigeNote]           = useState('');
   const [actionLoading, setActionLoading]     = useState(false);
 
@@ -155,44 +154,6 @@ const TransactionsPage = () => {
     fetchTransactions();
   };
 
-  const doRequestWithdrawal = async (tx) => {
-    setActionLoading(true);
-    const { error } = await supabase.rpc('vendor_request_withdrawal', { p_transaction_id: tx.id });
-    if (error) {
-      setActionLoading(false);
-      setWithdrawDialog(null);
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-      return;
-    }
-
-    // Récupérer MoMo du vendeur + email de notification admin en parallèle
-    const [{ data: profile }, { data: settings }] = await Promise.all([
-      supabase.from('profiles').select('momo_number, full_name').eq('id', user.id).single(),
-      supabase.from('site_settings').select('notification_email').eq('id', 1).single(),
-    ]);
-
-    const commission = Math.round(tx.montant * COMMISSION_RATE);
-    const net = tx.montant - commission;
-
-    // Notifier l'admin par email
-    supabase.functions.invoke('notify-withdrawal-request', {
-      body: {
-        vendeur_name: profile?.full_name || tx.vendeur?.full_name || 'Vendeur',
-        vendeur_momo: profile?.momo_number || '—',
-        montant: tx.montant,
-        commission,
-        net,
-        transaction_id: tx.id,
-        admin_email: settings?.notification_email || 'zandopluscg@gmail.com',
-      },
-    }).catch(console.error);
-
-    setActionLoading(false);
-    setWithdrawDialog(null);
-    toast({ title: 'Retrait demandé !', description: 'Zando+ va envoyer vos fonds sur votre numéro MoMo.' });
-    fetchTransactions();
-  };
-
   const canLitige = (tx) => {
     if (tx.statut !== 'confirme') return false;
     const confirmed = tx.date_confirmation ? new Date(tx.date_confirmation) : null;
@@ -200,12 +161,9 @@ const TransactionsPage = () => {
     return (Date.now() - confirmed.getTime()) / 3_600_000 <= 48;
   };
 
-  const withdrawalReady = (tx) =>
-    tx.withdrawal_available_at && new Date(tx.withdrawal_available_at) <= Date.now();
-
   return (
     <>
-      <Helmet><title>Mes Transactions — Zando+</title></Helmet>
+      <Helmet><title>Mes Commandes — Zando+</title></Helmet>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-10 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
 
@@ -214,8 +172,8 @@ const TransactionsPage = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mes Transactions</h1>
-              <p className="text-sm text-gray-500">Achat sécurisé Zando+</p>
+              <h1 className="text-2xl font-bold text-gray-900">Mes Commandes</h1>
+              <p className="text-sm text-gray-500">Achats &amp; ventes sécurisés Zando+</p>
             </div>
           </div>
 
@@ -249,7 +207,6 @@ const TransactionsPage = () => {
                 const netVendeur = tx.montant - commission;
                 const isAchats = tab === 'achats';
                 const otherParty = isAchats ? tx.vendeur?.full_name : tx.acheteur?.full_name;
-                const canWithdraw = withdrawalReady(tx);
 
                 return (
                   <Card key={tx.id} className="shadow-md border-0">
@@ -357,40 +314,17 @@ const TransactionsPage = () => {
                         </div>
                       )}
                       {!isAchats && tx.statut === 'confirme' && (
-                        <div className="space-y-3">
-                          {!canWithdraw && tx.withdrawal_available_at && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 space-y-3">
-                              <Countdown targetDate={tx.withdrawal_available_at} label="Retrait disponible dans" />
-                              <Button disabled className="w-full bg-gray-200 text-gray-400 cursor-not-allowed">
-                                <Wallet className="w-4 h-4 mr-2" /> Retrait disponible bientôt...
-                              </Button>
-                            </div>
-                          )}
-                          {canWithdraw && (
-                            user?.momo_number ? (
-                              <Button
-                                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
-                                onClick={() => setWithdrawDialog(tx)}
-                              >
-                                <Wallet className="w-5 h-5 mr-2" />
-                                Retirer mes fonds — {formatAmount(netVendeur)} FCFA
-                              </Button>
-                            ) : (
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
-                                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                  Ajoutez votre numéro MoMo dans vos paramètres pour pouvoir retirer.
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  className="w-full border-orange-300 text-orange-700"
-                                  onClick={() => navigate('/settings')}
-                                >
-                                  Ajouter mon numéro MoMo →
-                                </Button>
-                              </div>
-                            )
-                          )}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-4 py-3">
+                            <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                            Réception confirmée — vos fonds sont disponibles dans votre portefeuille.
+                          </div>
+                          <Button
+                            className="w-full gradient-bg"
+                            onClick={() => navigate('/wallet')}
+                          >
+                            <Wallet className="w-4 h-4 mr-2" /> Accéder à mon portefeuille
+                          </Button>
                         </div>
                       )}
                       {!isAchats && tx.statut === 'retrait_demande' && (
@@ -469,32 +403,6 @@ const TransactionsPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog : Retirer les fonds */}
-      <Dialog open={!!withdrawDialog} onOpenChange={() => setWithdrawDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Retirer vos fonds</DialogTitle>
-            <DialogDescription>
-              Zando+ va envoyer{' '}
-              <strong>
-                {formatAmount(withdrawDialog
-                  ? withdrawDialog.montant - Math.round(withdrawDialog.montant * COMMISSION_RATE)
-                  : 0
-                )} FCFA
-              </strong>{' '}
-              sur votre numéro MoMo enregistré dans votre profil.
-              Vérifiez que votre numéro est à jour dans <strong>Mes paramètres</strong> avant de confirmer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWithdrawDialog(null)}>Annuler</Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => doRequestWithdrawal(withdrawDialog)} disabled={actionLoading}>
-              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Wallet className="w-4 h-4 mr-2" /> Confirmer le retrait
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

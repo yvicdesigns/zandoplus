@@ -55,7 +55,7 @@ DECLARE
   v_role TEXT;
 BEGIN
   SELECT role INTO v_role FROM profiles WHERE id = auth.uid();
-  IF auth.uid() != p_vendor_id AND v_role != 'admin' THEN
+  IF auth.uid() != p_vendor_id AND v_role NOT IN ('admin', 'monetisation', 'gestion') THEN
     RAISE EXCEPTION 'Accès refusé';
   END IF;
 
@@ -66,6 +66,7 @@ BEGIN
       te.commission_amount,
       te.statut,
       te.date_confirmation,
+      te.withdrawal_available_at,
       (te.montant - COALESCE(te.commission_amount, ROUND(te.montant * 0.07, 2))) AS net
     FROM transactions_escrow te
     WHERE te.vendeur_id = p_vendor_id
@@ -78,14 +79,17 @@ BEGIN
   )
   SELECT
     COALESCE(SUM(e.net), 0)::DECIMAL AS solde_total,
+    GREATEST(
+      COALESCE(SUM(CASE
+        WHEN (e.date_confirmation IS NOT NULL AND now() - e.date_confirmation > INTERVAL '48 hours')
+          OR (e.withdrawal_available_at IS NOT NULL AND now() >= e.withdrawal_available_at)
+        THEN e.net ELSE 0
+      END), 0)::DECIMAL - (SELECT total FROM withdrawn),
+      0
+    ) AS solde_disponible,
     COALESCE(SUM(CASE
-      WHEN e.date_confirmation IS NOT NULL
-       AND now() - e.date_confirmation > INTERVAL '48 hours'
-      THEN e.net ELSE 0
-    END), 0)::DECIMAL - (SELECT total FROM withdrawn) AS solde_disponible,
-    COALESCE(SUM(CASE
-      WHEN e.date_confirmation IS NULL
-        OR now() - e.date_confirmation <= INTERVAL '48 hours'
+      WHEN (e.date_confirmation IS NULL OR now() - e.date_confirmation <= INTERVAL '48 hours')
+        AND (e.withdrawal_available_at IS NULL OR now() < e.withdrawal_available_at)
       THEN e.net ELSE 0
     END), 0)::DECIMAL AS solde_en_attente,
     (SELECT total FROM withdrawn)::DECIMAL AS solde_retire

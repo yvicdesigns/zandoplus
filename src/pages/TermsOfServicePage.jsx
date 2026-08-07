@@ -127,7 +127,7 @@ const TermsOfServicePage = () => {
               <p>Zando+ Congo propose un service d'achat sécurisé par fonds protégés. L'acheteur envoie le paiement à Zando+, qui bloque les fonds jusqu'à confirmation de réception du bien. Ce service fonctionne comme suit :</p>
               <ul>
                 <li>Une commission de <strong>10%</strong> du montant de la transaction est prélevée sur la part reversée au vendeur. L'acheteur paie le prix affiché sans surcoût.</li>
-                <li>Une fois le paiement sécurisé, le vendeur prépare et livre l'article, puis déclare la livraison depuis la page Mes Transactions.</li>
+                <li>Une fois le paiement sécurisé, le vendeur prépare et livre l'article, puis déclare la livraison depuis la page Mes Commandes.</li>
                 <li>L'acheteur dispose de <strong>48 heures</strong> après la déclaration de livraison pour confirmer la réception ou ouvrir un litige.</li>
                 <li>Passé ce délai de 48 heures sans action de l'acheteur, les fonds sont automatiquement libérés au vendeur. Aucun remboursement ne peut être accordé après ce délai.</li>
                 <li>En cas de litige ouvert dans les 48 heures, Zando+ examine les preuves et prend une décision qui peut aboutir à la libération des fonds au vendeur ou au remboursement de l'acheteur.</li>

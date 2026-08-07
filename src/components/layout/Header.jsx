@@ -352,7 +352,7 @@ const Header = memo(({ onLoginClick }) => {
                       {[
                         { to: '/profile',      icon: User,          label: 'Mon Profil'       },
                         { to: null, icon: MessageCircle, label: 'Mes Messages', action: openMessages },
-                        { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
+                        { to: '/transactions', icon: ShieldCheck,   label: 'Mes Commandes' },
                         { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
                       ].map(({ to, icon: Icon, label, action }) => (
                         action ? (
@@ -541,7 +541,7 @@ const Header = memo(({ onLoginClick }) => {
                     { to: '/profile',      icon: User,          label: 'Mon Profil'       },
                     { to: null,            icon: MessageCircle, label: 'Mes Messages',     action: () => { setIsMenuOpen(false); openMessages(); } },
                     { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier'       },
-                    { to: '/transactions', icon: ShieldCheck,   label: 'Mes Transactions' },
+                    { to: '/transactions', icon: ShieldCheck,   label: 'Mes Commandes' },
                     { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
                   ].map(({ to, icon: Icon, label, action }) => action ? (
                     <button key={label} onClick={action}
