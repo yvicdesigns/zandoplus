@@ -60,7 +60,7 @@ const HomePage = () => {
 
   const ogImage = siteSettings?.logo_url;
 
-  if (loading || settingsLoading) {
+  if (settingsLoading) {
     return <FullPageLoader />;
   }
 
