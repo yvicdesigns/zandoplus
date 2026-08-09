@@ -155,12 +155,16 @@ const AdminListingsTab = memo(() => {
     return listings.filter(l => {
       const matchesSearch = l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         l.seller_full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' ? true :
+        statusFilter === 'zero_stock' ? (l.quantity === 0 || l.status === 'inactive') :
+        l.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [listings, searchQuery, statusFilter]);
 
   const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review' || l.status === 'needs_changes').length, [listings]);
+  const zeroStockCount = useMemo(() => listings.filter(l => l.quantity === 0 || l.status === 'inactive').length, [listings]);
 
   if (loading) {
     return (
@@ -221,6 +225,7 @@ const AdminListingsTab = memo(() => {
               { value: 'pending_review', label: `En attente${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
               { value: 'needs_changes', label: 'Modif. requises' },
               { value: 'inactive', label: 'Inactives' },
+              { value: 'zero_stock', label: `Stock = 0${zeroStockCount > 0 ? ` (${zeroStockCount})` : ''}` },
             ].map(f => (
               <Button
                 key={f.value}
@@ -256,6 +261,9 @@ const AdminListingsTab = memo(() => {
                     </div>
                     <div className="text-sm text-gray-600">
                       <p>Catégorie: <Badge variant="secondary">{listing.category}</Badge></p>
+                      {(statusFilter === 'zero_stock' || listing.quantity === 0) && (
+                        <p className="text-xs font-semibold text-red-600">⚠ Stock mis à 0 par le vendeur</p>
+                      )}
                       <p className="flex items-center gap-1 flex-wrap">
                         Statut: <Badge variant={listing.status === 'active' ? 'default' : 'outline'} className={listing.status === 'active' ? 'bg-green-100 text-green-800' : listing.status === 'pending_review' ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>{listing.status}</Badge>
                         {listing.moderation_flags?.length > 0 && (
