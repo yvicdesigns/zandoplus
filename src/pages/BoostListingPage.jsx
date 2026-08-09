@@ -69,7 +69,7 @@ const BoostListingPage = () => {
   const [listing, setListing]         = useState(null);
   const [loading, setLoading]         = useState(true);
   const [selectedType, setSelectedType] = useState('urgent');
-  const [days, setDays]               = useState(7);
+  const [days, setDays]               = useState(1);
   const [activeBoost, setActiveBoost] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -177,7 +177,16 @@ const BoostListingPage = () => {
           </button>
 
           <h1 className="text-[22px] font-black text-gray-900 mb-1">Booster votre annonce</h1>
-          <p className="text-[13px] text-gray-400 mb-6">Choisissez le type et la durée de votre boost.</p>
+          <p className="text-[13px] text-gray-400 mb-3">Choisissez le type et la durée de votre boost.</p>
+
+          {/* Prix d'entrée bien visible */}
+          <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl mb-6">
+            <span className="text-2xl">💡</span>
+            <div>
+              <p className="text-[13px] font-black text-green-800">À partir de 150 FCFA seulement</p>
+              <p className="text-[11px] text-green-700">Vous pouvez booster pour <strong>1 seul jour</strong> — testez et voyez la différence !</p>
+            </div>
+          </div>
 
           {/* Annonce */}
           <div className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl mb-6 shadow-sm">

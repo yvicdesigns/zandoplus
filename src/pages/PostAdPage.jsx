@@ -284,7 +284,7 @@ const PostAdPage = () => {
         });
       }
 
-      toast({ title: "Annonce publiée avec succès !", description: "Votre annonce est maintenant en ligne.", className: "bg-custom-green-500 text-white" });
+      toast({ title: "Annonce publiée avec succès !", description: "Votre annonce est visible sur la page d'accueil dans « Annonces récentes ».", className: "bg-custom-green-500 text-white", duration: 6000 });
       navigate('/profile');
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
