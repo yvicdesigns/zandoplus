@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -75,8 +75,16 @@ const TransactionsPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState('achats');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(
+    searchParams.get('tab') === 'ventes' ? 'ventes' : 'achats'
+  );
   const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t === 'ventes' || t === 'achats') setTab(t);
+  }, [searchParams]);
   const [loading, setLoading] = useState(true);
 
   const [confirmDialog, setConfirmDialog]     = useState(null);
