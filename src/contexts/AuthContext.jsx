@@ -166,8 +166,18 @@ export const AuthProvider = ({ children }) => {
                 }).catch(() => { if (mounted) setProfileReady(true); });
                 return;
             }
-            const fullUser = await fetchUserProfile(newSession.user);
+            // Timeout guard: if fetchUserProfile hangs (Supabase reinitialization post-OAuth),
+            // fall back to base auth user after 5s so isLoading clears and UI unblocks.
+            // The profile fetch continues in background and updates state when it resolves.
+            const profileFetch = fetchUserProfile(newSession.user);
+            const fullUser = await Promise.race([
+                profileFetch,
+                new Promise(resolve => setTimeout(() => resolve(newSession.user), 5000))
+            ]);
             if (mounted) { setUserSafe(fullUser); setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
+            profileFetch.then(fullProfile => {
+                if (mounted && fullProfile?.id) setUserSafe(fullProfile);
+            }).catch(() => {});
         } else {
             if (mounted) setUserSafe(null); // resets userRef so re-login re-fetches profile
             if (mounted) { setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
