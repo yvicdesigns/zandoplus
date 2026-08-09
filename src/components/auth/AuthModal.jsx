@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Phone, MapPin, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -27,6 +27,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState('');
+  const submittingRef = useRef(false);
   const { toast } = useToast();
 
   const resetForm = useCallback(() => {
@@ -70,9 +71,11 @@ const AuthModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e, action, type) => {
     e.preventDefault();
     if (formData.honeypot) return;
+    if (submittingRef.current) return; // guard double-submit
     if (type === 'login'    && !validateLogin())        return;
     if (type === 'register' && !validateRegistration()) return;
 
+    submittingRef.current = true;
     setLoading(true);
     setError('');
     const safeData = {
@@ -91,18 +94,20 @@ const AuthModal = ({ isOpen, onClose }) => {
       setError(err.message);
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
   const onLogin = async (email, password) => {
     await login(email, password);
     toast({ title: "Connexion réussie !", description: "Bienvenue sur Zando+ Congo.", className: "toast-success" });
-    if (onClose) onClose();
+    // Ne pas appeler onClose ici — onAuthStateChange SIGNED_IN appelle closeAuthModal()
+    // Appeler les deux cause un double-close et un flash du modal
   };
 
   const onRegister = async (data) => {
     await register(data);
-    if (onClose) onClose();
+    // register() appelle closeAuthModal() + navigate() directement
   };
 
   const handlePasswordReset = async () => {

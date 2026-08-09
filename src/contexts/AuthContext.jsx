@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }) => {
                 return;
             }
             const fullUser = await fetchUserProfile(newSession.user);
-            if (mounted) { setUserSafe(fullUser); setIsLoading(false); clearTimeout(safetyTimer); }
+            if (mounted) { setUserSafe(fullUser); setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
         } else {
             if (mounted) setUserSafe(null); // resets userRef so re-login re-fetches profile
             if (mounted) { setIsLoading(false); setProfileReady(true); clearTimeout(safetyTimer); }
@@ -339,7 +339,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     setIsLoading(true);
     const { email, password, name, phone, location } = userData;
-    
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -357,18 +357,21 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw new Error(translateSupabaseError(error, 'inscription'));
 
-      if (data.user && !data.user.email_confirmed_at) {
-         toast({
-            title: "Compte créé avec succès !",
-            description: "Un e-mail de confirmation a été envoyé à votre adresse.",
-            className: "toast-success",
-          });
+      // Supabase retourne succès avec identities vides si l'email existe déjà (non confirmé)
+      if (!data.user?.identities?.length) {
+        throw new Error("Un compte existe déjà avec cet e-mail. Vérifiez votre boîte mail ou connectez-vous.");
       }
+
+      toast({
+        title: "Compte créé avec succès !",
+        description: "Un e-mail de confirmation a été envoyé à votre adresse.",
+        className: "toast-success",
+      });
 
       closeAuthModal();
       navigate('/confirmation-required', { state: { email } });
       return data;
-      
+
     } catch (err) {
       logError(err, { context: 'register', email });
       throw err;
