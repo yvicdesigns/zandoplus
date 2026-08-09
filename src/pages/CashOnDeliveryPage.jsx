@@ -11,28 +11,7 @@ import { Helmet } from 'react-helmet-async';
 import { Banknote, Truck, ArrowLeft, Loader2, CheckCircle, MapPin, Phone } from 'lucide-react';
 import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 
-const COMMISSION_RATE = 0.10;
-
-const ZONES = [
-  {
-    id: 'zone1',
-    label: 'Zone 1 — Proche',
-    quartiers: 'Poto-Poto, Moungali, Centre-ville, Plateau des 15 ans',
-    fee: 1500,
-  },
-  {
-    id: 'zone2',
-    label: 'Zone 2 — Moyen',
-    quartiers: 'Bacongo, Makélékélé, Ouenzé, Mikalou',
-    fee: 2000,
-  },
-  {
-    id: 'zone3',
-    label: 'Zone 3 — Éloigné',
-    quartiers: 'Talangaï, Mfilou, Madibou, Djiri, Kingasani',
-    fee: 3500,
-  },
-];
+const COD_FEE = 1500; // FCFA — frais Zando livraison + collecte cash
 
 const CashOnDeliveryPage = () => {
   const { listingId } = useParams();
@@ -46,7 +25,6 @@ const CashOnDeliveryPage = () => {
   const [done, setDone] = useState(false);
   const [adresse, setAdresse] = useState('');
   const [telephone, setTelephone] = useState('');
-  const [selectedZone, setSelectedZone] = useState(ZONES[1]); // zone2 par défaut
 
   useEffect(() => {
     if (!user) { openAuthModal(); navigate('/'); return; }
@@ -102,7 +80,7 @@ const CashOnDeliveryPage = () => {
         p_annonce_id: listingId,
         p_adresse_livraison: adresse.trim(),
         p_telephone_contact: telephone.trim(),
-        p_zone: selectedZone.id,
+        p_zone: 'standard',
       });
       if (error) throw error;
       setDone(true);
@@ -119,6 +97,8 @@ const CashOnDeliveryPage = () => {
     </div>
   );
 
+  const total = listing.price + COD_FEE;
+
   if (done) return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">
       <CheckCircle className="w-16 h-16 text-custom-green-500 mx-auto mb-4" />
@@ -126,15 +106,13 @@ const CashOnDeliveryPage = () => {
       <p className="text-gray-600 mb-2">Votre commande a été transmise au vendeur.</p>
       <p className="text-gray-600 mb-6">
         Un livreur Zando vous contactera pour organiser la livraison.<br />
-        Vous paierez <strong>{(listing.price + selectedZone.fee).toLocaleString()} FCFA</strong> en cash à la réception.
+        Vous paierez <strong>{total.toLocaleString()} FCFA</strong> en cash à la réception.
       </p>
-      <Button onClick={() => navigate('/transactions')} className="bg-green-600 hover:bg-green-700 text-white">
+      <Button onClick={() => navigate('/transactions')} className="gradient-bg text-white">
         Voir mes commandes
       </Button>
     </div>
   );
-
-  const total = listing.price + selectedZone.fee;
 
   return (
     <>
@@ -147,47 +125,19 @@ const CashOnDeliveryPage = () => {
         <h1 className="text-2xl font-bold mb-1">Payer à la livraison</h1>
         <p className="text-gray-500 text-sm mb-6">Zando livre et collecte le paiement sur place.</p>
 
-        {/* Zone de livraison */}
-        <Card className="mb-4">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><MapPin className="w-4 h-4 text-orange-500" /> Votre zone de livraison</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {ZONES.map(zone => (
-              <button
-                key={zone.id}
-                onClick={() => setSelectedZone(zone)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border-2 text-left transition-colors ${
-                  selectedZone.id === zone.id
-                    ? 'border-orange-400 bg-orange-50'
-                    : 'border-gray-200 hover:border-orange-200 hover:bg-orange-50/40'
-                }`}
-              >
-                <div>
-                  <p className={`font-semibold text-sm ${selectedZone.id === zone.id ? 'text-orange-800' : 'text-gray-700'}`}>
-                    {zone.label}
-                  </p>
-                  <p className="text-xs text-gray-500">{zone.quartiers}</p>
-                </div>
-                <span className={`text-sm font-bold shrink-0 ml-3 ${selectedZone.id === zone.id ? 'text-orange-600' : 'text-gray-600'}`}>
-                  {zone.fee.toLocaleString()} FCFA
-                </span>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
         {/* Résumé commande */}
         <Card className="mb-4">
           <CardHeader><CardTitle className="text-base">Résumé de la commande</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">{listing.title}</span>
-              <span className="font-semibold">{listing.price.toLocaleString()} {listing.currency}</span>
+              <span className="font-semibold">{listing.price.toLocaleString()} {listing.currency || 'FCFA'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 flex items-center gap-1">
-                <Truck className="w-3.5 h-3.5" /> Frais livraison ({selectedZone.label})
+                <Truck className="w-3.5 h-3.5" /> Frais de livraison Zando
               </span>
-              <span className="font-semibold">{selectedZone.fee.toLocaleString()} FCFA</span>
+              <span className="font-semibold">{COD_FEE.toLocaleString()} FCFA</span>
             </div>
             <div className="border-t pt-2 flex justify-between text-base font-bold">
               <span>Total à payer en cash</span>
@@ -206,7 +156,7 @@ const CashOnDeliveryPage = () => {
               </Label>
               <Input
                 id="adresse"
-                placeholder={`Ex: ${selectedZone.quartiers.split(',')[0]}, face à...`}
+                placeholder="Ex: Poto-Poto, face à l'église..."
                 value={adresse}
                 onChange={e => setAdresse(e.target.value)}
               />

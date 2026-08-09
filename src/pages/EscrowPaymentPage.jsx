@@ -10,7 +10,7 @@ import { Helmet } from 'react-helmet-async';
 import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
 
 const COMMISSION_RATE = 0.10;
-const ZANDO_DELIVERY_FEE = 1500; // FCFA — modifiable
+const ZANDO_DELIVERY_FEE = 1000; // FCFA
 const AUTOPAY_ENABLED = import.meta.env.VITE_MOMO_AUTOPAY_ENABLED === 'true';
 const AUTOPAY_POLL_MS = 4000;
 const AUTOPAY_TIMEOUT_MS = 120000;
