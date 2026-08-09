@@ -15,16 +15,24 @@ import { Button } from '@/components/ui/button';
 // has finished processing the session (both flags cleared = user is already set in context).
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
-  const { isLoading, isOAuthPending } = useAuth();
+  const { isLoading, isOAuthPending, user } = useAuth();
   const [stage, setStage] = useState('waiting'); // 'waiting' | 'slow' | 'failed'
 
-  // Navigate once AuthProvider signals it's done (both loading flags cleared).
-  // At this point user is already set in context — home will render logged-in on first paint.
+  // Navigate once AuthProvider signals it's done AND user is set.
+  // Waiting for user prevents navigating to home with user=null when the
+  // safety timer fires before fetchUserProfile completes.
+  // Fallback: navigate anyway after 12s (slow network / profile creation failure).
   useEffect(() => {
     if (!isLoading && !isOAuthPending) {
-      navigate('/', { replace: true });
+      if (user) {
+        navigate('/', { replace: true });
+      } else {
+        // Safety net: if user is still null 2s after loading cleared, navigate anyway
+        const t = setTimeout(() => navigate('/', { replace: true }), 2000);
+        return () => clearTimeout(t);
+      }
     }
-  }, [isLoading, isOAuthPending, navigate]);
+  }, [isLoading, isOAuthPending, user, navigate]);
 
   // Show "slow" message after 12s, "failed" UI after 45s (network truly unreachable)
   useEffect(() => {

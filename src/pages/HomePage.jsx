@@ -34,20 +34,22 @@ const HomePage = () => {
     const fetchHomePageData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc('get_category_listing_counts');
-        if (error) {
-          console.error("Erreur lors de la récupération du nombre d'annonces par catégorie:", error);
-        } else {
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 6000)
+        );
+        const { data, error } = await Promise.race([
+          supabase.rpc('get_category_listing_counts'),
+          timeout,
+        ]);
+        if (!error && data) {
           const countsMap = data.reduce((acc, item) => {
-            if (item.category_slug) {
-              acc[item.category_slug] = item.listing_count;
-            }
+            if (item.category_slug) acc[item.category_slug] = item.listing_count;
             return acc;
           }, {});
           setCategoryCounts(countsMap);
         }
       } catch (e) {
-        console.error(e);
+        // timeout ou erreur réseau — on continue sans les counts
       } finally {
         setLoading(false);
       }
