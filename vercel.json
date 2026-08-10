@@ -4,5 +4,13 @@
     { "source": "/seller/:id",     "destination": "/api/seller-og?id=:id" },
     { "source": "/listings/:id",   "destination": "/api/listing-og?id=:id" },
     { "source": "/(.*)",           "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
   ]
 }

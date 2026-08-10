@@ -14,8 +14,23 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    const msg = error?.message || '';
+    const isChunkError =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Unable to preload CSS');
+
+    if (isChunkError) {
+      const key = 'chunk_reload_v1';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return;
+      }
+    }
+
     const errorId = Math.random().toString(36).substr(2, 9);
-    this.setState({ errorId, errorMessage: error?.message || 'Unknown error' });
+    this.setState({ errorId, errorMessage: msg || 'Unknown error' });
 
     logError(error, {
       componentStack: errorInfo.componentStack,
