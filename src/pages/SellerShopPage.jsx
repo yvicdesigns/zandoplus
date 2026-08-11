@@ -236,14 +236,14 @@ const SellerShopPage = () => {
 
                 <div className="space-y-2">
                   <button
-                    className="w-full h-9 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                    className="w-full h-11 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
                     onClick={() => toast({ title: 'Bientôt disponible !' })}
                   >
                     <Heart className="w-4 h-4" /> Suivre la boutique
                   </button>
                   <button
                     onClick={handleContact}
-                    className="w-full h-9 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                    className="w-full h-11 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
                   >
                     <MessageSquare className="w-4 h-4" /> Contacter le vendeur
                   </button>
@@ -254,7 +254,7 @@ const SellerShopPage = () => {
 
           {/* Trust bar */}
           <div className="relative bg-white/95 backdrop-blur-sm border-t border-gray-100">
-            <div className="max-w-[1280px] mx-auto px-6 py-3 flex items-center justify-around gap-4">
+            <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-around gap-2 flex-wrap sm:flex-nowrap sm:gap-4">
               {TRUST.map(({ icon: Icon, title, sub }) => (
                 <div key={title} className="flex items-center gap-2">
                   <Icon className="w-5 h-5 text-custom-green-500 flex-shrink-0" />
@@ -271,12 +271,12 @@ const SellerShopPage = () => {
         {/* ══ TABS ══ */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
           <div className="max-w-[1280px] mx-auto px-6">
-            <div className="flex">
+            <div className="flex overflow-x-auto scrollbar-hide">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-5 py-4 text-[13px] font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  className={`px-5 py-4 text-[13px] font-semibold border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'border-custom-green-500 text-custom-green-500'
                       : 'border-transparent text-gray-500 hover:text-gray-800'

@@ -92,23 +92,23 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
         <CardContent className="p-1.5 sm:p-4 flex-grow flex-col justify-between">
           <div>
             <Link to={`/listings/${listing.listing_slug || listing.id}`}>
-              <h3 className="text-[10px] sm:text-base font-bold mb-0.5 sm:mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors leading-tight">
+              <h3 className="text-[12px] sm:text-base font-bold mb-0.5 sm:mb-2 line-clamp-2 hover:text-custom-green-600 transition-colors leading-tight">
                 {listing.title}
               </h3>
             </Link>
             {listing.negotiated_price ? (
               <div className="mb-0.5 sm:mb-2 leading-tight">
-                <p className="text-[9px] sm:text-sm text-gray-400 line-through leading-none">
+                <p className="text-[11px] sm:text-sm text-gray-400 line-through leading-none">
                   {(listing.price || 0).toLocaleString()} {listing.currency || 'FCFA'}
                 </p>
-                <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 leading-tight">
-                  {listing.negotiated_price.toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
-                  <span className="ml-1 text-[8px] sm:text-[10px] bg-green-100 text-green-700 font-bold px-1 py-0.5 rounded">Meilleur prix</span>
+                <p className="text-[12px] sm:text-lg font-bold text-custom-green-600 leading-tight">
+                  {listing.negotiated_price.toLocaleString()} <span className="text-[11px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
+                  <span className="ml-1 text-[10px] sm:text-[10px] bg-green-100 text-green-700 font-bold px-1 py-0.5 rounded">Meilleur prix</span>
                 </p>
               </div>
             ) : (
-              <p className="text-[11px] sm:text-lg font-bold text-custom-green-600 mb-0.5 sm:mb-2 leading-tight">
-                {(listing.price || 0).toLocaleString()} <span className="text-[9px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
+              <p className="text-[12px] sm:text-lg font-bold text-custom-green-600 mb-0.5 sm:mb-2 leading-tight">
+                {(listing.price || 0).toLocaleString()} <span className="text-[11px] sm:text-xs font-semibold">{listing.currency || 'FCFA'}</span>
               </p>
             )}
           </div>
@@ -160,7 +160,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               <div className="sm:hidden mt-1.5">
                 <button
                   onClick={(e) => { e.preventDefault(); addItem(listing, (title) => toast({ title: 'Ajouté ✅', description: title, className: 'bg-green-100 text-green-800' })); }}
-                  className={`w-full flex items-center justify-center py-1.5 rounded-lg transition-colors ${inCart ? 'bg-custom-green-700 text-white' : 'bg-custom-green-600 text-white hover:bg-custom-green-700'}`}
+                  className={`w-full flex items-center justify-center py-2.5 rounded-lg transition-colors ${inCart ? 'bg-custom-green-700 text-white' : 'bg-custom-green-600 text-white hover:bg-custom-green-700'}`}
                 >
                   {inCart ? <CheckCircle className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
                 </button>

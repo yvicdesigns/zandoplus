@@ -528,10 +528,10 @@ const HeroSection = () => {
                   className="flex relative z-20 w-[100px] h-[100px] sm:w-[150px] sm:h-[150px] lg:w-[190px] lg:h-[190px] rounded-full flex-col items-center justify-center text-center px-2 sm:px-5 border-2 sm:border-4 border-white/20 shadow-lg"
                   style={{ backgroundColor: promoColor }}
                 >
-                  <span className="text-[7px] sm:text-[9px] font-bold text-white/70 uppercase tracking-widest leading-tight">{promoLabelTop}</span>
-                  <span className="text-[7px] sm:text-[10px] text-white/70 mt-1">Jusqu'à</span>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-white/70 uppercase tracking-widest leading-tight">{promoLabelTop}</span>
+                  <span className="text-[9px] sm:text-[10px] text-white/70 mt-1">Jusqu'à</span>
                   <span className="text-[30px] sm:text-[44px] lg:text-[48px] font-black text-accent-yellow leading-none">{promoValue}</span>
-                  <span className="text-[6px] sm:text-[9px] text-white/70 uppercase tracking-wider mt-0.5 leading-tight">{promoCaption}</span>
+                  <span className="text-[9px] sm:text-[10px] text-white/70 uppercase tracking-wider mt-0.5 leading-tight">{promoCaption}</span>
                 </div>
               )}
             </div>

@@ -192,7 +192,7 @@ const ListingsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar / Filters */}
             <aside className={`
-              fixed inset-0 z-50 bg-white p-4 overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 lg:bg-transparent lg:p-0 lg:overflow-visible lg:block lg:col-span-1
+              fixed inset-0 z-50 bg-white p-4 pt-[calc(1rem+env(safe-area-inset-top))] overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 lg:bg-transparent lg:p-0 lg:overflow-visible lg:block lg:col-span-1
               ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
               <ListingsFilters
@@ -219,7 +219,7 @@ const ListingsPage = () => {
             {/* Main Content */}
             <main className="lg:col-span-3">
               {loading ? (
-                <div className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-3 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                <div className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1'}`}>
                   {[...Array(9)].map((_, i) => (
                     <Skeleton key={i} className="h-80 w-full rounded-lg" />
                   ))}
@@ -227,7 +227,7 @@ const ListingsPage = () => {
               ) : listings.length > 0 ? (
                 <>
                     <div
-                      className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-3 lg:grid-cols-3' : 'grid-cols-1'}`}
+                      className={`grid gap-2 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1'}`}
                     >
                       {listings.slice(0, visibleCount).map(listing => (
                           <ListingItem

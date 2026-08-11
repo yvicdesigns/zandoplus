@@ -95,7 +95,7 @@ const Step = ({ n, label, status }) => (
     <span className={`text-[13px] font-semibold whitespace-nowrap ${
       status === 'active' ? 'text-gray-900' :
       status === 'done'   ? 'text-custom-green-600' : 'text-gray-400'
-    }`}>{label}</span>
+    } ${status === 'pending' ? 'hidden sm:inline' : ''}`}>{label}</span>
   </div>
 );
 
@@ -137,23 +137,23 @@ const AddressForm = ({ initial = {}, onSave, onCancel, loading, onCityChange }) 
         <input
           type="text" placeholder="Nom complet" value={form.full_name}
           onChange={e => set('full_name', e.target.value)}
-          className="h-10 border border-gray-200 rounded-lg px-3 text-[12px] focus:outline-none focus:border-custom-green-500 bg-white"
+          className="h-10 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500 bg-white"
         />
         <input
           type="tel" placeholder="+242 06 000 00 00" value={form.phone}
           onChange={e => set('phone', e.target.value)}
-          className="h-10 border border-gray-200 rounded-lg px-3 text-[12px] focus:outline-none focus:border-custom-green-500 bg-white"
+          className="h-10 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500 bg-white"
         />
       </div>
       <input
         type="text" placeholder="Adresse complète (avenue, quartier...)" value={form.street}
         onChange={e => set('street', e.target.value)}
-        className="w-full h-10 border border-gray-200 rounded-lg px-3 text-[12px] focus:outline-none focus:border-custom-green-500 bg-white"
+        className="w-full h-10 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500 bg-white"
       />
       <input
         type="text" placeholder="Ville" value={form.city}
         onChange={e => set('city', e.target.value)}
-        className="w-full h-10 border border-gray-200 rounded-lg px-3 text-[12px] focus:outline-none focus:border-custom-green-500 bg-white"
+        className="w-full h-10 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500 bg-white"
       />
       <label className="flex items-center gap-2 text-[12px] text-gray-600 cursor-pointer">
         <input type="checkbox" checked={form.is_default} onChange={e => set('is_default', e.target.checked)}

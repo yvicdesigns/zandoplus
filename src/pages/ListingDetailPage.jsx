@@ -280,7 +280,7 @@ const ListingDetailPage = () => {
       </Helmet>
 
       <div className="bg-page-bg min-h-screen py-6">
-        <div className="max-w-[1280px] mx-auto px-6">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
 
           {/* ── Fil d'Ariane ── */}
           <nav className="flex items-center gap-1 text-[12px] text-gray-500 mb-5 flex-wrap">
@@ -531,7 +531,7 @@ const ListingDetailPage = () => {
 
             {/* Onglets */}
             <div className="lg:col-span-8">
-              <div className="flex border-b border-gray-200 mb-6">
+              <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-200 mb-6">
                 {TABS.map(tab => (
                   <button
                     key={tab}
@@ -558,7 +558,7 @@ const ListingDetailPage = () => {
 
               {activeTab === 'Caractéristiques' && (
                 <div className="bg-white rounded-xl p-6 border border-gray-100">
-                  <table className="w-full text-[13px]">
+                  <div className="overflow-x-auto"><table className="w-full text-[13px]">
                     <tbody className="divide-y divide-gray-100">
                       {[
                         ['Catégorie',   categoryName],
@@ -575,7 +575,7 @@ const ListingDetailPage = () => {
                         </tr>
                       ) : null)}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               )}
 
