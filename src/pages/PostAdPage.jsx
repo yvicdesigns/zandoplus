@@ -93,6 +93,12 @@ const PostAdPage = () => {
 
   useEffect(() => {
     if (user && !listingsLoading) {
+      const isAdmin = user.role === 'admin' || user.role === 'editor';
+      if (!user.is_seller && !isAdmin) {
+        navigate('/devenir-vendeur');
+        toast({ title: 'Espace vendeur requis', description: 'Activez votre espace vendeur pour publier une annonce.', variant: 'destructive' });
+        return;
+      }
       setFormData(prev => ({
         ...prev,
         phone: user.phone || '',

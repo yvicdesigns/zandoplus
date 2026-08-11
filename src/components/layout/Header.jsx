@@ -383,7 +383,7 @@ const Header = memo(({ onLoginClick }) => {
                 </div>
 
                 {/* Publier */}
-                <Link to="/post-ad" className="hidden md:block shrink-0">
+                <Link to={user?.is_seller || isAdmin ? "/post-ad" : "/devenir-vendeur"} className="hidden md:block shrink-0">
                   <button className="h-[38px] px-5 bg-custom-green-500 text-white text-[13px] font-bold rounded-lg flex items-center gap-1.5 hover:bg-custom-green-600 transition-colors">
                     <Plus className="w-4 h-4" />
                     Publier
@@ -563,7 +563,7 @@ const Header = memo(({ onLoginClick }) => {
                       Dashboard Admin
                     </Link>
                   )}
-                  <Link to="/post-ad" onClick={() => setIsMenuOpen(false)}>
+                  <Link to={user?.is_seller || isAdmin ? "/post-ad" : "/devenir-vendeur"} onClick={() => setIsMenuOpen(false)}>
                     <button className="w-full mt-2 h-[42px] bg-custom-green-500 text-white font-bold text-[13px] rounded-lg flex items-center justify-center gap-2">
                       <Plus className="w-4 h-4" /> Publier une annonce
                     </button>
