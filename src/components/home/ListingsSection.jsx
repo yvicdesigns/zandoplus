@@ -42,6 +42,7 @@ const ListingsSection = () => {
           const formattedData = data.map(item => ({
             ...item,
             createdAt: item.created_at,
+            seller_verified: item.seller?.verified === true,
             seller: item.seller ? {
               ...item.seller,
               name: item.seller.full_name || 'Vendeur Anonyme',
