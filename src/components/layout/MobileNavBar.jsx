@@ -3,9 +3,13 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { Home, LayoutGrid, Plus, Wallet, User } from 'lucide-react';
 import { isMobile } from 'react-device-detect';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MobileNavBar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.user_metadata?.is_admin || ['admin', 'editor', 'monetisation', 'gestion'].includes(user?.role);
+  const plusTarget = user?.is_seller || isAdmin ? '/post-ad' : '/devenir-vendeur';
 
   if (!isMobile) return null;
 
@@ -30,7 +34,7 @@ const MobileNavBar = () => {
             return (
               <div key="plus" className="relative flex justify-center w-1/5 -translate-y-3">
                 <Link
-                  to="/post-ad"
+                  to={plusTarget}
                   className="w-14 h-14 rounded-full bg-custom-green-500 flex items-center justify-center shadow-lg shadow-custom-green-500/30 border-4 border-white"
                 >
                   <Plus className="w-7 h-7 text-white stroke-[2.5]" />

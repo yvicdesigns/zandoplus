@@ -168,7 +168,7 @@ const PostAdProtectedRoute = () => {
           <p className="text-gray-600 mb-6">
             Veuillez compléter votre profil (nom complet et numéro de téléphone) avant de publier une annonce.
           </p>
-          <Button onClick={() => navigate('/profile')} className="gradient-bg hover:opacity-90">
+          <Button onClick={() => navigate('/devenir-vendeur')} className="gradient-bg hover:opacity-90">
             Compléter le Profil
           </Button>
         </div>
@@ -252,6 +252,7 @@ const AppContent = () => {
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/verification" element={<VerificationPage />} />
                     <Route path="/become-seller" element={<BecomeSellerPage />} />
+                    <Route path="/devenir-vendeur" element={<BecomeSellerPage />} />
                     <Route path="/suivi" element={<TrackingPage />} />
                     <Route path="/data-deletion" element={<DataDeletionPage />} />
                     <Route path="/changelog" element={<ChangelogPage />} />

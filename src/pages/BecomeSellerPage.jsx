@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, ShoppingBag, MessageCircle, Truck, Shield, ChevronRight, BadgeCheck } from 'lucide-react';
+import { Loader2, ShoppingBag, MessageCircle, Truck, Shield, ChevronRight, BadgeCheck, User, Phone, MapPin } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const BENEFITS = [
@@ -19,19 +19,53 @@ const BecomeSellerPage = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  const [form, setForm] = useState({ full_name: '', phone: '', location: '' });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        full_name: user.full_name || '',
+        phone: user.phone || '',
+        location: user.location || '',
+      });
+    }
+  }, [user]);
+
+  const validate = () => {
+    const e = {};
+    if (!form.full_name.trim()) e.full_name = 'Le nom complet est requis.';
+    if (!form.phone.trim()) e.phone = 'Le numéro de téléphone est requis.';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+  };
+
   const handleActivate = async () => {
     if (!user) { navigate('/'); return; }
+    if (!validate()) return;
+
     setLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ is_seller: true, updated_at: new Date().toISOString() })
+        .update({
+          full_name: form.full_name.trim(),
+          phone: form.phone.trim(),
+          location: form.location.trim() || null,
+          is_seller: true,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', user.id);
 
       if (error) throw error;
 
       toast({ title: 'Espace vendeur activé !', description: 'Vous pouvez maintenant publier vos annonces.', className: 'toast-success' });
-      // Rechargement complet pour que AuthContext relise is_seller=true depuis la DB
       setTimeout(() => { window.location.href = '/espace-vendeur'; }, 800);
     } catch (err) {
       toast({ title: 'Erreur', description: 'Impossible d\'activer le mode vendeur.', variant: 'destructive' });
@@ -51,18 +85,79 @@ const BecomeSellerPage = () => {
         <div className="max-w-lg mx-auto">
 
           {/* Hero */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-100 mb-4">
               <ShoppingBag className="w-8 h-8 text-green-700" />
             </div>
             <h1 className="text-2xl font-black text-gray-900 mb-2">Devenez vendeur sur Zando+</h1>
             <p className="text-gray-500 text-sm leading-relaxed">
-              Activez votre espace vendeur en un clic. Gratuit, sans abonnement, sans engagement.
+              Complétez vos informations pour activer votre espace vendeur. Gratuit, sans abonnement.
             </p>
           </div>
 
+          {/* Form */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 space-y-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Vos informations</p>
+
+            {/* Nom complet */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Nom complet <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  name="full_name"
+                  value={form.full_name}
+                  onChange={handleChange}
+                  placeholder="Ex : Jean-Pierre Mavoungou"
+                  className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border ${errors.full_name ? 'border-red-400 bg-red-50' : 'border-gray-200'} outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-colors`}
+                />
+              </div>
+              {errors.full_name && <p className="text-xs text-red-500 mt-1">{errors.full_name}</p>}
+            </div>
+
+            {/* Téléphone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Numéro de téléphone <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="Ex : +242 06 000 0000"
+                  className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200'} outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-colors`}
+                />
+              </div>
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+            </div>
+
+            {/* Ville */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Ville <span className="text-gray-400 font-normal">(recommandé)</span>
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  name="location"
+                  value={form.location}
+                  onChange={handleChange}
+                  placeholder="Ex : Brazzaville"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Benefits */}
-          <div className="space-y-3 mb-8">
+          <div className="space-y-3 mb-6">
             {BENEFITS.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex items-start gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <div className="shrink-0 w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
