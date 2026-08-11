@@ -64,7 +64,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
           </Link>
           <button
             onClick={() => toggleFavorite(listing.id)}
-            className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-1 sm:p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
+            className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 p-2 sm:p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
           >
             <Heart
               className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${isFavorite

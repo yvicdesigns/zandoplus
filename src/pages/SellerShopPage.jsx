@@ -260,7 +260,7 @@ const SellerShopPage = () => {
                   <Icon className="w-5 h-5 text-custom-green-500 flex-shrink-0" />
                   <div>
                     <p className="text-[12px] font-bold text-gray-900 leading-tight">{title}</p>
-                    <p className="text-[10px] text-gray-400 leading-tight">{sub}</p>
+                    <p className="text-[11px] text-gray-400 leading-tight">{sub}</p>
                   </div>
                 </div>
               ))}

@@ -335,7 +335,7 @@ const PostAdPage = () => {
         <PostAdStepper steps={steps} currentStep={currentStep} />
         <form onSubmit={handleSubmit}>
           <Card className="border-0 shadow-lg">
-            <CardContent className="p-8">
+            <CardContent className="p-4 sm:p-8">
               {renderStep()}
               {currentStep < 3 ? (
                 <FormControls currentStep={currentStep} prevStep={prevStep} nextStep={nextStep} loading={loading} />

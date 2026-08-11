@@ -255,7 +255,7 @@ const WalletPage = () => {
                   onChange={e => setMomoEdit(e.target.value)}
                   placeholder="06 XXX XX XX"
                   autoFocus
-                  className="flex-1 h-10 border border-gray-200 rounded-xl px-3 text-[14px] focus:outline-none focus:border-custom-green-500"
+                  className="flex-1 h-10 border border-gray-200 rounded-xl px-3 text-base focus:outline-none focus:border-custom-green-500"
                 />
                 <button onClick={saveMomo} disabled={savingMomo}
                   className="w-10 h-10 bg-custom-green-500 text-white rounded-xl flex items-center justify-center hover:bg-custom-green-600 transition-colors disabled:opacity-50">

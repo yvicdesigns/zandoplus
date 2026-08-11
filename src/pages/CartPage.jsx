@@ -77,7 +77,7 @@ const CartPage = () => {
                           )}
                         </div>
                       </div>
-                      <button onClick={() => removeItem(item.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button onClick={() => removeItem(item.id)} className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

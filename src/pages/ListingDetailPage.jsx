@@ -625,7 +625,7 @@ const ListingDetailPage = () => {
             {/* Carte vendeur */}
             <div className="lg:col-span-4">
               <div className="bg-white rounded-xl border border-gray-100 p-5 sticky top-24">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Vendu par</p>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Vendu par</p>
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-12 h-12 border border-gray-100">
                     <AvatarImage src={listing.seller?.avatar_url} />
@@ -636,7 +636,7 @@ const ListingDetailPage = () => {
                   <div className="min-w-0">
                     <p className="text-[15px] font-black text-gray-900 truncate">{listing.seller?.full_name}</p>
                     {listing.seller?.verified && (
-                      <span className="inline-flex items-center gap-1 bg-green-50 text-custom-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-custom-green-200 mt-0.5">
+                      <span className="inline-flex items-center gap-1 bg-green-50 text-custom-green-600 text-[11px] font-bold px-2 py-0.5 rounded-full border border-custom-green-200 mt-0.5">
                         <BadgeCheck className="w-3 h-3" /> Boutique officielle
                       </span>
                     )}

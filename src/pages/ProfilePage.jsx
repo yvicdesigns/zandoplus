@@ -46,12 +46,12 @@ const EditableRow = ({ label, value, type = 'text', options, onSave }) => {
         <div className="flex items-center gap-2 flex-1">
           {options ? (
             <select value={val} onChange={e => setVal(e.target.value)}
-              className="flex-1 h-9 border border-gray-200 rounded-lg px-3 text-[13px] focus:outline-none focus:border-custom-green-500 bg-white">
+              className="flex-1 h-11 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500 bg-white">
               {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           ) : (
             <input type={type} value={val} onChange={e => setVal(e.target.value)} autoFocus
-              className="flex-1 h-9 border border-gray-200 rounded-lg px-3 text-[13px] focus:outline-none focus:border-custom-green-500" />
+              className="flex-1 h-11 border border-gray-200 rounded-lg px-3 text-base focus:outline-none focus:border-custom-green-500" />
           )}
           <button onClick={handleSave} disabled={saving}
             className="w-8 h-8 bg-custom-green-500 text-white rounded-lg flex items-center justify-center hover:bg-custom-green-600 flex-shrink-0">
