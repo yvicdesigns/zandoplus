@@ -79,7 +79,7 @@ const EditableRow = ({ label, value, type = 'text', options, onSave }) => {
 
 /* ══════════════════════════════════════════ */
 const ProfilePage = () => {
-  const { user, updateUser, isLoading: authLoading, signOut } = useAuth();
+  const { user, updateUser, isLoading: authLoading, logout } = useAuth();
   const { favorites } = useListings();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -516,7 +516,7 @@ const ProfilePage = () => {
 
               {/* Déconnexion */}
               <div className="mx-4 mb-8">
-                <button onClick={() => { signOut?.(); navigate('/'); }}
+                <button onClick={() => { logout(); }}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-red-100 rounded-xl text-[13px] font-semibold text-red-400 active:bg-red-50">
                   <LogOut className="w-4 h-4" /> Se déconnecter
                 </button>
@@ -583,7 +583,7 @@ const ProfilePage = () => {
                       );
                     })}
                     <div className="border-t border-gray-100 mt-2 pt-2">
-                      <button onClick={() => { signOut?.(); navigate('/'); }}
+                      <button onClick={() => { logout(); }}
                         className="w-full flex items-center gap-3 px-5 py-3 text-[13px] font-medium text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors">
                         <LogOut className="w-4 h-4 flex-shrink-0" /> Se déconnecter
                       </button>
