@@ -16,7 +16,9 @@ import {
   Lock,
   Smartphone,
   CheckCircle,
-  Loader2
+  Loader2,
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -271,6 +273,34 @@ const SettingsPage = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="bg-gray-100 p-3 rounded-full">
+                  <FileText className="w-6 h-6 text-gray-600" />
+                </div>
+                <div>
+                  <CardTitle>Informations légales</CardTitle>
+                  <CardDescription>Vos droits et nos engagements</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <a href="/privacy" className="flex items-center justify-between py-2 border-b border-gray-100 hover:text-custom-green-600 transition-colors">
+                <span className="text-sm font-medium">Politique de confidentialité</span>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </a>
+              <a href="/terms" className="flex items-center justify-between py-2 border-b border-gray-100 hover:text-custom-green-600 transition-colors">
+                <span className="text-sm font-medium">Conditions générales d'utilisation</span>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </a>
+              <a href="/data-deletion" className="flex items-center justify-between py-2 hover:text-custom-green-600 transition-colors">
+                <span className="text-sm font-medium">Suppression de mes données</span>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </a>
             </CardContent>
           </Card>
 
