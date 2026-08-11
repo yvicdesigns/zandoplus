@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { useAuth } from '@/contexts/AuthContext';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-    import { Input } from '@/components/ui/input';
     import { useToast } from '@/components/ui/use-toast';
     import { Loader2, CheckCircle2, Clock } from 'lucide-react';
     import VerificationStep from '@/components/verification/VerificationStep';
@@ -165,20 +164,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               </VerificationStep>
               
               <VerificationStep
-                title="Étape 2: Vérification du Téléphone"
-                description="La vérification par téléphone ajoute une couche de sécurité supplémentaire à votre compte."
-                status="action_required"
-              >
-                 <div className="flex items-center gap-4">
-                    <Input placeholder="Votre numéro de téléphone" className="max-w-xs" />
-                    <Button onClick={() => toast({ title: "Bientôt disponible", description: "La vérification par téléphone sera bientôt ajoutée." })}>
-                        Envoyer le code
-                    </Button>
-                </div>
-              </VerificationStep>
-
-              <VerificationStep
-                title="Étape 3: Vérification de l'Identité"
+                title="Étape 2: Vérification de l'Identité"
                 description="Téléversez vos documents pour prouver votre identité. Vos données sont cryptées et stockées en toute sécurité."
                 status={isResubmitting ? 'rejected' : 'action_required'}
                 rejectionReason={verificationStatus?.rejection_reason}
