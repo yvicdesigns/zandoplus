@@ -74,12 +74,12 @@ const MessagesInline = () => {
   );
 
   return (
-    <div className="flex h-full min-h-[500px]">
+    <div className="flex h-full min-h-[500px] overflow-hidden">
 
       {/* ── MOBILE : soit liste soit chat, jamais les deux ── */}
-      <div className="flex flex-col w-full md:hidden">
+      <div className="flex flex-col w-full overflow-hidden md:hidden">
         {!selected ? ListPanel : (
-          <div className="flex flex-col flex-1">{ChatPanel}</div>
+          <div className="flex flex-col flex-1 overflow-hidden">{ChatPanel}</div>
         )}
       </div>
 
@@ -87,7 +87,7 @@ const MessagesInline = () => {
       <div className="hidden md:flex w-[260px] flex-shrink-0 border-r border-gray-100 flex-col">
         {ListPanel}
       </div>
-      <div className="hidden md:flex flex-1 flex-col min-w-0">
+      <div className="hidden md:flex flex-1 flex-col min-w-0 overflow-hidden">
         {ChatPanel}
       </div>
       {selected && (

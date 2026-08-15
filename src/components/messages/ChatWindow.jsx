@@ -112,7 +112,7 @@ const ChatWindow = ({ conversation, onMessageSent, onBack }) => {
   }, {});
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-white relative overflow-hidden">
       <ConversationHeader conversation={conversation} onBack={onBack} />
 
       {/* Messages */}
