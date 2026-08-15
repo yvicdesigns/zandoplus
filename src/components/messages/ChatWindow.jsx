@@ -181,7 +181,7 @@ const ChatWindow = ({ conversation, onMessageSent, onBack }) => {
                 value={offerPrice}
                 onChange={e => setOfferPrice(e.target.value)}
                 autoFocus
-                className="w-full h-12 border-2 border-gray-200 rounded-xl px-4 pr-20 text-[15px] font-bold text-gray-900 focus:outline-none focus:border-custom-green-500"
+                className="w-full h-12 border-2 border-gray-200 rounded-xl px-4 pr-20 text-[16px] font-bold text-gray-900 focus:outline-none focus:border-custom-green-500"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-gray-400">FCFA</span>
             </div>

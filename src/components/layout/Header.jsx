@@ -204,7 +204,7 @@ const Header = memo(({ onLoginClick }) => {
   ];
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] bg-card-bg">
 
       {/* ── 1. Barre d'annonces verte ── */}
       <div className="bg-custom-green-500 text-white text-[12px] font-medium hidden md:block">
@@ -498,7 +498,7 @@ const Header = memo(({ onLoginClick }) => {
             transition={{ duration: 0.2 }}
             className="md:hidden bg-white border-t border-gray-100 shadow-lg overflow-hidden"
           >
-            <div className="px-4 py-4 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] max-h-[calc(100dvh-8rem-env(safe-area-inset-top))] overflow-y-auto">
               {/* Catégories */}
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Catégories</p>
               <div className="grid grid-cols-4 gap-1.5 mb-4">

@@ -23,8 +23,8 @@ const getBgStyle = (d) => {
 const HeroSlidePreview = ({ slideData: d, imageUrl, mode = 'desktop' }) => {
   const isMobile = mode === 'mobile';
   const layout        = d?.layout_type  || 'classic';
-  const title         = d?.title        || 'Titre du hero';
-  const subtitle      = d?.subtitle     || 'Sous-titre descriptif';
+  const title         = d?.title        || '';
+  const subtitle      = d?.subtitle     || '';
   const description   = d?.description  || '';
   const ctaText       = d?.btn_count >= 1 ? (d?.cta_text            || 'Bouton principal') : null;
   const secText       = d?.btn_count >= 2 ? (d?.secondary_cta_text  || null)               : null;
@@ -107,8 +107,12 @@ const HeroSlidePreview = ({ slideData: d, imageUrl, mode = 'desktop' }) => {
               {badgeText}
             </span>
           )}
-          <p className={`font-black leading-tight mb-1.5 ${isMobile ? 'text-[12px]' : 'text-[15px]'}`} style={{ color: titleColor }}>{title}</p>
-          <p className={`leading-snug mb-3 max-w-[220px] ${isMobile ? 'text-[8px]' : 'text-[9px]'}`} style={{ color: subtitleColor }}>{subtitle}</p>
+          {title && (
+            <p className={`font-black leading-tight mb-1.5 ${isMobile ? 'text-[12px]' : 'text-[15px]'}`} style={{ color: titleColor }}>{title}</p>
+          )}
+          {subtitle && (
+            <p className={`leading-snug mb-3 max-w-[220px] ${isMobile ? 'text-[8px]' : 'text-[9px]'}`} style={{ color: subtitleColor }}>{subtitle}</p>
+          )}
           {description && (
             <p className="text-[8px] leading-snug mb-2 max-w-[200px] opacity-80" style={{ color: subtitleColor }}>{description}</p>
           )}
@@ -145,8 +149,12 @@ const HeroSlidePreview = ({ slideData: d, imageUrl, mode = 'desktop' }) => {
               {badgeText}
             </span>
           )}
-          <p className="font-black leading-tight mb-1 text-[12px] line-clamp-2" style={{ color: titleColor }}>{title}</p>
-          <p className="text-[8px] leading-snug mb-2 line-clamp-1" style={{ color: subtitleColor }}>{subtitle}</p>
+          {title && (
+            <p className="font-black leading-tight mb-1 text-[12px] line-clamp-2" style={{ color: titleColor }}>{title}</p>
+          )}
+          {subtitle && (
+            <p className="text-[8px] leading-snug mb-2 line-clamp-1" style={{ color: subtitleColor }}>{subtitle}</p>
+          )}
           {description && (
             <p className="text-[7px] leading-snug mb-2 opacity-75 line-clamp-1" style={{ color: descColor }}>{description}</p>
           )}
@@ -185,8 +193,12 @@ const HeroSlidePreview = ({ slideData: d, imageUrl, mode = 'desktop' }) => {
             {badgeText}
           </span>
         )}
-        <p className="font-black leading-tight mb-1.5" style={{ fontSize: '15px', color: titleColor }}>{title}</p>
-        <p className="leading-snug mb-1 text-[9px]" style={{ color: subtitleColor }}>{subtitle}</p>
+        {title && (
+          <p className="font-black leading-tight mb-1.5" style={{ fontSize: '15px', color: titleColor }}>{title}</p>
+        )}
+        {subtitle && (
+          <p className="leading-snug mb-1 text-[9px]" style={{ color: subtitleColor }}>{subtitle}</p>
+        )}
         {description && (
           <p className="leading-snug mb-3 text-[8px] opacity-75" style={{ color: descColor }}>{description}</p>
         )}

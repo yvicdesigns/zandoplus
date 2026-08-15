@@ -35,7 +35,7 @@ const ConversationList = ({ conversations, selectedConversation, onSelect }) => 
             placeholder="Rechercher..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-full text-[13px] focus:outline-none bg-white text-gray-700 placeholder-gray-400"
+            className="w-full h-9 pl-9 pr-4 rounded-full text-[16px] focus:outline-none bg-white text-gray-700 placeholder-gray-400"
           />
         </div>
       </div>

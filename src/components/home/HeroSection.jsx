@@ -392,15 +392,16 @@ const HeroSection = () => {
                     {badgeText}
                   </span>
                 )}
-                <h1 className="text-[26px] sm:text-[38px] lg:text-[48px] font-black leading-tight mb-3 text-white">
-                  {titleLine
-                    ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
-                    : <><span>Achetez malin,</span><br /><span className="text-accent-yellow">économisez plus !</span></>
-                  }
-                </h1>
-                <p className="text-[12px] sm:text-[15px] text-white/80 mb-2 max-w-md">
-                  {subtitleLine || 'Des milliers de produits de qualité à des prix imbattables.'}
-                </p>
+                {titleLine && (
+                  <h1 className="text-[26px] sm:text-[38px] lg:text-[48px] font-black leading-tight mb-3 text-white">
+                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
+                  </h1>
+                )}
+                {subtitleLine && (
+                  <p className="text-[12px] sm:text-[15px] text-white/80 mb-2 max-w-md">
+                    {subtitleLine}
+                  </p>
+                )}
                 {descriptionLine && (
                   <p className="text-[11px] sm:text-[13px] mb-5 max-w-md" style={{ color: descriptionColor }}>{descriptionLine}</p>
                 )}
@@ -470,16 +471,17 @@ const HeroSection = () => {
                     </span>
                   )}
 
-                  <h1 className="text-[24px] sm:text-[34px] lg:text-[40px] font-black leading-[1.08] mb-2 sm:mb-3" style={{ color: titleColor || '#111827' }}>
-                    {titleLine
-                      ? <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
-                      : <>Achetez malin,<br /><span className="text-custom-green-500">économisez plus !</span></>
-                    }
-                  </h1>
+                  {titleLine && (
+                    <h1 className="text-[24px] sm:text-[34px] lg:text-[40px] font-black leading-[1.08] mb-2 sm:mb-3" style={{ color: titleColor || '#111827' }}>
+                      <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleLine) }} />
+                    </h1>
+                  )}
 
-                  <p className="text-[12px] sm:text-[14px] leading-relaxed mb-2" style={{ color: subtitleColor || '#6B7280' }}>
-                    {subtitleLine || <>Des milliers de produits de qualité<br />à des prix imbattables.</>}
-                  </p>
+                  {subtitleLine && (
+                    <p className="text-[12px] sm:text-[14px] leading-relaxed mb-2" style={{ color: subtitleColor || '#6B7280' }}>
+                      {subtitleLine}
+                    </p>
+                  )}
 
                   {descriptionLine && (
                     <p className="text-[11px] sm:text-[13px] leading-relaxed mb-4 sm:mb-6" style={{ color: descriptionColor }}>{descriptionLine}</p>

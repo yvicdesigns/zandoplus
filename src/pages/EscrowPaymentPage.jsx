@@ -170,6 +170,7 @@ const EscrowPaymentPage = () => {
 
       notifyPurchase(txId);
       setSubmitted(true);
+      window.scrollTo(0, 0);
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
@@ -195,6 +196,7 @@ const EscrowPaymentPage = () => {
         stopPolling();
         notifyPurchase(txId);
         setSubmitted(true);
+        window.scrollTo(0, 0);
         return;
       }
       if (data?.collection_status === 'failed' || data?.collection_status === 'expired') {
@@ -229,6 +231,7 @@ const EscrowPaymentPage = () => {
       if (initData.status === 'successful') {
         notifyPurchase(txId);
         setSubmitted(true);
+        window.scrollTo(0, 0);
         return;
       }
 

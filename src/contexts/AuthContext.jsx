@@ -272,21 +272,20 @@ export const AuthProvider = ({ children }) => {
     };
     window.addEventListener('pageshow', handlePageShow);
 
-    // iOS Capacitor native: OAuth redirects to com.zando.app://login#access_token=...
-    // iOS routes the custom scheme back to the app, firing appUrlOpen.
+    // iOS Capacitor native: OAuth redirects to com.zando.app://login?code=...
+    // (PKCE flow — see customSupabaseClient.js flowType: 'pkce'). iOS routes the
+    // custom scheme back to the app, firing appUrlOpen; the code_verifier saved
+    // before leaving the app is still in storage since the app never reloaded,
+    // so exchangeCodeForSession can complete the flow using just the auth code.
     let appUrlOpenHandle = null;
     if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (!url.startsWith('com.zando.app://') || !mounted) return;
-        const hashIdx = url.indexOf('#');
-        if (hashIdx === -1) return;
-        const params = new URLSearchParams(url.slice(hashIdx + 1));
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-        if (access_token && refresh_token && mounted) {
-          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (!error && data?.session && mounted) await updateUserSession(data.session);
-        }
+        const code = new URL(url).searchParams.get('code');
+        if (!code || !mounted) return;
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error && data?.session && mounted) await updateUserSession(data.session);
+        else if (error) logError(error, { context: 'appUrlOpen exchangeCodeForSession' });
       }).then(handle => { appUrlOpenHandle = handle; });
     }
 

@@ -66,7 +66,7 @@ const MessageInput = ({ conversation, onMessageSent }) => {
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKey}
           disabled={sending}
-          className="flex-1 bg-transparent text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none min-w-0"
+          className="flex-1 bg-transparent text-[16px] text-gray-800 placeholder-gray-400 focus:outline-none min-w-0"
         />
 
         <button type="button" className="p-1 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"

@@ -138,7 +138,8 @@
       body {
         @apply bg-background text-foreground;
         font-size: 14px;
-        padding-top: env(safe-area-inset-top);
+        /* Top inset is handled by Header.jsx itself (opaque background), not here —
+           applying it twice doubled the transparent gap above the sticky header. */
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
         padding-bottom: env(safe-area-inset-bottom);

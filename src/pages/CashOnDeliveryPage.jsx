@@ -84,6 +84,8 @@ const CashOnDeliveryPage = () => {
       });
       if (error) throw error;
       setDone(true);
+      window.scrollTo(0, 0);
+      toast({ title: 'Commande confirmée !', description: 'Votre commande a été transmise au vendeur.', className: 'toast-success' });
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
@@ -100,7 +102,8 @@ const CashOnDeliveryPage = () => {
   const total = listing.price + COD_FEE;
 
   if (done) return (
-    <div className="max-w-lg mx-auto px-4 py-16 text-center">
+    <div className="min-h-screen flex items-center justify-center max-w-lg mx-auto px-4 text-center">
+      <div>
       <CheckCircle className="w-16 h-16 text-custom-green-500 mx-auto mb-4" />
       <h1 className="text-2xl font-bold mb-2">Commande confirmée !</h1>
       <p className="text-gray-600 mb-2">Votre commande a été transmise au vendeur.</p>
@@ -111,6 +114,7 @@ const CashOnDeliveryPage = () => {
       <Button onClick={() => navigate('/transactions')} className="gradient-bg text-white">
         Voir mes commandes
       </Button>
+      </div>
     </div>
   );
 
