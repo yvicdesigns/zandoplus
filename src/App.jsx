@@ -217,7 +217,7 @@ const AppLayout = memo(() => {
                     </Suspense>
                 </ErrorBoundary>
             </main>
-            <Footer />
+            {pathname === '/' && <Footer />}
             <MobileNavBar />
             <Suspense fallback={null}><BugReportButton /></Suspense>
             <Suspense fallback={null}><ChatWidget /></Suspense>

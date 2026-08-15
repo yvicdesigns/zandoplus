@@ -80,7 +80,7 @@ const ChatWindow = ({ conversation, onMessageSent, onBack }) => {
     else { setMessages([]); setLoading(false); }
   }, [conversation?.id, fetchMessages]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, [messages]);
 
   useEffect(() => {
     if (!user?.id || !conversation?.id) return;
