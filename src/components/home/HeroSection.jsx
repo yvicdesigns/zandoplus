@@ -213,9 +213,9 @@ const HeroSection = () => {
   const eff         = (key, fallback) => (devOver[key] !== undefined && devOver[key] !== 'inherit') ? devOver[key] : (baseSettings[key] ?? fallback);
   const settings    = baseSettings;
 
-  const ctaLabel      = slide?.cta_text           || 'Découvrir les offres';
+  const ctaLabel      = slide?.cta_text           || null;
   const ctaLink       = slide?.cta_link           || '/listings';
-  const secLabel      = slide?.secondary_cta_text || 'Voir les nouveautés';
+  const secLabel      = slide?.secondary_cta_text || null;
   const secondaryLink = slide?.secondary_cta_link || '/listings?sort=newest';
   const titleLine     = slide?.text_content?.[0]?.spans?.map(s => s.text).join('') || null;
   const subtitleLine  = slide?.text_content?.[1]?.spans?.map(s => s.text).join('') || null;
@@ -407,7 +407,7 @@ const HeroSection = () => {
                 )}
                 {!descriptionLine && <div className="mb-5" />}
                 <div className="flex items-center gap-3 flex-wrap justify-center">
-                  {btnCount >= 1 && (
+                  {ctaLabel && (
                     <Link to={ctaLink}>
                       <button className="h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-opacity hover:opacity-80"
                         style={btnInlineStyle(btn1Style, btn1Color)}>
@@ -415,7 +415,7 @@ const HeroSection = () => {
                       </button>
                     </Link>
                   )}
-                  {btnCount >= 2 && (
+                  {secLabel && (
                     <Link to={secondaryLink}>
                       <button className="h-[40px] sm:h-[48px] px-6 sm:px-8 font-bold text-[13px] sm:text-[15px] rounded-xl transition-opacity hover:opacity-80"
                         style={btnInlineStyle(btn2Style, btn2Color)}>
@@ -489,7 +489,7 @@ const HeroSection = () => {
                   {!descriptionLine && <div className="mb-4 sm:mb-7" />}
 
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    {btnCount >= 1 && (
+                    {ctaLabel && (
                       <Link to={ctaLink}>
                         <button className="h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-opacity hover:opacity-80"
                           style={btnInlineStyle(btn1Style, btn1Color)}>
@@ -497,7 +497,7 @@ const HeroSection = () => {
                         </button>
                       </Link>
                     )}
-                    {btnCount >= 2 && (
+                    {secLabel && (
                       <Link to={secondaryLink}>
                         <button className="h-[38px] sm:h-[46px] px-4 sm:px-6 font-bold text-[12px] sm:text-[14px] rounded-xl transition-opacity hover:opacity-80"
                           style={btnInlineStyle(btn2Style, btn2Color)}>

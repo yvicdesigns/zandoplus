@@ -138,7 +138,7 @@ function formToPayload(form, order) {
       btn1_color: form.cta_color,
       btn2_style: form.secondary_cta_style,
       btn2_color: form.secondary_cta_color,
-      btn_count: form.secondary_cta_text ? 2 : 1,
+      btn_count: form.secondary_cta_text ? 2 : (form.cta_text ? 1 : 0),
       mobile: {
         enabled: form.mobile_enabled,
         ...(form.mobile_bg_type !== 'inherit' && { bg_type: form.mobile_bg_type }),
