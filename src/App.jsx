@@ -71,6 +71,7 @@ const DataDeletionPage = lazy(() => import('@/pages/DataDeletionPage'));
 const ChangelogPage = lazy(() => import('@/pages/ChangelogPage'));
 const AdminDiagnosticsPage = lazy(() => import('@/pages/AdminDiagnosticsPage'));
 const AdminEmailDiagnosticsPage = lazy(() => import('@/pages/AdminEmailDiagnosticsPage'));
+const AdminHeroBuilderBetaPage = lazy(() => import('@/pages/AdminHeroBuilderBetaPage'));
 const AuditReportPage = lazy(() => import('@/pages/AuditReportPage'));
 const StorePage = lazy(() => import('@/pages/StorePage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
@@ -262,6 +263,7 @@ const AppContent = () => {
                         <Route path="/smtp-test" element={<SmtpTestPage />} />
                         <Route path="/admin/diagnostics" element={<AdminDiagnosticsPage />} />
                         <Route path="/admin/email-diagnostics" element={<AdminEmailDiagnosticsPage />} />
+                        <Route path="/admin/hero-builder-beta" element={<AdminHeroBuilderBetaPage />} />
                         <Route path="/make-admin" element={<MakeAdminPage />} />
                     </Route>
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
