@@ -101,6 +101,17 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, on
           {element.text}
         </div>
       )}
+      {element.type === 'badge' && (
+        <div
+          style={{
+            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: element.bgColor, color: element.textColor, fontWeight: 700, fontSize: 12,
+            letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 999, pointerEvents: 'none',
+          }}
+        >
+          {element.text}
+        </div>
+      )}
       {element.type === 'image' && (
         <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 6, background: '#22243a', pointerEvents: 'none' }}>
           {element.imageUrl ? (

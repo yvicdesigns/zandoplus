@@ -68,6 +68,20 @@ const PropertiesPanel = ({ element, onChange, onDelete }) => {
         </>
       )}
 
+      {element.type === 'badge' && (
+        <>
+          <Field label="Texte du badge">
+            <input className={inputCls} value={element.text} onChange={(e) => set('text', e.target.value)} />
+          </Field>
+          <Field label="Couleur de fond">
+            <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.bgColor} onChange={(e) => set('bgColor', e.target.value)} />
+          </Field>
+          <Field label="Couleur du texte">
+            <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.textColor} onChange={(e) => set('textColor', e.target.value)} />
+          </Field>
+        </>
+      )}
+
       {element.type === 'image' && (
         <>
           <Field label="URL de l'image">

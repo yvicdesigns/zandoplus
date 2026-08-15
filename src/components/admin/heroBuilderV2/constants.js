@@ -48,6 +48,17 @@ export const ELEMENT_TYPES = {
       layout: centeredLayout(canvas, 280, 220),
     }),
   },
+  badge: {
+    label: 'Badge',
+    defaults: (canvas) => ({
+      type: 'badge',
+      name: 'Badge',
+      text: 'Promo -20%',
+      bgColor: '#ff6d81',
+      textColor: '#ffffff',
+      layout: centeredLayout(canvas, 140, 32),
+    }),
+  },
 };
 
 function centeredLayout(canvas, w, h) {
