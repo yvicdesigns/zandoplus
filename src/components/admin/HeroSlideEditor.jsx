@@ -533,8 +533,9 @@ export default function HeroSlideEditor({ isOpen, onClose, initialSlideId }) {
     const { data, error } = await supabase.from('hero_slides').insert({ ...DEFAULT_SLIDE, order: nextOrder }).select().single();
     if (error) { toast({ variant: 'destructive', title: 'Erreur', description: error.message }); return; }
     setSlides(prev => [...prev, data]);
-    selectSlide(data.id);
-    setTimeout(() => setSelectedId(data.id), 0);
+    setSelectedId(data.id);
+    setForm(slideToForm(data));
+    setSaved(false);
   };
 
   /* Delete slide */
