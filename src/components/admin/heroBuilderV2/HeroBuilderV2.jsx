@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Save, Eye, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
+import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Save, Eye, X, Undo2, Redo2 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import Canvas from './Canvas';
@@ -29,6 +29,87 @@ const HeroBuilderV2 = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const historyRef = useRef({ past: [], future: [] });
+  const pendingSnapshotRef = useRef(null);
+  const coalesceTimerRef = useRef(null);
+  const [, forceHistoryRender] = useReducer((c) => c + 1, 0);
+
+  const resetHistory = () => {
+    historyRef.current = { past: [], future: [] };
+    pendingSnapshotRef.current = null;
+    clearTimeout(coalesceTimerRef.current);
+    forceHistoryRender();
+  };
+
+  const pushHistory = useCallback((prevForm) => {
+    historyRef.current.past.push(prevForm);
+    if (historyRef.current.past.length > 50) historyRef.current.past.shift();
+    historyRef.current.future = [];
+  }, []);
+
+  const flushPending = useCallback(() => {
+    clearTimeout(coalesceTimerRef.current);
+    if (pendingSnapshotRef.current) {
+      pushHistory(pendingSnapshotRef.current);
+      pendingSnapshotRef.current = null;
+      forceHistoryRender();
+    }
+  }, [pushHistory]);
+
+  const commitForm = useCallback((updater, { coalesce = false } = {}) => {
+    setForm((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (coalesce) {
+        if (!pendingSnapshotRef.current) pendingSnapshotRef.current = prev;
+        clearTimeout(coalesceTimerRef.current);
+        coalesceTimerRef.current = setTimeout(() => {
+          pushHistory(pendingSnapshotRef.current);
+          pendingSnapshotRef.current = null;
+          forceHistoryRender();
+        }, 600);
+      } else {
+        clearTimeout(coalesceTimerRef.current);
+        if (pendingSnapshotRef.current) {
+          pushHistory(pendingSnapshotRef.current);
+          pendingSnapshotRef.current = null;
+        }
+        pushHistory(prev);
+        forceHistoryRender();
+      }
+      return next;
+    });
+  }, [pushHistory]);
+
+  const handleUndo = useCallback(() => {
+    flushPending();
+    const { past, future } = historyRef.current;
+    if (past.length === 0) return;
+    const prevForm = past.pop();
+    setForm((current) => { future.push(current); return prevForm; });
+    setSelectedElementId(null);
+    forceHistoryRender();
+  }, [flushPending]);
+
+  const handleRedo = useCallback(() => {
+    const { past, future } = historyRef.current;
+    if (future.length === 0) return;
+    const nextForm = future.pop();
+    setForm((current) => { past.push(current); return nextForm; });
+    setSelectedElementId(null);
+    forceHistoryRender();
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || e.key.toLowerCase() !== 'z') return;
+      e.preventDefault();
+      if (e.shiftKey) handleRedo(); else handleUndo();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleUndo, handleRedo]);
+
   const slideToForm = (s) => ({
     name: s.name,
     order: s.order,
@@ -48,6 +129,7 @@ const HeroBuilderV2 = () => {
       if (data && data.length > 0) {
         setSelectedId(data[0].id);
         setForm(slideToForm(data[0]));
+        resetHistory();
       }
     }
     setLoading(false);
@@ -61,6 +143,7 @@ const HeroBuilderV2 = () => {
     setSelectedId(id);
     setForm(slideToForm(s));
     setSelectedElementId(null);
+    resetHistory();
   };
 
   const handleAdd = async () => {
@@ -76,6 +159,7 @@ const HeroBuilderV2 = () => {
     setSelectedId(data.id);
     setForm(slideToForm(data));
     setSelectedElementId(null);
+    resetHistory();
   };
 
   const handleDelete = async (id) => {
@@ -93,6 +177,7 @@ const HeroBuilderV2 = () => {
         setForm(emptyForm());
       }
       setSelectedElementId(null);
+      resetHistory();
     }
   };
 
@@ -150,23 +235,23 @@ const HeroBuilderV2 = () => {
     const id = `el_${Date.now()}`;
     const layout = { desktop: def.layout, tablet: def.layout, mobile: def.layout };
     const el = { id, ...def, layout };
-    setForm((f) => ({ ...f, elements: [...f.elements, el] }));
+    commitForm((f) => ({ ...f, elements: [...f.elements, el] }));
     setSelectedElementId(id);
   };
 
   const updateElement = (updated) => {
-    setForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === updated.id ? updated : e)) }));
+    commitForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === updated.id ? updated : e)) }), { coalesce: true });
   };
 
   const updateElementLayout = (elId, dev, layout) => {
-    setForm((f) => ({
+    commitForm((f) => ({
       ...f,
       elements: f.elements.map((e) => (e.id === elId ? { ...e, layout: { ...e.layout, [dev]: layout } } : e)),
-    }));
+    }), { coalesce: true });
   };
 
   const deleteElement = (elId) => {
-    setForm((f) => ({ ...f, elements: f.elements.filter((e) => e.id !== elId) }));
+    commitForm((f) => ({ ...f, elements: f.elements.filter((e) => e.id !== elId) }));
     setSelectedElementId(null);
   };
 
@@ -186,6 +271,24 @@ const HeroBuilderV2 = () => {
         <span className="font-bold text-sm">Hero Builder</span>
         <span className="text-[10px] font-bold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full">BETA — isolé</span>
         <div className="flex-1" />
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={handleUndo}
+            disabled={historyRef.current.past.length === 0 && !pendingSnapshotRef.current}
+            title="Annuler (Ctrl/Cmd+Z)"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleRedo}
+            disabled={historyRef.current.future.length === 0}
+            title="Rétablir (Ctrl/Cmd+Shift+Z)"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+          >
+            <Redo2 className="w-4 h-4" />
+          </button>
+        </div>
         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
           {DEVICES.map((d) => {
             const Icon = DEVICE_ICONS[d];
@@ -233,14 +336,14 @@ const HeroBuilderV2 = () => {
                 <input
                   className="text-[12px] font-semibold outline-none"
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => commitForm((f) => ({ ...f, name: e.target.value }), { coalesce: true })}
                 />
                 <span className="text-[10px] text-gray-400">{CANVAS_SIZE[device].label}</span>
                 <label className="flex items-center gap-1.5 text-[11px] text-gray-600 ml-3">
                   <input
                     type="checkbox"
                     checked={form.is_active}
-                    onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                    onChange={(e) => commitForm((f) => ({ ...f, is_active: e.target.checked }))}
                   />
                   Actif
                 </label>
@@ -271,7 +374,7 @@ const HeroBuilderV2 = () => {
                 <label className="block text-[10px] text-gray-500 mb-2">Arrière-plan ({device})</label>
                 <BackgroundEditor
                   value={form.background[device] || ''}
-                  onChange={(v) => setForm((f) => ({ ...f, background: { ...f.background, [device]: v } }))}
+                  onChange={(v) => commitForm((f) => ({ ...f, background: { ...f.background, [device]: v } }), { coalesce: true })}
                 />
               </div>
             </>
