@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import Canvas from './Canvas';
 import SlideList from './SlideList';
 import PropertiesPanel from './PropertiesPanel';
+import BackgroundEditor from './BackgroundEditor';
 import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES } from './constants';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
@@ -99,13 +100,49 @@ const HeroBuilderV2 = () => {
     if (!selectedId) return;
     setSaving(true);
     const { error } = await supabase.from('hero_slides_v2').update(form).eq('id', selectedId);
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast({ variant: 'destructive', title: 'Erreur', description: error.message });
-    } else {
-      setSlides((prev) => prev.map((s) => (s.id === selectedId ? { ...s, ...form } : s)));
-      toast({ title: 'Enregistré', className: 'bg-custom-green-500 text-white' });
+      return;
     }
+    let updatedSlides = slides.map((s) => (s.id === selectedId ? { ...s, ...form } : s));
+    if (form.is_active) {
+      const others = slides.filter((s) => s.id !== selectedId && s.is_active);
+      if (others.length > 0) {
+        const { error: deactivateError } = await supabase
+          .from('hero_slides_v2')
+          .update({ is_active: false })
+          .neq('id', selectedId)
+          .eq('is_active', true);
+        if (!deactivateError) {
+          updatedSlides = updatedSlides.map((s) => (s.id !== selectedId ? { ...s, is_active: false } : s));
+        }
+      }
+    }
+    setSlides(updatedSlides);
+    setSaving(false);
+    toast({ title: 'Enregistré', className: 'bg-custom-green-500 text-white' });
+  };
+
+  const handleReorder = async (id, direction) => {
+    const idx = slides.findIndex((s) => s.id === id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= slides.length) return;
+    const a = slides[idx];
+    const b = slides[swapIdx];
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([
+      supabase.from('hero_slides_v2').update({ order: b.order }).eq('id', a.id),
+      supabase.from('hero_slides_v2').update({ order: a.order }).eq('id', b.id),
+    ]);
+    if (e1 || e2) {
+      toast({ variant: 'destructive', title: 'Erreur', description: (e1 || e2).message });
+      return;
+    }
+    const next = [...slides];
+    next[idx] = { ...a, order: b.order };
+    next[swapIdx] = { ...b, order: a.order };
+    next.sort((x, y) => x.order - y.order);
+    setSlides(next);
   };
 
   const addElement = (type) => {
@@ -175,7 +212,15 @@ const HeroBuilderV2 = () => {
       <div className="flex-1 grid grid-cols-[220px_1fr_260px] min-h-0">
         {/* Left: slides */}
         <div className="border-r border-gray-200 bg-white p-3 overflow-y-auto">
-          <SlideList slides={slides} selectedId={selectedId} onSelect={selectSlide} onAdd={handleAdd} onDelete={handleDelete} />
+          <SlideList
+            slides={slides}
+            selectedId={selectedId}
+            onSelect={selectSlide}
+            onAdd={handleAdd}
+            onDelete={handleDelete}
+            onMoveUp={(id) => handleReorder(id, 'up')}
+            onMoveDown={(id) => handleReorder(id, 'down')}
+          />
         </div>
 
         {/* Center: canvas */}
@@ -223,11 +268,10 @@ const HeroBuilderV2 = () => {
               </div>
 
               <div className="w-full max-w-[500px] bg-white border border-gray-200 rounded-lg p-3">
-                <label className="block text-[10px] text-gray-500 mb-1">Arrière-plan ({device}) — valeur CSS background</label>
-                <input
-                  className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] font-mono outline-none focus:border-violet-400"
+                <label className="block text-[10px] text-gray-500 mb-2">Arrière-plan ({device})</label>
+                <BackgroundEditor
                   value={form.background[device] || ''}
-                  onChange={(e) => setForm((f) => ({ ...f, background: { ...f.background, [device]: e.target.value } }))}
+                  onChange={(v) => setForm((f) => ({ ...f, background: { ...f.background, [device]: v } }))}
                 />
               </div>
             </>

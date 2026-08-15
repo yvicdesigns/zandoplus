@@ -1,7 +1,17 @@
 import React, { useRef, useCallback } from 'react';
 import { MIN_EL_W, MIN_EL_H } from './constants';
 
-const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, canvasSize }) => {
+const CORNERS = ['nw', 'ne', 'sw', 'se'];
+const CURSORS = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
+
+const cornerStyle = (corner) => {
+  const style = { position: 'absolute', width: 12, height: 12, borderRadius: '50%', background: '#fff', border: '2px solid #3787ff', cursor: CURSORS[corner] };
+  style[corner.includes('n') ? 'top' : 'bottom'] = -6;
+  style[corner.includes('w') ? 'left' : 'right'] = -6;
+  return style;
+};
+
+const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, onDragEnd, canvasSize }) => {
   const dragState = useRef(null);
 
   const clamp = useCallback((next) => {
@@ -20,11 +30,11 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, ca
     window.addEventListener('mouseup', onMouseUp);
   };
 
-  const startResize = (e) => {
+  const startResize = (corner) => (e) => {
     e.stopPropagation();
     e.preventDefault();
     onSelect(element.id);
-    dragState.current = { mode: 'resize', startX: e.clientX, startY: e.clientY, layout: { ...layout } };
+    dragState.current = { mode: 'resize', corner, startX: e.clientX, startY: e.clientY, layout: { ...layout } };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   };
@@ -35,9 +45,15 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, ca
     const dx = e.clientX - st.startX;
     const dy = e.clientY - st.startY;
     if (st.mode === 'move') {
-      onLayoutChange(clamp({ ...st.layout, x: st.layout.x + dx, y: st.layout.y + dy }));
+      onLayoutChange(clamp({ ...st.layout, x: st.layout.x + dx, y: st.layout.y + dy }), 'move');
     } else {
-      onLayoutChange(clamp({ ...st.layout, w: st.layout.w + dx, h: st.layout.h + dy }));
+      const { corner } = st;
+      const next = { ...st.layout };
+      if (corner.includes('e')) next.w = st.layout.w + dx;
+      if (corner.includes('s')) next.h = st.layout.h + dy;
+      if (corner.includes('w')) { next.w = st.layout.w - dx; next.x = st.layout.x + dx; }
+      if (corner.includes('n')) { next.h = st.layout.h - dy; next.y = st.layout.y + dy; }
+      onLayoutChange(clamp(next), 'resize');
     }
   };
 
@@ -45,6 +61,7 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, ca
     dragState.current = null;
     window.removeEventListener('mousemove', onMouseMove);
     window.removeEventListener('mouseup', onMouseUp);
+    onDragEnd && onDragEnd();
   };
 
   const style = {
@@ -95,16 +112,9 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, ca
           )}
         </div>
       )}
-      {selected && (
-        <div
-          onMouseDown={startResize}
-          style={{
-            position: 'absolute', right: -7, bottom: -7, width: 14, height: 14,
-            borderRadius: '50%', background: '#fff', border: '2px solid #3787ff',
-            cursor: 'nwse-resize',
-          }}
-        />
-      )}
+      {selected && CORNERS.map((corner) => (
+        <div key={corner} onMouseDown={startResize(corner)} style={cornerStyle(corner)} />
+      ))}
     </div>
   );
 };

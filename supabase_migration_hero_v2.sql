@@ -25,13 +25,30 @@ ALTER TABLE public.hero_slides_v2 ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "hero_slides_v2_select_public" ON public.hero_slides_v2
   FOR SELECT USING (true);
 
--- Écriture réservée aux admins (même pattern que le reste du projet)
-CREATE POLICY "hero_slides_v2_write_admin" ON public.hero_slides_v2
-  FOR ALL USING (
-    (SELECT raw_user_meta_data->>'is_admin' FROM auth.users WHERE id = auth.uid()) = 'true'
+-- Écriture réservée aux admins.
+-- IMPORTANT : ne jamais utiliser `FOR ALL` avec une policy qui interroge
+-- `auth.users` — Postgres évalue TOUTES les policies applicables à une
+-- commande, donc une policy `FOR ALL` s'applique aussi aux SELECT, et le
+-- rôle `authenticated` n'a pas de droit SELECT direct sur `auth.users`
+-- (ça casse même le SELECT public ci-dessus avec "permission denied for
+-- table users"). On utilise `auth.jwt()` (JWT déjà décodé, pas de requête
+-- sur auth.users) et des policies séparées par commande à la place.
+CREATE POLICY "hero_slides_v2_insert_admin" ON public.hero_slides_v2
+  FOR INSERT WITH CHECK (
+    coalesce((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false)
+  );
+
+CREATE POLICY "hero_slides_v2_update_admin" ON public.hero_slides_v2
+  FOR UPDATE USING (
+    coalesce((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false)
   )
   WITH CHECK (
-    (SELECT raw_user_meta_data->>'is_admin' FROM auth.users WHERE id = auth.uid()) = 'true'
+    coalesce((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false)
+  );
+
+CREATE POLICY "hero_slides_v2_delete_admin" ON public.hero_slides_v2
+  FOR DELETE USING (
+    coalesce((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false)
   );
 
 CREATE OR REPLACE FUNCTION public.set_updated_at_hero_slides_v2()

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
-const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete }) => (
+const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete, onMoveUp, onMoveDown }) => (
   <div>
     <div className="flex items-center justify-between mb-3">
       <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Slides ({slides.length})</span>
@@ -10,7 +10,7 @@ const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete }) => (
       </button>
     </div>
     <div className="flex flex-col gap-1.5">
-      {slides.map((s) => (
+      {slides.map((s, i) => (
         <div
           key={s.id}
           onClick={() => onSelect(s.id)}
@@ -19,12 +19,28 @@ const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete }) => (
           }`}
         >
           <span className="truncate">{s.name}{s.is_active ? ' •' : ''}</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
-            className="text-gray-300 hover:text-red-500 flex-shrink-0"
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveUp(s.id); }}
+              disabled={i === 0}
+              className="text-gray-300 hover:text-violet-600 disabled:opacity-20 disabled:hover:text-gray-300"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveDown(s.id); }}
+              disabled={i === slides.length - 1}
+              className="text-gray-300 hover:text-violet-600 disabled:opacity-20 disabled:hover:text-gray-300"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
+              className="text-gray-300 hover:text-red-500"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       ))}
       {slides.length === 0 && (
