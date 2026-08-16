@@ -5,7 +5,7 @@
 // s'affiche sur la vraie page.
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { cornerRadius, effectStyle, borderStyle, parseBgImage, isElementHidden } from '@/components/admin/heroBuilderV2/elementStyles';
+import { cornerRadius, effectStyle, borderStyle, parseBgImage, isElementHidden, animationStyle, ANIMATION_KEYFRAMES_CSS } from '@/components/admin/heroBuilderV2/elementStyles';
 import { ICON_MAP } from '@/components/admin/heroBuilderV2/iconLibrary';
 import { CANVAS_SIZE } from '@/components/admin/heroBuilderV2/constants';
 
@@ -18,7 +18,6 @@ const HeroV2Element = ({ element, device }) => {
   const fontSize = element.fontSizeByDevice?.[device] ?? element.fontSize;
   const align = element.alignByDevice?.[device] ?? element.align;
   const subFontSize = element.subFontSizeByDevice?.[device] ?? element.subFontSize;
-  const animType = element.animation?.type;
   const style = {
     position: 'absolute',
     left: layout.x,
@@ -26,7 +25,7 @@ const HeroV2Element = ({ element, device }) => {
     width: layout.w,
     height: layout.h,
     pointerEvents: element.type === 'button' ? 'auto' : 'none',
-    animation: animType && animType !== 'none' ? `hb-${animType} ${element.animation?.duration ?? 600}ms ease-out both` : undefined,
+    ...animationStyle(element),
     ...effectStyle(element),
   };
   const contentStyle = { width: '100%', height: '100%', opacity: element.opacity ?? 1 };
@@ -146,13 +145,6 @@ const HeroV2Element = ({ element, device }) => {
   );
 };
 
-const KEYFRAMES = `
-  @keyframes hb-fade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes hb-slide-left { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes hb-slide-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes hb-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes hb-zoom { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
-`;
 
 // Une slide du Hero Builder v2, mise à l'échelle pour remplir son conteneur (dimensions
 // fluides de la vraie page) tout en gardant les proportions et positions conçues dans
@@ -186,7 +178,7 @@ const HeroSlideV2 = ({ slide, device, onTouchStart, onTouchEnd }) => {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <style>{KEYFRAMES}</style>
+      <style>{ANIMATION_KEYFRAMES_CSS}</style>
       {bgImage && (
         <div
           style={{

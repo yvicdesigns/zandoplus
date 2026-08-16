@@ -2,10 +2,10 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { Move, Pencil, Copy, Eye, EyeOff, Lock, Unlock, X, PlayCircle } from 'lucide-react';
 import { MIN_EL_W, MIN_EL_H } from './constants';
 import { ICON_MAP } from './iconLibrary';
-import { cornerRadius, effectStyle, borderStyle, isElementHidden, ANIMATIONS } from './elementStyles';
+import { cornerRadius, effectStyle, borderStyle, isElementHidden, animationStyle, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS } from './elementStyles';
 import FocalPointEditor from './FocalPointEditor';
 
-export { cornerRadius, ANIMATIONS };
+export { cornerRadius, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS };
 
 const CORNERS = ['nw', 'ne', 'sw', 'se'];
 const CURSORS = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
@@ -118,7 +118,6 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
     onDragEnd && onDragEnd();
   };
 
-  const animType = element.animation?.type;
   const style = {
     position: 'absolute',
     left: layout.x,
@@ -130,7 +129,7 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
     outlineOffset: 2,
     userSelect: 'none',
     zIndex: selected ? 500 : undefined,
-    animation: animType && animType !== 'none' ? `hb-${animType} ${element.animation?.duration ?? 600}ms ease-out both` : undefined,
+    ...animationStyle(element),
     ...effectStyle(element),
   };
 

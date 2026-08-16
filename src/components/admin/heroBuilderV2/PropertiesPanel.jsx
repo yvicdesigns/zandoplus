@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Copy, Italic, Underline, FlipHorizontal2, FlipVertical2, RotateCcw } from 'lucide-react';
 import { CANVAS_SIZE, MIN_EL_W, MIN_EL_H } from './constants';
 import { ICON_LIBRARY } from './iconLibrary';
-import { ANIMATIONS } from './CanvasElement';
+import { ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS } from './CanvasElement';
 import MediaUploadField from './MediaUploadField';
 
 const RADIUS_TYPES = ['button', 'badge', 'stat', 'image', 'video', 'shape'];
@@ -461,12 +461,15 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
           <p className="text-[10px] text-gray-400 mb-1">ID : {element.id}</p>
           {element.groupId && <p className="text-[10px] text-gray-400">Groupe : {element.groupId}</p>}
 
-          <SectionTitle>Animation à l'apparition</SectionTitle>
+          <SectionTitle>Animation</SectionTitle>
           <Field label="Type">
             <select
               className={inputCls}
               value={element.animation?.type || 'none'}
-              onChange={(e) => set('animation', { ...element.animation, type: e.target.value })}
+              onChange={(e) => {
+                const type = e.target.value;
+                set('animation', { ...element.animation, type, loop: LOOP_FRIENDLY_ANIMATIONS.includes(type) });
+              }}
             >
               {ANIMATIONS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </select>
@@ -481,6 +484,14 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
                   className="w-full"
                 />
               </Field>
+              <label className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-3">
+                <input
+                  type="checkbox"
+                  checked={!!element.animation?.loop}
+                  onChange={(e) => set('animation', { ...element.animation, loop: e.target.checked })}
+                />
+                Boucle (joue en continu)
+              </label>
               <button
                 onClick={() => set('_animTick', (element._animTick || 0) + 1)}
                 className="flex items-center gap-1.5 text-[11px] font-semibold text-violet-600 hover:text-violet-700"
