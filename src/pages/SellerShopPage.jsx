@@ -9,11 +9,12 @@ import { useToast } from '@/components/ui/use-toast';
 import ListingItem from '@/components/listings/ListingItem';
 import ReviewItem from '@/components/reviews/ReviewItem';
 import SendMessageDialog from '@/components/listing/SendMessageDialog';
+import ShareMenu from '@/components/listing/ShareMenu';
 import {
   Loader2, Star, Heart, MessageSquare, MapPin, Calendar,
   Package, Users, Clock, ThumbsUp, ChevronRight, BadgeCheck,
   Truck, Shield, Headphones, CheckCircle, SlidersHorizontal,
-  ShoppingBag, Store, LayoutDashboard,
+  ShoppingBag, Store, LayoutDashboard, Share2,
 } from 'lucide-react';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -254,6 +255,13 @@ const SellerShopPage = () => {
                   >
                     <MessageSquare className="w-4 h-4" /> Contacter le vendeur
                   </button>
+                  <ShareMenu
+                    shareTitle={`Boutique de ${seller.name}`}
+                    shareText={`Découvrez la boutique de ${seller.name} sur Zando+ Congo`}
+                    shareUrl={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`}
+                    triggerClassName="w-full h-11 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
+                    triggerContent={<><Share2 className="w-4 h-4" /> Partager la boutique</>}
+                  />
                 </div>
               </div>
             </div>

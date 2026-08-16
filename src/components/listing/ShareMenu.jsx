@@ -15,14 +15,14 @@ const FacebookIcon = () => (
   </svg>
 );
 
-const ShareMenu = ({ listing }) => {
+const ShareMenu = ({ shareTitle, shareText, shareUrl, triggerClassName, triggerContent }) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const ref = useRef(null);
 
-  const url = window.location.href;
-  const text = `${listing.title} — ${listing.price?.toLocaleString()} ${listing.currency || 'FCFA'} sur Zando+`;
+  const url = shareUrl || window.location.href;
+  const text = shareText || shareTitle || '';
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -53,16 +53,22 @@ const ShareMenu = ({ listing }) => {
   };
 
   const handleNativeShare = () => {
-    navigator.share({ title: listing.title, text, url }).catch(() => {});
+    navigator.share({ title: shareTitle, text, url }).catch(() => {});
     setOpen(false);
   };
 
   return (
     <div className="relative" ref={ref}>
-      <Button variant="ghost" onClick={() => setOpen(p => !p)} className="flex-col h-auto">
-        <Share2 className="mb-1" />
-        <span className="text-xs">Partager</span>
-      </Button>
+      {triggerContent ? (
+        <button type="button" onClick={() => setOpen(p => !p)} className={triggerClassName}>
+          {triggerContent}
+        </button>
+      ) : (
+        <Button variant="ghost" onClick={() => setOpen(p => !p)} className="flex-col h-auto">
+          <Share2 className="mb-1" />
+          <span className="text-xs">Partager</span>
+        </Button>
+      )}
 
       {open && (
         <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border p-3 w-56 z-50">
