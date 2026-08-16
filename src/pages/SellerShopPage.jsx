@@ -144,6 +144,7 @@ const SellerShopPage = () => {
       <Helmet>
         <title>Boutique {seller.name} — Zando+</title>
         <meta name="description" content={`Explorez la boutique de ${seller.name} sur Zando+ Congo.`} />
+        <link rel="canonical" href={`https://www.zandopluscg.com/seller/${seller.shop_slug || seller.id}`} />
       </Helmet>
 
       {/* Bannière "tu regardes ta propre boutique" */}
