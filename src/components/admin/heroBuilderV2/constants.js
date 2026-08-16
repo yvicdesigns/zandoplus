@@ -1,9 +1,11 @@
 export const DEVICES = ['desktop', 'tablet', 'mobile'];
 
+// Dimensions calquées sur le vrai conteneur du hero en prod (src/components/home/HeroSection.jsx) :
+// max-w-[1280px] mx-auto px-4 sm:px-6, hauteurs alignées sur les layout_type existants (v22/overlay/fullimage/classic).
 export const CANVAS_SIZE = {
-  desktop: { w: 960, h: 450, label: '1920 × 900' },
-  tablet: { w: 720, h: 450, label: '1440 × 900' },
-  mobile: { w: 390, h: 520, label: '390 × 520' },
+  desktop: { w: 1232, h: 380, label: '1232 × 380' },
+  tablet: { w: 720, h: 340, label: '720 × 340' },
+  mobile: { w: 358, h: 300, label: '358 × 300' },
 };
 
 export const DEFAULT_BACKGROUND = {
@@ -67,13 +69,19 @@ function centeredLayout(canvas, w, h) {
   return { x, y, w, h };
 }
 
+// Centre un élément par device selon un ratio vertical, en le bornant toujours à l'intérieur
+// du canvas de CE device (largeur/hauteur/position clampées) — un template ne peut donc jamais
+// produire un élément hors-cadre, même si ses dimensions de base ont été pensées pour un autre
+// canvas.
 function layoutAllDevices(w, h, centerYRatio) {
   const layout = {};
   DEVICES.forEach((d) => {
     const canvas = CANVAS_SIZE[d];
-    const x = Math.max(0, Math.round((canvas.w - w) / 2));
-    const y = Math.max(0, Math.round(canvas.h * centerYRatio - h / 2));
-    layout[d] = { x, y, w, h };
+    const bw = Math.min(w, canvas.w);
+    const bh = Math.min(h, canvas.h);
+    const x = Math.max(0, Math.min(Math.round((canvas.w - bw) / 2), canvas.w - bw));
+    const y = Math.max(0, Math.min(Math.round(canvas.h * centerYRatio - bh / 2), canvas.h - bh));
+    layout[d] = { x, y, w: bw, h: bh };
   });
   return layout;
 }
@@ -93,9 +101,9 @@ export const SLIDE_TEMPLATES = [
     build: () => ({
       background: { ...DEFAULT_BACKGROUND },
       elements: [
-        { id: tplId(), type: 'badge', name: 'Badge', text: 'Promo -20%', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(140, 32, 0.3) },
-        { id: tplId(), type: 'text', name: 'Texte', text: 'Les meilleures offres du moment', fontSize: 28, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(420, 70, 0.5) },
-        { id: tplId(), type: 'button', name: 'Bouton', text: 'Voir les offres', link: '/listings?daily=true', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(180, 44, 0.72) },
+        { id: tplId(), type: 'badge', name: 'Badge', text: 'Promo -20%', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(140, 32, 0.22) },
+        { id: tplId(), type: 'text', name: 'Texte', text: 'Les meilleures offres du moment', fontSize: 24, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(320, 64, 0.5) },
+        { id: tplId(), type: 'button', name: 'Bouton', text: 'Voir les offres', link: '/listings?daily=true', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(170, 40, 0.8) },
       ],
     }),
   },
@@ -105,9 +113,9 @@ export const SLIDE_TEMPLATES = [
     build: () => ({
       background: { ...DEFAULT_BACKGROUND },
       elements: [
-        { id: tplId(), type: 'text', name: 'Texte', text: 'Découvrez la nouvelle collection', fontSize: 28, fontWeight: 700, color: '#ffffff', align: 'left', layout: layoutAllDevices(360, 80, 0.3) },
-        { id: tplId(), type: 'button', name: 'Bouton', text: 'Découvrir', link: '/listings', bgColor: '#ffffff', textColor: '#101657', layout: layoutAllDevices(160, 44, 0.5) },
-        { id: tplId(), type: 'image', name: 'Image', imageUrl: '', fit: 'cover', layout: layoutAllDevices(260, 200, 0.78) },
+        { id: tplId(), type: 'text', name: 'Texte', text: 'Découvrez la nouvelle collection', fontSize: 22, fontWeight: 700, color: '#ffffff', align: 'left', layout: layoutAllDevices(320, 56, 0.2) },
+        { id: tplId(), type: 'button', name: 'Bouton', text: 'Découvrir', link: '/listings', bgColor: '#ffffff', textColor: '#101657', layout: layoutAllDevices(160, 40, 0.42) },
+        { id: tplId(), type: 'image', name: 'Image', imageUrl: '', fit: 'cover', layout: layoutAllDevices(220, 120, 0.75) },
       ],
     }),
   },
@@ -117,8 +125,8 @@ export const SLIDE_TEMPLATES = [
     build: () => ({
       background: { ...DEFAULT_BACKGROUND },
       elements: [
-        { id: tplId(), type: 'text', name: 'Titre', text: 'Bienvenue sur Zando+', fontSize: 34, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(420, 60, 0.42) },
-        { id: tplId(), type: 'text', name: 'Sous-titre', text: 'Achetez, vendez, simplement.', fontSize: 16, fontWeight: 400, color: '#e5e5f0', align: 'center', layout: layoutAllDevices(360, 30, 0.55) },
+        { id: tplId(), type: 'text', name: 'Titre', text: 'Bienvenue sur Zando+', fontSize: 30, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(320, 56, 0.4) },
+        { id: tplId(), type: 'text', name: 'Sous-titre', text: 'Achetez, vendez, simplement.', fontSize: 15, fontWeight: 400, color: '#e5e5f0', align: 'center', layout: layoutAllDevices(320, 28, 0.58) },
       ],
     }),
   },
