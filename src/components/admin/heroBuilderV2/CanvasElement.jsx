@@ -2,10 +2,11 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { Move, Pencil, Copy, Eye, EyeOff, Lock, Unlock, X, PlayCircle } from 'lucide-react';
 import { MIN_EL_W, MIN_EL_H } from './constants';
 import { ICON_MAP } from './iconLibrary';
-import { cornerRadius, effectStyle, borderStyle, isElementHidden, animationStyle, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS } from './elementStyles';
+import { cornerRadius, effectStyle, borderStyle, isElementHidden, animationStyle, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS, TEXT_ONLY_ANIMATIONS } from './elementStyles';
 import FocalPointEditor from './FocalPointEditor';
+import TypingText from './TypingText';
 
-export { cornerRadius, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS };
+export { cornerRadius, ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS, TEXT_ONLY_ANIMATIONS };
 
 const CORNERS = ['nw', 'ne', 'sw', 'se'];
 const CURSORS = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
@@ -215,7 +216,9 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', pointerEvents: 'none',
           }}
         >
-          {element.text}
+          {element.animation?.type === 'typing'
+            ? <TypingText text={element.text} duration={element.animation?.duration ?? 600} loop={!!element.animation?.loop} animTick={element._animTick} />
+            : element.text}
         </div>
       ))}
       {element.type === 'button' && (editing ? (

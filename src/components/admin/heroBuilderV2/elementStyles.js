@@ -84,12 +84,17 @@ export const ANIMATIONS = [
   ['slide-right', 'Depuis la droite'],
   ['rise', 'Montée'],
   ['zoom', 'Zoom'],
+  ['typing', 'Machine à écrire'],
   ['wiggle', 'Wiggle (balancement)'],
   ['pulse', 'Pulsation'],
   ['bounce', 'Rebond'],
   ['shake', 'Secousse'],
   ['float', 'Flottement'],
 ];
+
+// La machine à écrire ne se règle que sur les éléments Texte (révèle le texte lui-même,
+// pas une boîte) — les autres types de contenu ne peuvent pas afficher cette option.
+export const TEXT_ONLY_ANIMATIONS = ['typing'];
 
 // Types d'animation conçus pour boucler proprement (état de départ = état d'arrivée à
 // chaque cycle) — utilisé pour cocher "Boucle" par défaut quand l'admin les choisit.
@@ -106,13 +111,17 @@ export const ANIMATION_KEYFRAMES_CSS = `
   @keyframes hb-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
   @keyframes hb-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   @keyframes hb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes hb-caret { from, to { border-color: transparent; } 50% { border-color: currentColor; } }
 `;
 
 // Construit les propriétés d'animation longhand (plus sûr que le shorthand vis-à-vis de
 // l'ordre des composants) à partir de `element.animation = { type, duration, loop }`.
+// Appliqué au conteneur de l'élément (position/taille) — ne gère PAS "typing", qui est piloté
+// en JS par le composant <TypingText> (révélation progressive du texte) plutôt qu'en CSS pur,
+// justement pour respecter les retours à la ligne et ne jamais couper la fin du texte.
 export const animationStyle = (element) => {
   const type = element.animation?.type;
-  if (!type || type === 'none') return {};
+  if (!type || type === 'none' || TEXT_ONLY_ANIMATIONS.includes(type)) return {};
   const loop = !!element.animation?.loop;
   return {
     animationName: `hb-${type}`,

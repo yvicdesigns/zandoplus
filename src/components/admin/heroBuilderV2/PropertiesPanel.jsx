@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Copy, Italic, Underline, FlipHorizontal2, FlipVertical2, RotateCcw } from 'lucide-react';
 import { CANVAS_SIZE, MIN_EL_W, MIN_EL_H } from './constants';
 import { ICON_LIBRARY } from './iconLibrary';
-import { ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS } from './CanvasElement';
+import { ANIMATIONS, LOOP_FRIENDLY_ANIMATIONS, TEXT_ONLY_ANIMATIONS } from './CanvasElement';
 import MediaUploadField from './MediaUploadField';
 
 const RADIUS_TYPES = ['button', 'badge', 'stat', 'image', 'video', 'shape'];
@@ -471,11 +471,16 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
                 set('animation', { ...element.animation, type, loop: LOOP_FRIENDLY_ANIMATIONS.includes(type) });
               }}
             >
-              {ANIMATIONS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+              {ANIMATIONS.filter(([key]) => element.type === 'text' || !TEXT_ONLY_ANIMATIONS.includes(key)).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
             </select>
           </Field>
           {element.animation?.type && element.animation.type !== 'none' && (
             <>
+              {element.animation.type === 'typing' && (
+                <p className="text-[10px] text-gray-400 mb-2 leading-relaxed">Fonctionne mieux sur un texte court, sur une seule ligne.</p>
+              )}
               <Field label={`Durée (${element.animation?.duration ?? 600}ms)`}>
                 <input
                   type="range" min="150" max="2000" step="50"
