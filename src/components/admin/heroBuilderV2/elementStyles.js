@@ -72,6 +72,11 @@ export const parseBgImage = (css) => {
 export const buildBgImageCss = ({ url, x, y, zoom }) =>
   `url('${url}') ${x}% ${y}%/cover no-repeat${zoom && zoom !== 1 ? ` /*z:${zoom}*/` : ''}`;
 
+// Animations d'entrée (jouent une fois, de "invisible" à l'état final) et animations de
+// boucle (oscillent entre le même état de départ/arrivée — pensées pour tourner en continu).
+// Les deux catégories sont sélectionnables pour n'importe quel élément ; la case "Boucle"
+// dans le panneau Propriétés permet de faire boucler indéfiniment une animation d'entrée
+// aussi, si l'admin le souhaite explicitement.
 export const ANIMATIONS = [
   ['none', 'Aucune'],
   ['fade', 'Fondu'],
@@ -79,4 +84,41 @@ export const ANIMATIONS = [
   ['slide-right', 'Depuis la droite'],
   ['rise', 'Montée'],
   ['zoom', 'Zoom'],
+  ['wiggle', 'Wiggle (balancement)'],
+  ['pulse', 'Pulsation'],
+  ['bounce', 'Rebond'],
+  ['shake', 'Secousse'],
+  ['float', 'Flottement'],
 ];
+
+// Types d'animation conçus pour boucler proprement (état de départ = état d'arrivée à
+// chaque cycle) — utilisé pour cocher "Boucle" par défaut quand l'admin les choisit.
+export const LOOP_FRIENDLY_ANIMATIONS = ['wiggle', 'pulse', 'bounce', 'shake', 'float'];
+
+export const ANIMATION_KEYFRAMES_CSS = `
+  @keyframes hb-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hb-slide-left { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes hb-slide-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes hb-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes hb-zoom { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes hb-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+  @keyframes hb-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes hb-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes hb-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  @keyframes hb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+`;
+
+// Construit les propriétés d'animation longhand (plus sûr que le shorthand vis-à-vis de
+// l'ordre des composants) à partir de `element.animation = { type, duration, loop }`.
+export const animationStyle = (element) => {
+  const type = element.animation?.type;
+  if (!type || type === 'none') return {};
+  const loop = !!element.animation?.loop;
+  return {
+    animationName: `hb-${type}`,
+    animationDuration: `${element.animation?.duration ?? 600}ms`,
+    animationTimingFunction: loop ? 'ease-in-out' : 'ease-out',
+    animationIterationCount: loop ? 'infinite' : 1,
+    animationFillMode: 'both',
+  };
+};

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import CanvasElement from './CanvasElement';
 import FocalPointEditor from './FocalPointEditor';
-import { parseBgImage, buildBgImageCss, isElementHidden } from './elementStyles';
+import { parseBgImage, buildBgImageCss, isElementHidden, ANIMATION_KEYFRAMES_CSS } from './elementStyles';
 import { CANVAS_SIZE } from './constants';
 
 const SNAP_THRESHOLD = 6;
@@ -101,13 +101,7 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
         gridTemplateRows: `${RULER_SIZE}px ${size.h * zoom}px`,
       }}
     >
-      <style>{`
-        @keyframes hb-fade { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes hb-slide-left { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes hb-slide-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes hb-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes hb-zoom { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
-      `}</style>
+      <style>{ANIMATION_KEYFRAMES_CSS}</style>
       <div style={{ background: '#f4f4fa', borderRight: '1px solid #e3e4ee', borderBottom: '1px solid #e3e4ee' }} />
 
       <div style={{ position: 'relative', width: size.w * zoom, height: RULER_SIZE, background: '#f4f4fa', borderBottom: '1px solid #e3e4ee', overflow: 'hidden' }}>
