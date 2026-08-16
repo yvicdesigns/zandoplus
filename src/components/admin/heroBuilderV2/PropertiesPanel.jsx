@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, Copy, Italic, Underline } from 'lucide-react';
 import { CANVAS_SIZE, MIN_EL_W, MIN_EL_H } from './constants';
+import { ICON_LIBRARY } from './iconLibrary';
 
 const Field = ({ label, children }) => (
   <div className="mb-3">
@@ -173,6 +174,33 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
         <Field label="Couleur">
           <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.bgColor} onChange={(e) => set('bgColor', e.target.value)} />
         </Field>
+      )}
+
+      {element.type === 'icon' && (
+        <>
+          <Field label="Icône">
+            <div className="grid grid-cols-6 gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-1.5">
+              {ICON_LIBRARY.map(({ name, Icon }) => (
+                <button
+                  key={name}
+                  onClick={() => set('icon', name)}
+                  title={name}
+                  className={`w-7 h-7 flex items-center justify-center rounded-md ${
+                    element.icon === name ? 'bg-violet-100 text-violet-700' : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Couleur">
+            <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.color} onChange={(e) => set('color', e.target.value)} />
+          </Field>
+          <Field label="Épaisseur du trait">
+            <input type="number" step="0.5" min="0.5" max="4" className={inputCls} value={element.strokeWidth ?? 2} onChange={(e) => set('strokeWidth', Number(e.target.value))} />
+          </Field>
+        </>
       )}
 
       <Field label={`Rotation (${element.rotation ?? 0}°)`}>

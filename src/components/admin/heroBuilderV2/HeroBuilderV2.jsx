@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
 import {
-  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Save, Eye, X, Undo2, Redo2,
+  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Sparkles, Save, Eye, X, Undo2, Redo2,
   ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers, Copy,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
@@ -13,7 +13,8 @@ import SlideList from './SlideList';
 import PropertiesPanel from './PropertiesPanel';
 import LayersPanel from './LayersPanel';
 import BackgroundEditor from './BackgroundEditor';
-import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES, SLIDE_TEMPLATES } from './constants';
+import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES, SLIDE_TEMPLATES, BADGE_PRESETS } from './constants';
+import { ICON_LIBRARY } from './iconLibrary';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
 const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5];
@@ -37,6 +38,19 @@ const HeroBuilderV2 = () => {
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [iconMenuOpen, setIconMenuOpen] = useState(false);
+  const [badgeMenuOpen, setBadgeMenuOpen] = useState(false);
+  const iconMenuRef = useRef(null);
+  const badgeMenuRef = useRef(null);
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (iconMenuRef.current && !iconMenuRef.current.contains(e.target)) setIconMenuOpen(false);
+      if (badgeMenuRef.current && !badgeMenuRef.current.contains(e.target)) setBadgeMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
 
   const historyRef = useRef({ past: [], future: [] });
   const pendingSnapshotRef = useRef(null);
@@ -240,8 +254,8 @@ const HeroBuilderV2 = () => {
     setSlides(next);
   };
 
-  const addElement = (type) => {
-    const def = ELEMENT_TYPES[type].defaults(CANVAS_SIZE[device]);
+  const addElement = (type, overrides = {}) => {
+    const def = { ...ELEMENT_TYPES[type].defaults(CANVAS_SIZE[device]), ...overrides };
     const id = `el_${Date.now()}`;
     const layout = {};
     DEVICES.forEach((d) => {
@@ -605,15 +619,51 @@ const HeroBuilderV2 = () => {
                 <button onClick={() => addElement('image')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
                   <ImageIcon className="w-3.5 h-3.5" /> Image
                 </button>
-                <button onClick={() => addElement('badge')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <Tag className="w-3.5 h-3.5" /> Badge
-                </button>
+                <div className="relative" ref={badgeMenuRef}>
+                  <button onClick={() => setBadgeMenuOpen((v) => !v)} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
+                    <Tag className="w-3.5 h-3.5" /> Badge
+                  </button>
+                  {badgeMenuOpen && (
+                    <div className="absolute left-0 top-10 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-52">
+                      {BADGE_PRESETS.map((p) => (
+                        <button
+                          key={p.key}
+                          onClick={() => { addElement('badge', { text: p.text, bgColor: p.bgColor, textColor: p.textColor }); setBadgeMenuOpen(false); }}
+                          className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
+                        >
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase" style={{ background: p.bgColor, color: p.textColor }}>
+                            {p.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button onClick={() => addElement('shape')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
                   <Circle className="w-3.5 h-3.5" /> Forme
                 </button>
                 <button onClick={() => addElement('separator')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
                   <Minus className="w-3.5 h-3.5" /> Séparateur
                 </button>
+                <div className="relative" ref={iconMenuRef}>
+                  <button onClick={() => setIconMenuOpen((v) => !v)} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
+                    <Sparkles className="w-3.5 h-3.5" /> Icône
+                  </button>
+                  {iconMenuOpen && (
+                    <div className="absolute left-0 top-10 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 grid grid-cols-7 gap-1 max-h-64 overflow-y-auto">
+                      {ICON_LIBRARY.map(({ name, Icon }) => (
+                        <button
+                          key={name}
+                          onClick={() => { addElement('icon', { icon: name }); setIconMenuOpen(false); }}
+                          title={name}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-600 hover:bg-violet-100 hover:text-violet-700"
+                        >
+                          <Icon className="w-4 h-4" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="w-full max-w-[500px] bg-white border border-gray-200 rounded-lg p-3">

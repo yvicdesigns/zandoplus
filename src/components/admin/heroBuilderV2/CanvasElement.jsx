@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { MIN_EL_W, MIN_EL_H } from './constants';
+import { ICON_MAP } from './iconLibrary';
 
 const CORNERS = ['nw', 'ne', 'sw', 'se'];
 const CURSORS = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
@@ -144,6 +145,14 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
       {element.type === 'separator' && (
         <div style={{ ...contentStyle, background: element.bgColor, pointerEvents: 'none' }} />
       )}
+      {element.type === 'icon' && (() => {
+        const Icon = ICON_MAP[element.icon] || ICON_MAP.Star;
+        return (
+          <div style={{ ...contentStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <Icon color={element.color} strokeWidth={element.strokeWidth ?? 2} style={{ width: '100%', height: '100%' }} />
+          </div>
+        );
+      })()}
       {showHandles && CORNERS.map((corner) => (
         <div key={corner} onMouseDown={startResize(corner)} style={cornerStyle(corner)} />
       ))}

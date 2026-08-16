@@ -1,10 +1,11 @@
 import React from 'react';
 import { Type, Square, Image as ImageIcon, Tag, Circle, Minus, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import { ICON_MAP } from './iconLibrary';
 
 const TYPE_ICONS = { text: Type, button: Square, image: ImageIcon, badge: Tag, shape: Circle, separator: Minus };
 
 const layerLabel = (el) => {
-  if (el.type === 'image' || el.type === 'shape' || el.type === 'separator') return el.name || el.type;
+  if (el.type === 'image' || el.type === 'shape' || el.type === 'separator' || el.type === 'icon') return el.name || el.type;
   return el.text || el.name || el.type;
 };
 
@@ -18,7 +19,7 @@ const LayersPanel = ({ elements, selectedIds, onSelect, onMoveLayer, onDelete })
   return (
     <div className="flex flex-col gap-1">
       {reversed.map(({ el, idx }) => {
-        const Icon = TYPE_ICONS[el.type] || Square;
+        const Icon = el.type === 'icon' ? (ICON_MAP[el.icon] || Tag) : (TYPE_ICONS[el.type] || Square);
         const isSelected = selectedIds.includes(el.id);
         return (
           <div

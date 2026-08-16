@@ -97,7 +97,31 @@ export const ELEMENT_TYPES = {
       layout: centeredLayout(canvas, 200, 3),
     }),
   },
+  icon: {
+    label: 'Icône',
+    defaults: (canvas) => ({
+      type: 'icon',
+      name: 'Icône',
+      icon: 'Star',
+      color: '#ffffff',
+      strokeWidth: 2,
+      rotation: 0,
+      opacity: 1,
+      layout: centeredLayout(canvas, 48, 48),
+    }),
+  },
 };
+
+export const BADGE_PRESETS = [
+  { key: 'promo20', text: 'Promo -20%', bgColor: '#ff6d81', textColor: '#ffffff' },
+  { key: 'promo50', text: '-50%', bgColor: '#ef4444', textColor: '#ffffff' },
+  { key: 'new', text: 'Nouveau', bgColor: '#7c3aed', textColor: '#ffffff' },
+  { key: 'free-delivery', text: 'Livraison gratuite', bgColor: '#16a34a', textColor: '#ffffff' },
+  { key: 'bestseller', text: 'Meilleure vente', bgColor: '#f59e0b', textColor: '#ffffff' },
+  { key: 'limited', text: 'Stock limité', bgColor: '#dc2626', textColor: '#ffffff' },
+  { key: 'verified', text: 'Vérifié', bgColor: '#2563eb', textColor: '#ffffff' },
+  { key: 'exclusive', text: 'Exclusif', bgColor: '#101657', textColor: '#ffffff' },
+];
 
 function centeredLayout(canvas, w, h) {
   const x = Math.max(0, Math.round((canvas.w - w) / 2));
