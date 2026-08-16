@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
-import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Save, Eye, X, Undo2, Redo2 } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Save, Eye, X, Undo2, Redo2, ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import Canvas from './Canvas';
 import SlideList from './SlideList';
 import PropertiesPanel from './PropertiesPanel';
+import LayersPanel from './LayersPanel';
 import BackgroundEditor from './BackgroundEditor';
 import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES, SLIDE_TEMPLATES } from './constants';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
+const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5];
 
 const emptyForm = () => ({
   name: 'Nouveau slide',
@@ -25,7 +27,8 @@ const HeroBuilderV2 = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [form, setForm] = useState(emptyForm());
   const [device, setDevice] = useState('desktop');
-  const [selectedElementId, setSelectedElementId] = useState(null);
+  const [selectedElementIds, setSelectedElementIds] = useState([]);
+  const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -86,7 +89,7 @@ const HeroBuilderV2 = () => {
     if (past.length === 0) return;
     const prevForm = past.pop();
     setForm((current) => { future.push(current); return prevForm; });
-    setSelectedElementId(null);
+    setSelectedElementIds([]);
     forceHistoryRender();
   }, [flushPending]);
 
@@ -95,7 +98,7 @@ const HeroBuilderV2 = () => {
     if (future.length === 0) return;
     const nextForm = future.pop();
     setForm((current) => { past.push(current); return nextForm; });
-    setSelectedElementId(null);
+    setSelectedElementIds([]);
     forceHistoryRender();
   }, []);
 
@@ -142,7 +145,7 @@ const HeroBuilderV2 = () => {
     if (!s) return;
     setSelectedId(id);
     setForm(slideToForm(s));
-    setSelectedElementId(null);
+    setSelectedElementIds([]);
     resetHistory();
   };
 
@@ -159,7 +162,7 @@ const HeroBuilderV2 = () => {
     setSlides((prev) => [...prev, data]);
     setSelectedId(data.id);
     setForm(slideToForm(data));
-    setSelectedElementId(null);
+    setSelectedElementIds([]);
     resetHistory();
   };
 
@@ -177,7 +180,7 @@ const HeroBuilderV2 = () => {
         setSelectedId(null);
         setForm(emptyForm());
       }
-      setSelectedElementId(null);
+      setSelectedElementIds([]);
       resetHistory();
     }
   };
@@ -240,7 +243,7 @@ const HeroBuilderV2 = () => {
     });
     const el = { id, ...def, layout };
     commitForm((f) => ({ ...f, elements: [...f.elements, el] }));
-    setSelectedElementId(id);
+    setSelectedElementIds([id]);
   };
 
   const updateElement = (updated) => {
@@ -254,12 +257,83 @@ const HeroBuilderV2 = () => {
     }), { coalesce: true });
   };
 
-  const deleteElement = (elId) => {
-    commitForm((f) => ({ ...f, elements: f.elements.filter((e) => e.id !== elId) }));
-    setSelectedElementId(null);
+  const updateGroupLayout = (ids, dev, dx, dy, draggedId, draggedNext) => {
+    if (dx === 0 && dy === 0) return;
+    commitForm((f) => ({
+      ...f,
+      elements: f.elements.map((e) => {
+        if (!ids.includes(e.id)) return e;
+        if (e.id === draggedId) return { ...e, layout: { ...e.layout, [dev]: draggedNext } };
+        const l = e.layout?.[dev] || e.layout?.desktop;
+        return { ...e, layout: { ...e.layout, [dev]: { ...l, x: l.x + dx, y: l.y + dy } } };
+      }),
+    }), { coalesce: true });
   };
 
-  const selectedElement = form.elements.find((e) => e.id === selectedElementId) || null;
+  const deleteElement = (elId) => {
+    commitForm((f) => ({ ...f, elements: f.elements.filter((e) => e.id !== elId) }));
+    setSelectedElementIds((prev) => prev.filter((id) => id !== elId));
+  };
+
+  const deleteSelected = () => {
+    commitForm((f) => ({ ...f, elements: f.elements.filter((e) => !selectedElementIds.includes(e.id)) }));
+    setSelectedElementIds([]);
+  };
+
+  const moveLayer = (elId, direction) => {
+    commitForm((f) => {
+      const idx = f.elements.findIndex((e) => e.id === elId);
+      const swapIdx = direction === 'forward' ? idx + 1 : idx - 1;
+      if (idx < 0 || swapIdx < 0 || swapIdx >= f.elements.length) return f;
+      const next = [...f.elements];
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      return { ...f, elements: next };
+    });
+  };
+
+  const handleSelect = (id, additive) => {
+    if (id === null) { setSelectedElementIds([]); return; }
+    const el = form.elements.find((e) => e.id === id);
+    const groupIds = el?.groupId
+      ? form.elements.filter((e) => e.groupId === el.groupId).map((e) => e.id)
+      : [id];
+    if (additive) {
+      setSelectedElementIds((prev) => {
+        const allIn = groupIds.every((gid) => prev.includes(gid));
+        return allIn ? prev.filter((x) => !groupIds.includes(x)) : [...new Set([...prev, ...groupIds])];
+      });
+    } else {
+      setSelectedElementIds(groupIds);
+    }
+  };
+
+  const handleGroup = () => {
+    if (selectedElementIds.length < 2) return;
+    const groupId = `grp_${Date.now()}`;
+    commitForm((f) => ({
+      ...f,
+      elements: f.elements.map((e) => (selectedElementIds.includes(e.id) ? { ...e, groupId } : e)),
+    }));
+  };
+
+  const handleUngroup = () => {
+    commitForm((f) => ({
+      ...f,
+      elements: f.elements.map((e) => {
+        if (!selectedElementIds.includes(e.id)) return e;
+        const { groupId, ...rest } = e;
+        return rest;
+      }),
+    }));
+  };
+
+  const selectedElement = selectedElementIds.length === 1
+    ? form.elements.find((e) => e.id === selectedElementIds[0]) || null
+    : null;
+
+  const zoomIdx = ZOOM_LEVELS.indexOf(zoom);
+  const zoomOut = () => setZoom(ZOOM_LEVELS[Math.max(0, zoomIdx - 1)]);
+  const zoomIn = () => setZoom(ZOOM_LEVELS[Math.min(ZOOM_LEVELS.length - 1, zoomIdx + 1)]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">Chargement…</div>;
@@ -291,6 +365,15 @@ const HeroBuilderV2 = () => {
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30"
           >
             <Redo2 className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button onClick={zoomOut} disabled={zoomIdx <= 0} title="Zoom arrière" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30">
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <span className="text-[11px] text-gray-500 w-9 text-center">{Math.round(zoom * 100)}%</span>
+          <button onClick={zoomIn} disabled={zoomIdx >= ZOOM_LEVELS.length - 1} title="Zoom avant" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30">
+            <ZoomIn className="w-4 h-4" />
           </button>
         </div>
         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
@@ -353,13 +436,30 @@ const HeroBuilderV2 = () => {
                 </label>
               </div>
 
+              {selectedElementIds.length > 1 && (
+                <div className="flex items-center gap-2 self-start bg-violet-50 border border-violet-200 rounded-lg px-3 py-1.5">
+                  <span className="text-[11px] text-violet-700 font-semibold">{selectedElementIds.length} éléments sélectionnés</span>
+                  <button onClick={handleGroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
+                    <Group className="w-3 h-3" /> Grouper
+                  </button>
+                  <button onClick={handleUngroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
+                    <Ungroup className="w-3 h-3" /> Dégrouper
+                  </button>
+                  <button onClick={deleteSelected} className="h-7 px-2 rounded-md bg-white border border-red-200 text-[11px] flex items-center gap-1 text-red-600 hover:bg-red-50">
+                    <Trash2 className="w-3 h-3" /> Supprimer
+                  </button>
+                </div>
+              )}
+
               <Canvas
                 device={device}
                 background={form.background}
                 elements={form.elements}
-                selectedId={selectedElementId}
-                onSelect={setSelectedElementId}
+                selectedIds={selectedElementIds}
+                onSelect={handleSelect}
                 onLayoutChange={updateElementLayout}
+                onGroupMove={updateGroupLayout}
+                zoom={zoom}
               />
 
               <div className="flex items-center gap-2">
@@ -388,9 +488,31 @@ const HeroBuilderV2 = () => {
           )}
         </div>
 
-        {/* Right: properties */}
-        <div className="border-l border-gray-200 bg-white p-3 overflow-y-auto">
-          <PropertiesPanel element={selectedElement} onChange={updateElement} onDelete={deleteElement} />
+        {/* Right: layers + properties */}
+        <div className="border-l border-gray-200 bg-white p-3 overflow-y-auto flex flex-col gap-4">
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Layers className="w-3 h-3 text-gray-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Calques</span>
+            </div>
+            <LayersPanel
+              elements={form.elements}
+              selectedIds={selectedElementIds}
+              onSelect={handleSelect}
+              onMoveLayer={moveLayer}
+              onDelete={deleteElement}
+            />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 block mb-2">Propriétés</span>
+            {selectedElementIds.length > 1 ? (
+              <p className="text-[12px] text-gray-400 bg-gray-50 border border-gray-100 rounded-xl p-4 leading-relaxed">
+                Plusieurs éléments sélectionnés. Groupe-les pour les déplacer ensemble, ou sélectionne-en un seul pour modifier ses propriétés.
+              </p>
+            ) : (
+              <PropertiesPanel element={selectedElement} onChange={updateElement} onDelete={deleteElement} />
+            )}
+          </div>
         </div>
       </div>
     </div>

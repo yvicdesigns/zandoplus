@@ -11,7 +11,7 @@ const cornerStyle = (corner) => {
   return style;
 };
 
-const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, onDragEnd, canvasSize }) => {
+const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLayoutChange, onDragEnd, canvasSize, zoom = 1 }) => {
   const dragState = useRef(null);
 
   const clamp = useCallback((next) => {
@@ -24,7 +24,7 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, on
 
   const startDrag = (e) => {
     e.stopPropagation();
-    onSelect(element.id);
+    onSelect(element.id, e.shiftKey);
     dragState.current = { mode: 'move', startX: e.clientX, startY: e.clientY, layout: { ...layout } };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -33,7 +33,7 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, on
   const startResize = (corner) => (e) => {
     e.stopPropagation();
     e.preventDefault();
-    onSelect(element.id);
+    onSelect(element.id, false);
     dragState.current = { mode: 'resize', corner, startX: e.clientX, startY: e.clientY, layout: { ...layout } };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
@@ -42,8 +42,8 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, on
   const onMouseMove = (e) => {
     const st = dragState.current;
     if (!st) return;
-    const dx = e.clientX - st.startX;
-    const dy = e.clientY - st.startY;
+    const dx = (e.clientX - st.startX) / zoom;
+    const dy = (e.clientY - st.startY) / zoom;
     if (st.mode === 'move') {
       onLayoutChange(clamp({ ...st.layout, x: st.layout.x + dx, y: st.layout.y + dy }), 'move');
     } else {
@@ -123,7 +123,7 @@ const CanvasElement = ({ element, layout, selected, onSelect, onLayoutChange, on
           )}
         </div>
       )}
-      {selected && CORNERS.map((corner) => (
+      {showHandles && CORNERS.map((corner) => (
         <div key={corner} onMouseDown={startResize(corner)} style={cornerStyle(corner)} />
       ))}
     </div>
