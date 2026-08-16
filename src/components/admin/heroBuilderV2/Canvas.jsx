@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import CanvasElement from './CanvasElement';
+import FocalPointEditor from './FocalPointEditor';
+import { parseBgImage, buildBgImageCss, isElementHidden } from './elementStyles';
 import { CANVAS_SIZE } from './constants';
 
 const SNAP_THRESHOLD = 6;
@@ -7,9 +9,17 @@ const GUIDE_COLOR = '#ff4d6d';
 const RULER_SIZE = 18;
 const RULER_STEP = 50;
 
-const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutChange, onGroupMove, zoom = 1 }) => {
+const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutChange, onGroupMove, onTextChange, onFocalChange, onBackgroundChange, onDuplicate, onToggleHidden, onToggleLock, zoom = 1 }) => {
   const size = CANVAS_SIZE[device];
   const [guides, setGuides] = useState({ v: [], h: [] });
+  const [bgFocusEditing, setBgFocusEditing] = useState(false);
+
+  useEffect(() => {
+    if (!bgFocusEditing) return;
+    const handleKey = (e) => { if (e.key === 'Escape') setBgFocusEditing(false); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [bgFocusEditing]);
 
   const computeSnap = useCallback((elId, layout, mode) => {
     const vx = [0, size.w / 2, size.w];
@@ -70,6 +80,13 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
   const bg = background?.[device] || background?.desktop || '#171a32';
   const isVideo = typeof bg === 'string' && bg.startsWith('video:');
   const videoUrl = isVideo ? bg.slice(6) : null;
+  const bgImage = !isVideo ? parseBgImage(bg) : null;
+
+  const handleBgDoubleClick = (e) => {
+    if (e.target !== e.currentTarget) return;
+    if (!bgImage) return;
+    setBgFocusEditing(true);
+  };
 
   const hTicks = [];
   for (let t = 0; t <= size.w; t += RULER_STEP) hTicks.push(t);
@@ -84,6 +101,13 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
         gridTemplateRows: `${RULER_SIZE}px ${size.h * zoom}px`,
       }}
     >
+      <style>{`
+        @keyframes hb-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes hb-slide-left { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes hb-slide-right { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes hb-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes hb-zoom { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+      `}</style>
       <div style={{ background: '#f4f4fa', borderRight: '1px solid #e3e4ee', borderBottom: '1px solid #e3e4ee' }} />
 
       <div style={{ position: 'relative', width: size.w * zoom, height: RULER_SIZE, background: '#f4f4fa', borderBottom: '1px solid #e3e4ee', overflow: 'hidden' }}>
@@ -105,6 +129,7 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
       <div style={{ width: size.w * zoom, height: size.h * zoom, overflow: 'hidden', position: 'relative' }}>
         <div
           onMouseDown={() => onSelect(null, false)}
+          onDoubleClick={handleBgDoubleClick}
           style={{
             position: 'relative',
             width: size.w,
@@ -113,10 +138,24 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
             transformOrigin: 'top left',
             borderRadius: 12,
             overflow: 'hidden',
-            background: isVideo ? '#000' : bg,
+            background: isVideo ? '#000' : (bgImage ? '#171a32' : bg),
             boxShadow: '0 18px 55px rgba(31,34,68,.25)',
           }}
         >
+          {bgImage && (
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url('${bgImage.url}')`,
+                backgroundPosition: `${bgImage.x}% ${bgImage.y}%`,
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                transform: bgImage.zoom && bgImage.zoom !== 1 ? `scale(${bgImage.zoom})` : undefined,
+                transformOrigin: `${bgImage.x}% ${bgImage.y}%`,
+                pointerEvents: 'none',
+              }}
+            />
+          )}
           {isVideo && videoUrl && (
             <video
               key={videoUrl}
@@ -129,6 +168,7 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
             />
           )}
           {elements.map((el) => {
+            if (isElementHidden(el, device)) return null;
             const layout = el.layout?.[device] || el.layout?.desktop;
             if (!layout) return null;
             const isSelected = selectedIds.includes(el.id);
@@ -136,6 +176,7 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
               <CanvasElement
                 key={el.id}
                 element={el}
+                device={device}
                 layout={layout}
                 selected={isSelected}
                 showHandles={isSelected && selectedIds.length === 1}
@@ -144,9 +185,27 @@ const Canvas = ({ device, background, elements, selectedIds, onSelect, onLayoutC
                 zoom={zoom}
                 onLayoutChange={handleLayoutChange(el.id)}
                 onDragEnd={() => setGuides({ v: [], h: [] })}
+                onTextChange={(text) => onTextChange(el.id, text)}
+                onFocalChange={(focal) => onFocalChange(el.id, focal)}
+                onDuplicate={onDuplicate}
+                onToggleHidden={onToggleHidden}
+                onToggleLock={onToggleLock}
               />
             );
           })}
+          {bgFocusEditing && bgImage && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 9999 }}>
+              <FocalPointEditor
+                src={bgImage.url}
+                type="image"
+                focal={{ x: bgImage.x, y: bgImage.y, zoom: bgImage.zoom }}
+                frameW={size.w}
+                frameH={size.h}
+                onCommit={(f) => onBackgroundChange(device, buildBgImageCss({ url: bgImage.url, x: f.x, y: f.y, zoom: f.zoom }))}
+                onClose={() => setBgFocusEditing(false)}
+              />
+            </div>
+          )}
           {guides.v.map((x) => (
             <div key={`v${x}`} style={{ position: 'absolute', left: x, top: 0, bottom: 0, width: 1, background: GUIDE_COLOR, pointerEvents: 'none', zIndex: 50 }} />
           ))}

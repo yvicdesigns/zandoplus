@@ -3,12 +3,82 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Loader2, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, Trash2, Sparkles, ExternalLink } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import HeroSlideEditor from '@/components/admin/HeroSlideEditor';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+/* ── Bascule vers le nouveau Hero Builder v2 (table hero_slides_v2, éditeur drag & drop) ──
+   Requête isolée sur `site_settings`, séparée de SiteSettingsContext : si la colonne
+   `hero_v2_enabled` n'existe pas encore (migration pas encore jouée), cette carte échoue
+   silencieusement sans jamais casser le fetch partagé des réglages du site. */
+const HeroV2ToggleCard = () => {
+  const { toast } = useToast();
+  const [enabled, setEnabled] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [columnMissing, setColumnMissing] = useState(false);
+
+  useEffect(() => {
+    supabase.from('site_settings').select('hero_v2_enabled').eq('id', 1).single()
+      .then(({ data, error }) => {
+        if (error) { setColumnMissing(true); return; }
+        setEnabled(!!data?.hero_v2_enabled);
+      });
+  }, []);
+
+  const toggle = async () => {
+    setSaving(true);
+    const { error } = await supabase.from('site_settings').update({ hero_v2_enabled: !enabled }).eq('id', 1);
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: error.message });
+    } else {
+      setEnabled((v) => !v);
+    }
+    setSaving(false);
+  };
+
+  if (columnMissing) {
+    return (
+      <Card className="border-amber-200 bg-amber-50/40">
+        <CardContent className="pt-5 text-[12px] text-amber-800">
+          ⚠️ La colonne <code>hero_v2_enabled</code> n'existe pas encore sur <code>site_settings</code>.
+          Lance <code>supabase_migration_hero_v2_toggle.sql</code> dans le SQL Editor de Supabase pour activer cette bascule.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-violet-200 bg-violet-50/40">
+      <CardContent className="pt-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="flex items-start gap-3">
+          <Sparkles className="w-5 h-5 text-violet-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[13px] font-semibold text-gray-800">Nouveau Hero Builder (v2)</p>
+            <p className="text-[12px] text-gray-500 mt-0.5">
+              {enabled
+                ? 'Actif — tous les visiteurs voient les slides créées dans le nouvel éditeur.'
+                : "Désactivé — les visiteurs voient toujours le Hero classique ci-dessous. Toi seul peux vérifier le rendu du nouveau Hero via le lien d'aperçu."}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <a href="/admin/hero-builder-beta" className="text-[12px] font-semibold text-violet-700 hover:underline flex items-center gap-1">
+            Ouvrir l'éditeur
+          </a>
+          <a href="/?heroPreview=v2" target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-violet-700 hover:underline flex items-center gap-1">
+            Aperçu en situation réelle <ExternalLink className="w-3 h-3" />
+          </a>
+          <Button size="sm" variant={enabled ? 'default' : 'outline'} onClick={toggle} disabled={saving}>
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (enabled ? 'Activé pour tous' : 'Activer pour tous')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 /* Contenu par défaut = ce qui s'affiche sur la page d'accueil */
 const DEFAULT_SLIDE = {
@@ -145,6 +215,9 @@ const AdminHeroTab = memo(() => {
 
   return (
     <>
+      <div className="mb-4">
+        <HeroV2ToggleCard />
+      </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>

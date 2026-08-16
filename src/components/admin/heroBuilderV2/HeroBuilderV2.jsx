@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
 import {
-  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Circle, Minus, Save, Eye, X, Undo2, Redo2,
+  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Circle, Minus, Hash, Video, Save, Eye, X, Undo2, Redo2,
   ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers, Copy, LayoutGrid, LayoutTemplate, Presentation, Settings,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
@@ -15,6 +15,8 @@ import LayersPanel from './LayersPanel';
 import BackgroundEditor from './BackgroundEditor';
 import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES, SLIDE_TEMPLATES, BADGE_PRESETS } from './constants';
 import { ICON_LIBRARY } from './iconLibrary';
+import { convertOldSlideToV2 } from './importOldSlide';
+import { isElementHidden } from './elementStyles';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
 const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5];
@@ -157,9 +159,41 @@ const HeroBuilderV2 = () => {
 
   useEffect(() => { fetchSlides(); }, [fetchSlides]);
 
+  const [oldSlides, setOldSlides] = useState([]);
+  useEffect(() => {
+    supabase.from('hero_slides').select('*').order('order', { ascending: true })
+      .then(({ data, error }) => { if (!error) setOldSlides(data || []); });
+  }, []);
+
+  const handleImportOldSlide = async (oldSlide) => {
+    const payload = { ...emptyForm(), ...convertOldSlideToV2(oldSlide) };
+    const nextOrder = slides.length > 0 ? Math.max(...slides.map((s) => s.order || 0)) + 1 : 0;
+    const { data, error } = await supabase
+      .from('hero_slides_v2')
+      .insert({ ...payload, order: nextOrder })
+      .select()
+      .single();
+    if (error) { toast({ variant: 'destructive', title: 'Erreur', description: error.message }); return; }
+    setSlides([...syncFormIntoSlides(slides), data]);
+    setSelectedId(data.id);
+    setForm(slideToForm(data));
+    setSelectedElementIds([]);
+    resetHistory();
+    toast({ title: 'Slide importée', description: 'Vérifie la mise en page, elle a été reconstruite automatiquement.', className: 'bg-custom-green-500 text-white' });
+  };
+
+  // Recopie le form en cours (édité en mémoire, pas forcément enregistré en base) dans le
+  // tableau local `slides` avant de changer de slide — sinon quitter une slide sans avoir
+  // cliqué "Enregistrer" perdait silencieusement ses modifications en mémoire.
+  const syncFormIntoSlides = (slidesList) =>
+    selectedId ? slidesList.map((s) => (s.id === selectedId ? { ...s, ...form } : s)) : slidesList;
+
   const selectSlide = (id) => {
-    const s = slides.find((x) => x.id === id);
+    if (id === selectedId) return;
+    const synced = syncFormIntoSlides(slides);
+    const s = synced.find((x) => x.id === id);
     if (!s) return;
+    setSlides(synced);
     setSelectedId(id);
     setForm(slideToForm(s));
     setSelectedElementIds([]);
@@ -176,7 +210,7 @@ const HeroBuilderV2 = () => {
       .select()
       .single();
     if (error) { toast({ variant: 'destructive', title: 'Erreur', description: error.message }); return; }
-    setSlides((prev) => [...prev, data]);
+    setSlides([...syncFormIntoSlides(slides), data]);
     setSelectedId(data.id);
     setForm(slideToForm(data));
     setSelectedElementIds([]);
@@ -252,11 +286,22 @@ const HeroBuilderV2 = () => {
   };
 
   const addElement = (type, overrides = {}) => {
+    const sameTypeCount = form.elements.filter((e) => e.type === type).length;
+    const cascade = (layout, canvas) => {
+      const step = (sameTypeCount % 6) * 24;
+      const w = layout.w, h = layout.h;
+      return {
+        ...layout,
+        x: Math.max(0, Math.min(layout.x + step, canvas.w - w)),
+        y: Math.max(0, Math.min(layout.y + step, canvas.h - h)),
+      };
+    };
     const def = { ...ELEMENT_TYPES[type].defaults(CANVAS_SIZE[device]), ...overrides };
+    def.layout = cascade(def.layout, CANVAS_SIZE[device]);
     const id = `el_${Date.now()}`;
     const layout = {};
     DEVICES.forEach((d) => {
-      layout[d] = d === device ? def.layout : ELEMENT_TYPES[type].defaults(CANVAS_SIZE[d]).layout;
+      layout[d] = d === device ? def.layout : cascade(ELEMENT_TYPES[type].defaults(CANVAS_SIZE[d]).layout, CANVAS_SIZE[d]);
     });
     const el = { id, ...def, layout };
     commitForm((f) => ({ ...f, elements: [...f.elements, el] }));
@@ -265,6 +310,29 @@ const HeroBuilderV2 = () => {
 
   const updateElement = (updated) => {
     commitForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === updated.id ? updated : e)) }), { coalesce: true });
+  };
+
+  const updateElementText = (elId, text) => {
+    commitForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === elId ? { ...e, text } : e)) }));
+  };
+
+  const updateElementFocal = (elId, focal) => {
+    commitForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === elId ? { ...e, focal } : e)) }), { coalesce: true });
+  };
+
+  const updateBackground = (dev, value) => {
+    commitForm((f) => ({ ...f, background: { ...f.background, [dev]: value } }), { coalesce: true });
+  };
+
+  const toggleElementHidden = (elId) => {
+    commitForm((f) => ({
+      ...f,
+      elements: f.elements.map((e) => (e.id === elId ? { ...e, hiddenByDevice: { ...e.hiddenByDevice, [device]: !isElementHidden(e, device) } } : e)),
+    }));
+  };
+
+  const toggleElementLock = (elId) => {
+    commitForm((f) => ({ ...f, elements: f.elements.map((e) => (e.id === elId ? { ...e, locked: !e.locked } : e)) }));
   };
 
   const updateElementLayout = (elId, dev, layout) => {
@@ -403,7 +471,9 @@ const HeroBuilderV2 = () => {
   };
 
   const duplicateSlide = async (id) => {
-    const original = slides.find((s) => s.id === id);
+    // Si on duplique la slide actuellement affichée, on part du form en mémoire (édits non
+    // encore enregistrés inclus) plutôt que de la dernière version sauvegardée.
+    const original = id === selectedId ? form : slides.find((s) => s.id === id);
     if (!original) return;
     const groupIdMap = {};
     const newElements = (original.elements || []).map((e) => {
@@ -427,7 +497,7 @@ const HeroBuilderV2 = () => {
     };
     const { data, error } = await supabase.from('hero_slides_v2').insert(payload).select().single();
     if (error) { toast({ variant: 'destructive', title: 'Erreur', description: error.message }); return; }
-    setSlides((prev) => [...prev, data]);
+    setSlides([...syncFormIntoSlides(slides), data]);
     setSelectedId(data.id);
     setForm(slideToForm(data));
     setSelectedElementIds([]);
@@ -455,6 +525,14 @@ const HeroBuilderV2 = () => {
         </button>
         <span className="font-bold text-sm">Hero Builder</span>
         <span className="text-[10px] font-bold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full">BETA — isolé</span>
+        <a
+          href="/?heroPreview=v2"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[11px] font-semibold text-violet-600 hover:underline flex items-center gap-1"
+        >
+          <Eye className="w-3.5 h-3.5" /> Voir en situation réelle
+        </a>
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
           <button
@@ -537,7 +615,9 @@ const HeroBuilderV2 = () => {
                     <button onClick={() => addElement('button')} className={addRowCls}><Square className="w-4 h-4" /> Bouton</button>
                     <button onClick={() => addElement('image')} className={addRowCls}><ImageIcon className="w-4 h-4" /> Image</button>
                     <button onClick={() => addElement('shape')} className={addRowCls}><Circle className="w-4 h-4" /> Forme</button>
+                    <button onClick={() => addElement('video')} className={addRowCls}><Video className="w-4 h-4" /> Vidéo</button>
                     <button onClick={() => addElement('separator')} className={addRowCls}><Minus className="w-4 h-4" /> Séparateur</button>
+                    <button onClick={() => addElement('stat')} className={addRowCls}><Hash className="w-4 h-4" /> Stat (chiffre + légende)</button>
                   </div>
                   <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Bibliothèque de badges</h3>
                   <div className="grid grid-cols-2 gap-1.5 mb-4">
@@ -583,6 +663,9 @@ const HeroBuilderV2 = () => {
                   onSelect={handleSelect}
                   onMoveLayer={moveLayer}
                   onDelete={deleteElement}
+                  onToggleHidden={toggleElementHidden}
+                  onToggleLock={toggleElementLock}
+                  device={device}
                 />
               )}
             </div>
@@ -609,7 +692,7 @@ const HeroBuilderV2 = () => {
               ) : (
                 <BackgroundEditor
                   value={form.background[device] || ''}
-                  onChange={(v) => commitForm((f) => ({ ...f, background: { ...f.background, [device]: v } }), { coalesce: true })}
+                  onChange={(v) => updateBackground(device, v)}
                 />
               )}
             </div>
@@ -627,6 +710,29 @@ const HeroBuilderV2 = () => {
                 onMoveUp={(id) => handleReorder(id, 'up')}
                 onMoveDown={(id) => handleReorder(id, 'down')}
               />
+              {oldSlides.length > 0 && (
+                <div className="mt-5 pt-4 border-t border-gray-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-1">Importer une ancienne slide</h3>
+                  <p className="text-[10px] text-gray-400 mb-2 leading-relaxed">
+                    Reconstruit une slide de l'ancien Hero (fond, badge, titre, sous-titre, boutons) en éléments modifiables ici. À ajuster ensuite.
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {oldSlides.map((s) => {
+                      const label = s.text_content?.[0]?.spans?.[0]?.text || 'Sans titre';
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => handleImportOldSlide(s)}
+                          className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-gray-200 text-[12px] text-gray-700 hover:border-violet-300 hover:bg-violet-50 text-left"
+                        >
+                          <span className="truncate">{label}</span>
+                          <span className="text-[10px] text-violet-600 font-semibold flex-shrink-0">Importer</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -729,6 +835,12 @@ const HeroBuilderV2 = () => {
                 onSelect={handleSelect}
                 onLayoutChange={updateElementLayout}
                 onGroupMove={updateGroupLayout}
+                onTextChange={updateElementText}
+                onFocalChange={updateElementFocal}
+                onBackgroundChange={updateBackground}
+                onDuplicate={duplicateSelected}
+                onToggleHidden={toggleElementHidden}
+                onToggleLock={toggleElementLock}
                 zoom={zoom}
               />
             </>

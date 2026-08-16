@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import MediaUploadField from './MediaUploadField';
 
 const parseGradient = (css) => {
   const m = /^\s*linear-gradient\(\s*(-?\d+)deg\s*,\s*(.+)\)\s*$/i.exec(css || '');
@@ -110,23 +111,23 @@ const BackgroundEditor = ({ value, onChange }) => {
       )}
 
       {mode === 'image' && (
-        <input
-          className={inputCls}
-          placeholder="https://..."
+        <MediaUploadField
+          kind="image"
           value={imageUrl}
-          onChange={(e) => { setImageUrl(e.target.value); onChange(`url('${e.target.value}') center/cover no-repeat`); }}
+          onChange={(url) => { setImageUrl(url); onChange(url ? `url('${url}') center/cover no-repeat` : ''); }}
+          pathPrefix="hero_v2/backgrounds"
         />
       )}
 
       {mode === 'video' && (
         <div className="flex flex-col gap-1.5">
-          <input
-            className={inputCls}
-            placeholder="https://.../video.mp4"
+          <MediaUploadField
+            kind="video"
             value={videoUrl}
-            onChange={(e) => { setVideoUrl(e.target.value); onChange(`video:${e.target.value}`); }}
+            onChange={(url) => { setVideoUrl(url); onChange(url ? `video:${url}` : ''); }}
+            pathPrefix="hero_v2/backgrounds"
           />
-          <p className="text-[10px] text-gray-400 leading-relaxed">Vidéo en boucle, muette, lecture automatique. Utilise un fichier .mp4 léger et compressé.</p>
+          <p className="text-[10px] text-gray-400 leading-relaxed">Vidéo en boucle, muette, lecture automatique. Utilise un fichier léger et compressé.</p>
         </div>
       )}
 

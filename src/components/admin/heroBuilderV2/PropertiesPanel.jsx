@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Trash2, Copy, Italic, Underline } from 'lucide-react';
+import { Trash2, Copy, Italic, Underline, FlipHorizontal2, FlipVertical2, RotateCcw } from 'lucide-react';
 import { CANVAS_SIZE, MIN_EL_W, MIN_EL_H } from './constants';
 import { ICON_LIBRARY } from './iconLibrary';
+import { ANIMATIONS } from './CanvasElement';
+import MediaUploadField from './MediaUploadField';
+
+const RADIUS_TYPES = ['button', 'badge', 'stat', 'image', 'video', 'shape'];
 
 const Field = ({ label, children }) => (
   <div className="mb-3">
@@ -35,6 +39,21 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
   }
 
   const set = (key, value) => onChange({ ...element, [key]: value });
+
+  const effectiveFontSize = element.fontSizeByDevice?.[device] ?? element.fontSize;
+  const effectiveAlign = element.alignByDevice?.[device] ?? element.align;
+  const setAlign = (value) => onChange({ ...element, alignByDevice: { ...element.alignByDevice, [device]: value } });
+  const effectiveSubFontSize = element.subFontSizeByDevice?.[device] ?? element.subFontSize;
+  const setSubFontSize = (value) => {
+    const num = Number(value);
+    if (Number.isNaN(num)) return;
+    onChange({ ...element, subFontSizeByDevice: { ...element.subFontSizeByDevice, [device]: num } });
+  };
+  const setFontSize = (value) => {
+    const num = Number(value);
+    if (Number.isNaN(num)) return;
+    onChange({ ...element, fontSizeByDevice: { ...element.fontSizeByDevice, [device]: num } });
+  };
 
   const layout = element.layout?.[device] || element.layout?.desktop || { x: 0, y: 0, w: 0, h: 0 };
   const setLayout = (key, value) => {
@@ -99,10 +118,30 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
               <input className={inputCls} value={element.text} onChange={(e) => set('text', e.target.value)} />
             </Field>
           )}
+          {element.type === 'stat' && (
+            <>
+              <Field label="Texte principal (chiffre)">
+                <input className={inputCls} value={element.text} onChange={(e) => set('text', e.target.value)} />
+              </Field>
+              <Field label="Sous-texte (légende)">
+                <input className={inputCls} value={element.subtext} onChange={(e) => set('subtext', e.target.value)} />
+              </Field>
+            </>
+          )}
           {element.type === 'image' && (
-            <Field label="URL de l'image">
-              <input className={inputCls} value={element.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} placeholder="https://..." />
+            <Field label="Image">
+              <MediaUploadField kind="image" value={element.imageUrl} onChange={(url) => set('imageUrl', url)} pathPrefix="hero_v2/images" />
             </Field>
+          )}
+          {element.type === 'video' && (
+            <>
+              <Field label="Vidéo">
+                <MediaUploadField kind="video" value={element.videoUrl} onChange={(url) => set('videoUrl', url)} pathPrefix="hero_v2/videos" />
+              </Field>
+              <Field label="Image d'aperçu (poster, optionnel)">
+                <MediaUploadField kind="image" value={element.poster || ''} onChange={(url) => set('poster', url)} pathPrefix="hero_v2/images" />
+              </Field>
+            </>
           )}
           {element.type === 'shape' && (
             <Field label="Forme">
@@ -155,8 +194,9 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
           {element.type === 'text' && (
             <>
               <SectionTitle>Typographie</SectionTitle>
-              <Field label="Taille (px)">
-                <input type="number" className={inputCls} value={element.fontSize} onChange={(e) => set('fontSize', Number(e.target.value))} />
+              <Field label={`Taille (px) — ${device}`}>
+                <input type="number" className={inputCls} value={effectiveFontSize} onChange={(e) => setFontSize(e.target.value)} />
+                <p className="text-[10px] text-gray-400 mt-1">Réglable indépendamment pour desktop / tablette / mobile.</p>
               </Field>
               <Field label="Graisse">
                 <select className={inputCls} value={element.fontWeight} onChange={(e) => set('fontWeight', Number(e.target.value))}>
@@ -187,8 +227,31 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
               <Field label="Espacement des lettres (px)">
                 <input type="number" step="0.5" className={inputCls} value={element.letterSpacing ?? 0} onChange={(e) => set('letterSpacing', Number(e.target.value))} />
               </Field>
-              <Field label="Alignement">
-                <select className={inputCls} value={element.align} onChange={(e) => set('align', e.target.value)}>
+              <Field label={`Alignement — ${device}`}>
+                <select className={inputCls} value={effectiveAlign} onChange={(e) => setAlign(e.target.value)}>
+                  <option value="left">Gauche</option>
+                  <option value="center">Centre</option>
+                  <option value="right">Droite</option>
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1">Réglable indépendamment pour desktop / tablette / mobile.</p>
+              </Field>
+            </>
+          )}
+
+          {['button', 'badge', 'stat'].includes(element.type) && (
+            <>
+              <SectionTitle>Typographie</SectionTitle>
+              <Field label={`Taille (px) — ${device}`}>
+                <input type="number" className={inputCls} value={effectiveFontSize ?? ''} onChange={(e) => setFontSize(e.target.value)} />
+                <p className="text-[10px] text-gray-400 mt-1">Réglable indépendamment pour desktop / tablette / mobile.</p>
+              </Field>
+              {element.type === 'stat' && (
+                <Field label={`Taille du sous-texte (px) — ${device}`}>
+                  <input type="number" className={inputCls} value={effectiveSubFontSize ?? 11} onChange={(e) => setSubFontSize(e.target.value)} />
+                </Field>
+              )}
+              <Field label={`Alignement — ${device}`}>
+                <select className={inputCls} value={effectiveAlign || 'center'} onChange={(e) => setAlign(e.target.value)}>
                   <option value="left">Gauche</option>
                   <option value="center">Centre</option>
                   <option value="right">Droite</option>
@@ -234,13 +297,71 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
               </Field>
             </>
           )}
+          {element.type === 'stat' && (
+            <>
+              <Field label="Couleur de fond">
+                <input type="color" className={colorCls} value={element.bgColor} onChange={(e) => set('bgColor', e.target.value)} />
+              </Field>
+              <Field label="Couleur du texte principal">
+                <input type="color" className={colorCls} value={element.textColor} onChange={(e) => set('textColor', e.target.value)} />
+              </Field>
+              <Field label="Couleur du sous-texte">
+                <input type="color" className={colorCls} value={element.subColor} onChange={(e) => set('subColor', e.target.value)} />
+              </Field>
+              <Field label="Espacement entre les deux lignes (px)">
+                <input type="number" min="0" className={inputCls} value={element.gap ?? 4} onChange={(e) => set('gap', Number(e.target.value))} />
+              </Field>
+            </>
+          )}
           {element.type === 'image' && (
             <Field label="Ajustement">
               <select className={inputCls} value={element.fit} onChange={(e) => set('fit', e.target.value)}>
                 <option value="cover">Cover</option>
                 <option value="contain">Contain</option>
               </select>
+              <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Double-clique sur l'image dans le canvas pour la recadrer et zoomer.</p>
+              {(element.focal?.x !== undefined || element.focal?.y !== undefined) && (
+                <button onClick={() => set('focal', { x: 50, y: 50 })} className="mt-1.5 text-[10px] text-violet-600 font-semibold hover:underline">
+                  Recentrer le cadrage
+                </button>
+              )}
             </Field>
+          )}
+          {element.type === 'video' && (
+            <>
+              <Field label="Ajustement">
+                <select className={inputCls} value={element.fit} onChange={(e) => set('fit', e.target.value)}>
+                  <option value="cover">Cover</option>
+                  <option value="contain">Contain</option>
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">Double-clique sur la vidéo dans le canvas pour la recadrer et zoomer.</p>
+                {(element.focal?.x !== undefined || element.focal?.y !== undefined) && (
+                  <button onClick={() => set('focal', { x: 50, y: 50 })} className="mt-1.5 text-[10px] text-violet-600 font-semibold hover:underline">
+                    Recentrer le cadrage
+                  </button>
+                )}
+              </Field>
+              <Field label="Lecture">
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                    <input type="checkbox" checked={element.autoplay !== false} onChange={(e) => set('autoplay', e.target.checked)} />
+                    Lecture automatique
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                    <input type="checkbox" checked={element.loop !== false} onChange={(e) => set('loop', e.target.checked)} />
+                    Boucle
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                    <input type="checkbox" checked={element.muted !== false} onChange={(e) => set('muted', e.target.checked)} />
+                    Muet
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                    <input type="checkbox" checked={!!element.controls} onChange={(e) => set('controls', e.target.checked)} />
+                    Contrôles visibles
+                  </label>
+                </div>
+              </Field>
+            </>
           )}
           {element.type === 'shape' && (
             <Field label="Couleur de fond">
@@ -262,6 +383,72 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
               </Field>
             </>
           )}
+
+          <SectionTitle>Effets</SectionTitle>
+          {RADIUS_TYPES.includes(element.type) && (
+            <Field label="Bordure">
+              <label className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-1.5">
+                <input type="checkbox" checked={!!element.border?.enabled} onChange={(e) => set('border', { ...element.border, enabled: e.target.checked })} />
+                Activer
+              </label>
+              {element.border?.enabled && (
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" min="0" max="20" className={inputCls} placeholder="Épaisseur (px)" value={element.border?.width ?? 2} onChange={(e) => set('border', { ...element.border, width: Number(e.target.value) })} />
+                  <select className={inputCls} value={element.border?.style || 'solid'} onChange={(e) => set('border', { ...element.border, style: e.target.value })}>
+                    <option value="solid">Continue</option>
+                    <option value="dashed">Tirets</option>
+                    <option value="dotted">Pointillés</option>
+                  </select>
+                  <input type="color" className={`${colorCls} col-span-2`} value={element.border?.color ?? '#000000'} onChange={(e) => set('border', { ...element.border, color: e.target.value })} />
+                </div>
+              )}
+            </Field>
+          )}
+          {RADIUS_TYPES.includes(element.type) && !(element.type === 'shape' && element.shape === 'circle') && (
+            <Field label="Coins arrondis">
+              <label className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-1.5">
+                <input type="checkbox" checked={element.cornersLinked === false} onChange={(e) => set('cornersLinked', e.target.checked ? false : true)} />
+                Régler chaque coin indépendamment
+              </label>
+              {element.cornersLinked === false ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" min="0" className={inputCls} placeholder="Haut-gauche" value={element.radiusTL ?? 0} onChange={(e) => set('radiusTL', Number(e.target.value))} />
+                  <input type="number" min="0" className={inputCls} placeholder="Haut-droite" value={element.radiusTR ?? 0} onChange={(e) => set('radiusTR', Number(e.target.value))} />
+                  <input type="number" min="0" className={inputCls} placeholder="Bas-gauche" value={element.radiusBL ?? 0} onChange={(e) => set('radiusBL', Number(e.target.value))} />
+                  <input type="number" min="0" className={inputCls} placeholder="Bas-droite" value={element.radiusBR ?? 0} onChange={(e) => set('radiusBR', Number(e.target.value))} />
+                </div>
+              ) : (
+                <input type="number" min="0" className={inputCls} value={element.radius ?? ''} placeholder="Par défaut" onChange={(e) => set('radius', e.target.value === '' ? undefined : Number(e.target.value))} />
+              )}
+            </Field>
+          )}
+          <Field label="Ombre portée">
+            <label className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-1.5">
+              <input type="checkbox" checked={!!element.shadow?.enabled} onChange={(e) => set('shadow', { ...element.shadow, enabled: e.target.checked })} />
+              Activer
+            </label>
+            {element.shadow?.enabled && (
+              <div className="grid grid-cols-2 gap-2">
+                <input type="number" className={inputCls} placeholder="X" value={element.shadow?.x ?? 0} onChange={(e) => set('shadow', { ...element.shadow, x: Number(e.target.value) })} />
+                <input type="number" className={inputCls} placeholder="Y" value={element.shadow?.y ?? 4} onChange={(e) => set('shadow', { ...element.shadow, y: Number(e.target.value) })} />
+                <input type="number" min="0" className={inputCls} placeholder="Flou" value={element.shadow?.blurAmt ?? 8} onChange={(e) => set('shadow', { ...element.shadow, blurAmt: Number(e.target.value) })} />
+                <input type="color" className={colorCls} value={element.shadow?.color ?? '#000000'} onChange={(e) => set('shadow', { ...element.shadow, color: e.target.value })} />
+              </div>
+            )}
+          </Field>
+          <Field label={`Flou de l'élément (${element.blur ?? 0}px)`}>
+            <input type="range" min="0" max="20" step="1" value={element.blur ?? 0} onChange={(e) => set('blur', Number(e.target.value))} className="w-full" />
+          </Field>
+          <Field label="Retournement">
+            <div className="flex gap-1">
+              <button onClick={() => set('flipX', !element.flipX)} className={toggleCls(!!element.flipX)} title="Retourner horizontalement">
+                <FlipHorizontal2 className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => set('flipY', !element.flipY)} className={toggleCls(!!element.flipY)} title="Retourner verticalement">
+                <FlipVertical2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </Field>
         </div>
       )}
 
@@ -273,6 +460,35 @@ const PropertiesPanel = ({ element, device, onChange, onDelete, onDuplicate }) =
           </Field>
           <p className="text-[10px] text-gray-400 mb-1">ID : {element.id}</p>
           {element.groupId && <p className="text-[10px] text-gray-400">Groupe : {element.groupId}</p>}
+
+          <SectionTitle>Animation à l'apparition</SectionTitle>
+          <Field label="Type">
+            <select
+              className={inputCls}
+              value={element.animation?.type || 'none'}
+              onChange={(e) => set('animation', { ...element.animation, type: e.target.value })}
+            >
+              {ANIMATIONS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </Field>
+          {element.animation?.type && element.animation.type !== 'none' && (
+            <>
+              <Field label={`Durée (${element.animation?.duration ?? 600}ms)`}>
+                <input
+                  type="range" min="150" max="2000" step="50"
+                  value={element.animation?.duration ?? 600}
+                  onChange={(e) => set('animation', { ...element.animation, duration: Number(e.target.value) })}
+                  className="w-full"
+                />
+              </Field>
+              <button
+                onClick={() => set('_animTick', (element._animTick || 0) + 1)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-violet-600 hover:text-violet-700"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Rejouer l'aperçu
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
