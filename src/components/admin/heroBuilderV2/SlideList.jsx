@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Copy, ChevronUp, ChevronDown } from 'lucide-react';
 import { SLIDE_TEMPLATES } from './constants';
 
-const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete, onMoveUp, onMoveDown }) => {
+const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete, onDuplicate, onMoveUp, onMoveDown }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -65,8 +65,16 @@ const SlideList = ({ slides, selectedId, onSelect, onAdd, onDelete, onMoveUp, on
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <button
+                onClick={(e) => { e.stopPropagation(); onDuplicate(s.id); }}
+                className="text-gray-300 hover:text-violet-600"
+                title="Dupliquer"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+              <button
                 onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
                 className="text-gray-300 hover:text-red-500"
+                title="Supprimer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>

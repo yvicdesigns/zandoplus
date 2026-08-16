@@ -86,7 +86,12 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
           style={{
             ...contentStyle, overflow: 'hidden',
             fontSize: element.fontSize, fontWeight: element.fontWeight,
-            color: element.color, textAlign: element.align, lineHeight: 1.15,
+            fontStyle: element.fontStyle || 'normal',
+            textDecoration: element.textDecoration || 'none',
+            textTransform: element.textTransform || 'none',
+            color: element.color, textAlign: element.align,
+            lineHeight: element.lineHeight ?? 1.15,
+            letterSpacing: element.letterSpacing ? `${element.letterSpacing}px` : undefined,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', pointerEvents: 'none',
           }}
         >

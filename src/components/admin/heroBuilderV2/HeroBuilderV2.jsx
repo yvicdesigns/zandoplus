@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
-import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Save, Eye, X, Undo2, Redo2, ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers } from 'lucide-react';
+import {
+  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Save, Eye, X, Undo2, Redo2,
+  ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers, Copy,
+  AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
+  AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
+  ArrowUpToLine, ArrowDownToLine,
+} from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import Canvas from './Canvas';
@@ -327,6 +333,96 @@ const HeroBuilderV2 = () => {
     }));
   };
 
+  const duplicateSelected = () => {
+    if (selectedElementIds.length === 0) return;
+    const groupIdMap = {};
+    const idMap = {};
+    selectedElementIds.forEach((id) => { idMap[id] = `el_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; });
+    commitForm((f) => {
+      const newElements = [];
+      f.elements.forEach((e) => {
+        newElements.push(e);
+        if (!selectedElementIds.includes(e.id)) return;
+        const { groupId, ...rest } = e;
+        const offsetLayout = {};
+        DEVICES.forEach((d) => {
+          const l = e.layout?.[d] || e.layout?.desktop;
+          offsetLayout[d] = l ? { ...l, x: l.x + 16, y: l.y + 16 } : l;
+        });
+        const dup = { ...rest, id: idMap[e.id], layout: offsetLayout };
+        if (groupId) {
+          if (!groupIdMap[groupId]) groupIdMap[groupId] = `grp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          dup.groupId = groupIdMap[groupId];
+        }
+        newElements.push(dup);
+      });
+      return { ...f, elements: newElements };
+    });
+    setSelectedElementIds(Object.values(idMap));
+  };
+
+  const alignSelected = (edge) => {
+    if (selectedElementIds.length === 0) return;
+    const canvas = CANVAS_SIZE[device];
+    commitForm((f) => ({
+      ...f,
+      elements: f.elements.map((e) => {
+        if (!selectedElementIds.includes(e.id)) return e;
+        const l = e.layout?.[device] || e.layout?.desktop;
+        if (!l) return e;
+        let { x, y } = l;
+        if (edge === 'left') x = 0;
+        if (edge === 'center-h') x = Math.round((canvas.w - l.w) / 2);
+        if (edge === 'right') x = canvas.w - l.w;
+        if (edge === 'top') y = 0;
+        if (edge === 'middle-v') y = Math.round((canvas.h - l.h) / 2);
+        if (edge === 'bottom') y = canvas.h - l.h;
+        return { ...e, layout: { ...e.layout, [device]: { ...l, x, y } } };
+      }),
+    }));
+  };
+
+  const orderSelected = (direction) => {
+    if (selectedElementIds.length === 0) return;
+    commitForm((f) => {
+      const selected = f.elements.filter((e) => selectedElementIds.includes(e.id));
+      const rest = f.elements.filter((e) => !selectedElementIds.includes(e.id));
+      return { ...f, elements: direction === 'front' ? [...rest, ...selected] : [...selected, ...rest] };
+    });
+  };
+
+  const duplicateSlide = async (id) => {
+    const original = slides.find((s) => s.id === id);
+    if (!original) return;
+    const groupIdMap = {};
+    const newElements = (original.elements || []).map((e) => {
+      const { groupId, ...rest } = e;
+      const newId = `el_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const mapped = { ...rest, id: newId };
+      if (groupId) {
+        if (!groupIdMap[groupId]) groupIdMap[groupId] = `grp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        mapped.groupId = groupIdMap[groupId];
+      }
+      return mapped;
+    });
+    const nextOrder = slides.length > 0 ? Math.max(...slides.map((s) => s.order || 0)) + 1 : 0;
+    const payload = {
+      name: `${original.name} (copie)`,
+      order: nextOrder,
+      is_active: false,
+      background: original.background,
+      elements: newElements,
+      settings: original.settings || {},
+    };
+    const { data, error } = await supabase.from('hero_slides_v2').insert(payload).select().single();
+    if (error) { toast({ variant: 'destructive', title: 'Erreur', description: error.message }); return; }
+    setSlides((prev) => [...prev, data]);
+    setSelectedId(data.id);
+    setForm(slideToForm(data));
+    setSelectedElementIds([]);
+    resetHistory();
+  };
+
   const selectedElement = selectedElementIds.length === 1
     ? form.elements.find((e) => e.id === selectedElementIds[0]) || null
     : null;
@@ -408,6 +504,7 @@ const HeroBuilderV2 = () => {
             onSelect={selectSlide}
             onAdd={handleAdd}
             onDelete={handleDelete}
+            onDuplicate={duplicateSlide}
             onMoveUp={(id) => handleReorder(id, 'up')}
             onMoveDown={(id) => handleReorder(id, 'down')}
           />
@@ -436,14 +533,50 @@ const HeroBuilderV2 = () => {
                 </label>
               </div>
 
-              {selectedElementIds.length > 1 && (
-                <div className="flex items-center gap-2 self-start bg-violet-50 border border-violet-200 rounded-lg px-3 py-1.5">
-                  <span className="text-[11px] text-violet-700 font-semibold">{selectedElementIds.length} éléments sélectionnés</span>
-                  <button onClick={handleGroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
-                    <Group className="w-3 h-3" /> Grouper
+              {selectedElementIds.length >= 1 && (
+                <div className="flex items-center gap-1 self-start bg-violet-50 border border-violet-200 rounded-lg px-2 py-1.5 flex-wrap">
+                  <span className="text-[11px] text-violet-700 font-semibold px-1">
+                    {selectedElementIds.length > 1 ? `${selectedElementIds.length} éléments` : '1 élément'}
+                  </span>
+                  <div className="w-px h-4 bg-violet-200" />
+                  <button onClick={() => alignSelected('left')} title="Aligner à gauche" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignHorizontalJustifyStart className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={handleUngroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
-                    <Ungroup className="w-3 h-3" /> Dégrouper
+                  <button onClick={() => alignSelected('center-h')} title="Centrer horizontalement" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignHorizontalJustifyCenter className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => alignSelected('right')} title="Aligner à droite" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignHorizontalJustifyEnd className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => alignSelected('top')} title="Aligner en haut" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignVerticalJustifyStart className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => alignSelected('middle-v')} title="Centrer verticalement" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignVerticalJustifyCenter className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => alignSelected('bottom')} title="Aligner en bas" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <AlignVerticalJustifyEnd className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="w-px h-4 bg-violet-200" />
+                  <button onClick={() => orderSelected('front')} title="Premier plan" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <ArrowUpToLine className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => orderSelected('back')} title="Arrière-plan" className="w-7 h-7 flex items-center justify-center rounded-md text-violet-700 hover:bg-violet-100">
+                    <ArrowDownToLine className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="w-px h-4 bg-violet-200" />
+                  {selectedElementIds.length > 1 && (
+                    <>
+                      <button onClick={handleGroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
+                        <Group className="w-3 h-3" /> Grouper
+                      </button>
+                      <button onClick={handleUngroup} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
+                        <Ungroup className="w-3 h-3" /> Dégrouper
+                      </button>
+                    </>
+                  )}
+                  <button onClick={duplicateSelected} className="h-7 px-2 rounded-md bg-white border border-violet-200 text-[11px] flex items-center gap-1 text-violet-700 hover:bg-violet-100">
+                    <Copy className="w-3 h-3" /> Dupliquer
                   </button>
                   <button onClick={deleteSelected} className="h-7 px-2 rounded-md bg-white border border-red-200 text-[11px] flex items-center gap-1 text-red-600 hover:bg-red-50">
                     <Trash2 className="w-3 h-3" /> Supprimer
@@ -516,7 +649,7 @@ const HeroBuilderV2 = () => {
                 Plusieurs éléments sélectionnés. Groupe-les pour les déplacer ensemble, ou sélectionne-en un seul pour modifier ses propriétés.
               </p>
             ) : (
-              <PropertiesPanel element={selectedElement} onChange={updateElement} onDelete={deleteElement} />
+              <PropertiesPanel element={selectedElement} device={device} onChange={updateElement} onDelete={deleteElement} onDuplicate={duplicateSelected} />
             )}
           </div>
         </div>
