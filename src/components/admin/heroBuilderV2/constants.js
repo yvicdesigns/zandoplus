@@ -67,5 +67,62 @@ function centeredLayout(canvas, w, h) {
   return { x, y, w, h };
 }
 
+function layoutAllDevices(w, h, centerYRatio) {
+  const layout = {};
+  DEVICES.forEach((d) => {
+    const canvas = CANVAS_SIZE[d];
+    const x = Math.max(0, Math.round((canvas.w - w) / 2));
+    const y = Math.max(0, Math.round(canvas.h * centerYRatio - h / 2));
+    layout[d] = { x, y, w, h };
+  });
+  return layout;
+}
+
+let tplCounter = 0;
+const tplId = () => `el_tpl_${Date.now()}_${tplCounter++}`;
+
+export const SLIDE_TEMPLATES = [
+  {
+    key: 'blank',
+    label: 'Vide',
+    build: () => ({ background: { ...DEFAULT_BACKGROUND }, elements: [] }),
+  },
+  {
+    key: 'promo',
+    label: 'Promo',
+    build: () => ({
+      background: { ...DEFAULT_BACKGROUND },
+      elements: [
+        { id: tplId(), type: 'badge', name: 'Badge', text: 'Promo -20%', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(140, 32, 0.3) },
+        { id: tplId(), type: 'text', name: 'Texte', text: 'Les meilleures offres du moment', fontSize: 28, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(420, 70, 0.5) },
+        { id: tplId(), type: 'button', name: 'Bouton', text: 'Voir les offres', link: '/listings?daily=true', bgColor: '#ff6d81', textColor: '#ffffff', layout: layoutAllDevices(180, 44, 0.72) },
+      ],
+    }),
+  },
+  {
+    key: 'image_text',
+    label: 'Image + texte',
+    build: () => ({
+      background: { ...DEFAULT_BACKGROUND },
+      elements: [
+        { id: tplId(), type: 'text', name: 'Texte', text: 'Découvrez la nouvelle collection', fontSize: 28, fontWeight: 700, color: '#ffffff', align: 'left', layout: layoutAllDevices(360, 80, 0.3) },
+        { id: tplId(), type: 'button', name: 'Bouton', text: 'Découvrir', link: '/listings', bgColor: '#ffffff', textColor: '#101657', layout: layoutAllDevices(160, 44, 0.5) },
+        { id: tplId(), type: 'image', name: 'Image', imageUrl: '', fit: 'cover', layout: layoutAllDevices(260, 200, 0.78) },
+      ],
+    }),
+  },
+  {
+    key: 'simple_text',
+    label: 'Texte simple',
+    build: () => ({
+      background: { ...DEFAULT_BACKGROUND },
+      elements: [
+        { id: tplId(), type: 'text', name: 'Titre', text: 'Bienvenue sur Zando+', fontSize: 34, fontWeight: 700, color: '#ffffff', align: 'center', layout: layoutAllDevices(420, 60, 0.42) },
+        { id: tplId(), type: 'text', name: 'Sous-titre', text: 'Achetez, vendez, simplement.', fontSize: 16, fontWeight: 400, color: '#e5e5f0', align: 'center', layout: layoutAllDevices(360, 30, 0.55) },
+      ],
+    }),
+  },
+];
+
 export const MIN_EL_W = 40;
 export const MIN_EL_H = 24;

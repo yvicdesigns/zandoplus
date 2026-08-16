@@ -6,7 +6,7 @@ import Canvas from './Canvas';
 import SlideList from './SlideList';
 import PropertiesPanel from './PropertiesPanel';
 import BackgroundEditor from './BackgroundEditor';
-import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES } from './constants';
+import { DEVICES, CANVAS_SIZE, DEFAULT_BACKGROUND, ELEMENT_TYPES, SLIDE_TEMPLATES } from './constants';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
 
@@ -146,8 +146,9 @@ const HeroBuilderV2 = () => {
     resetHistory();
   };
 
-  const handleAdd = async () => {
-    const payload = emptyForm();
+  const handleAdd = async (templateKey = 'blank') => {
+    const template = SLIDE_TEMPLATES.find((t) => t.key === templateKey) || SLIDE_TEMPLATES[0];
+    const payload = { ...emptyForm(), ...template.build() };
     const nextOrder = slides.length > 0 ? Math.max(...slides.map((s) => s.order || 0)) + 1 : 0;
     const { data, error } = await supabase
       .from('hero_slides_v2')
