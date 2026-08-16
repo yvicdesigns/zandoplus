@@ -81,6 +81,7 @@ const ShopBoostPage = lazy(() => import('@/pages/ShopBoostPage'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage'));
 const BoutiquesOfficiellesPage = lazy(() => import('@/pages/BoutiquesOfficiellesPage'));
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const BecomeSellerPage = lazy(() => import('@/pages/BecomeSellerPage'));
 
 const FullPageLoader = () => (
@@ -300,6 +301,7 @@ const AppContent = () => {
                     <Route element={<TesterProtectedRoute />}>
                         <Route path="/dashboard/tester" element={<TesterDashboardPage />} />
                     </Route>
+                    <Route path="*" element={<NotFoundPage />} />
                 </Route>
             </Routes>
         </>
