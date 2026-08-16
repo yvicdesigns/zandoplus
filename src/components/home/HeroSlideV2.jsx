@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { cornerRadius, effectStyle, borderStyle, parseBgImage, isElementHidden, animationStyle, ANIMATION_KEYFRAMES_CSS } from '@/components/admin/heroBuilderV2/elementStyles';
 import { ICON_MAP } from '@/components/admin/heroBuilderV2/iconLibrary';
 import { CANVAS_SIZE } from '@/components/admin/heroBuilderV2/constants';
+import TypingText from '@/components/admin/heroBuilderV2/TypingText';
 
 const ALIGN_TO_JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
 
@@ -47,7 +48,9 @@ const HeroV2Element = ({ element, device }) => {
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           }}
         >
-          {element.text}
+          {element.animation?.type === 'typing'
+            ? <TypingText text={element.text} duration={element.animation?.duration ?? 600} loop={!!element.animation?.loop} animTick={element._animTick} />
+            : element.text}
         </div>
       )}
       {element.type === 'button' && (
