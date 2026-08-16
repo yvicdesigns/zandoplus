@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
+import HeroSlideV2 from './HeroSlideV2';
 
 const hexToRgba = (hex, alpha) => {
   if (!hex) return `rgba(0,0,0,${alpha})`;
@@ -168,6 +170,23 @@ const HeroSection = () => {
   const timerRef = useRef(null);
   const touchStartX = useRef(null);
 
+  const { isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [hero_v2_enabled, setHeroV2Enabled] = useState(false);
+  // Requête isolée, séparée de SiteSettingsContext : `hero_v2_enabled` est une colonne propre
+  // à ce chantier, encore récente/optionnelle. Si elle n'existe pas encore en base (migration
+  // pas encore jouée), on échoue silencieusement ici sans jamais casser le fetch partagé des
+  // réglages du site (logo, whatsapp, etc.) dont dépend le reste du site.
+  useEffect(() => {
+    supabase.from('site_settings').select('hero_v2_enabled').eq('id', 1).single()
+      .then(({ data, error }) => { if (!error && data) setHeroV2Enabled(!!data.hero_v2_enabled); })
+      .catch(() => {});
+  }, []);
+  // Le nouveau Hero Builder (v2) est actif pour tout le monde si l'interrupteur global est
+  // allumé, ou seulement pour un admin en train de vérifier le rendu via ?heroPreview=v2 —
+  // les autres visiteurs continuent de voir l'ancien Hero tant que l'interrupteur est éteint.
+  const useV2 = hero_v2_enabled || (isAdmin && searchParams.get('heroPreview') === 'v2');
+
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
@@ -179,10 +198,14 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    supabase.from('hero_slides').select('*').eq('is_active', true).order('order', { ascending: true })
+    setLoading(true);
+    const query = useV2
+      ? supabase.from('hero_slides_v2').select('*').eq('is_active', true).order('order', { ascending: true })
+      : supabase.from('hero_slides').select('*').eq('is_active', true).order('order', { ascending: true });
+    query
       .then(({ data }) => { if (data) setSlides(data); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [useV2]);
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
@@ -307,6 +330,28 @@ const HeroSection = () => {
     <section className="pt-4 pb-2">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative">
 
+        {/* ── HERO BUILDER V2 (nouvel éditeur, table hero_slides_v2) ── */}
+        {useV2 && slide && (
+          <div className="relative">
+            <HeroSlideV2 slide={slide} device={deviceKey} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} />
+            {slides.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      i === current ? 'w-6 bg-custom-green-500' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!useV2 && (
+        <>
         {/* ── LAYOUT: V22 HERO BUILDER ── */}
         {layoutType === 'v22' && settings.builder_data_v22 && (
           <V22Hero state={settings.builder_data_v22} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} />
@@ -567,6 +612,8 @@ const HeroSection = () => {
               </div>
             )}
           </div>
+        )}
+        </>
         )}
 
         {/* ── Flèches desktop uniquement ── */}
