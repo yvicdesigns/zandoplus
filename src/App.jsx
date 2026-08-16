@@ -3,7 +3,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
 
 const SplashAnimationOverlay = lazy(() => import('@/components/common/SplashAnimationOverlay'));
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ListingsProvider, useListings } from '@/contexts/ListingsContext';
@@ -199,6 +199,14 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Ancien préfixe de boutique jamais utilisé par l'app (toujours /seller/) mais parfois
+// partagé par erreur (bio réseaux sociaux, fiche Google Business...) — on redirige plutôt
+// que de laisser une page 404.
+const ShopSlugRedirect = () => {
+    const { sellerId } = useParams();
+    return <Navigate to={`/seller/${sellerId}`} replace />;
+};
+
 const AppLayout = memo(() => {
     const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
     const { pathname } = useLocation();
@@ -247,6 +255,7 @@ const AppContent = () => {
                     <Route path="/listings" element={<ListingsPage />} />
                     <Route path="/listings/:id" element={<ListingDetailPage />} />
                     <Route path="/seller/:sellerId" element={<SellerShopPage />} />
+                    <Route path="/shop/:sellerId" element={<ShopSlugRedirect />} />
                     <Route element={<PostAdProtectedRoute />}>
                         <Route path="/post-ad" element={<PostAdPage />} />
                     </Route>
