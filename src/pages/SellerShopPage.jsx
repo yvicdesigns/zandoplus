@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import ListingItem from '@/components/listings/ListingItem';
 import ReviewItem from '@/components/reviews/ReviewItem';
+import SendMessageDialog from '@/components/listing/SendMessageDialog';
 import {
   Loader2, Star, Heart, MessageSquare, MapPin, Calendar,
   Package, Users, Clock, ThumbsUp, ChevronRight, BadgeCheck,
@@ -43,6 +44,7 @@ const SellerShopPage = () => {
   const [activeTab, setActiveTab]     = useState('boutique');
   const [showAllCats, setShowAllCats] = useState(false);
   const [sortBy, setSortBy]           = useState('recent');
+  const [showContactDialog, setShowContactDialog] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -105,7 +107,11 @@ const SellerShopPage = () => {
 
   const handleContact = () => {
     if (!user) { openAuthModal(); return; }
-    navigate(`/messages?seller=${seller.id}`);
+    if (!listings.length) {
+      toast({ title: 'Aucun produit disponible', description: "Ce vendeur n'a pas d'annonce active pour le moment.", variant: 'destructive' });
+      return;
+    }
+    setShowContactDialog(true);
   };
 
   if (loading) return (
@@ -564,6 +570,12 @@ const SellerShopPage = () => {
 
         </div>
       </div>
+
+      <SendMessageDialog
+        isOpen={showContactDialog}
+        onOpenChange={setShowContactDialog}
+        listing={listings[0]}
+      />
     </>
   );
 };
