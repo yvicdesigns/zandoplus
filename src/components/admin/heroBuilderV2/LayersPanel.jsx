@@ -1,10 +1,10 @@
 import React from 'react';
-import { Type, Square, Image as ImageIcon, Tag, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import { Type, Square, Image as ImageIcon, Tag, Circle, Minus, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 
-const TYPE_ICONS = { text: Type, button: Square, image: ImageIcon, badge: Tag };
+const TYPE_ICONS = { text: Type, button: Square, image: ImageIcon, badge: Tag, shape: Circle, separator: Minus };
 
 const layerLabel = (el) => {
-  if (el.type === 'image') return el.name || 'Image';
+  if (el.type === 'image' || el.type === 'shape' || el.type === 'separator') return el.name || el.type;
   return el.text || el.name || el.type;
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
-import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Save, Eye, X, Undo2, Redo2, ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Save, Eye, X, Undo2, Redo2, ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import Canvas from './Canvas';
@@ -474,6 +474,12 @@ const HeroBuilderV2 = () => {
                 </button>
                 <button onClick={() => addElement('badge')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
                   <Tag className="w-3.5 h-3.5" /> Badge
+                </button>
+                <button onClick={() => addElement('shape')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
+                  <Circle className="w-3.5 h-3.5" /> Forme
+                </button>
+                <button onClick={() => addElement('separator')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
+                  <Minus className="w-3.5 h-3.5" /> Séparateur
                 </button>
               </div>
 

@@ -95,6 +95,43 @@ const PropertiesPanel = ({ element, onChange, onDelete }) => {
           </Field>
         </>
       )}
+
+      {element.type === 'shape' && (
+        <>
+          <Field label="Forme">
+            <select className={inputCls} value={element.shape} onChange={(e) => set('shape', e.target.value)}>
+              <option value="rect">Rectangle</option>
+              <option value="circle">Cercle</option>
+            </select>
+          </Field>
+          <Field label="Couleur de fond">
+            <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.bgColor} onChange={(e) => set('bgColor', e.target.value)} />
+          </Field>
+        </>
+      )}
+
+      {element.type === 'separator' && (
+        <Field label="Couleur">
+          <input type="color" className="w-full h-8 rounded-lg border border-gray-200" value={element.bgColor} onChange={(e) => set('bgColor', e.target.value)} />
+        </Field>
+      )}
+
+      <Field label={`Rotation (${element.rotation ?? 0}°)`}>
+        <input
+          type="range" min="-180" max="180" step="1"
+          value={element.rotation ?? 0}
+          onChange={(e) => set('rotation', Number(e.target.value))}
+          className="w-full"
+        />
+      </Field>
+      <Field label={`Opacité (${Math.round((element.opacity ?? 1) * 100)}%)`}>
+        <input
+          type="range" min="0" max="1" step="0.01"
+          value={element.opacity ?? 1}
+          onChange={(e) => set('opacity', Number(e.target.value))}
+          className="w-full"
+        />
+      </Field>
     </div>
   );
 };

@@ -74,14 +74,17 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
     outline: selected ? '2px solid #3787ff' : 'none',
     outlineOffset: 2,
     userSelect: 'none',
+    transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
   };
+
+  const contentStyle = { width: '100%', height: '100%', opacity: element.opacity ?? 1 };
 
   return (
     <div style={style} onMouseDown={startDrag}>
       {element.type === 'text' && (
         <div
           style={{
-            width: '100%', height: '100%', overflow: 'hidden',
+            ...contentStyle, overflow: 'hidden',
             fontSize: element.fontSize, fontWeight: element.fontWeight,
             color: element.color, textAlign: element.align, lineHeight: 1.15,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', pointerEvents: 'none',
@@ -93,7 +96,7 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
       {element.type === 'button' && (
         <div
           style={{
-            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            ...contentStyle, display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: element.bgColor, color: element.textColor, fontWeight: 700, fontSize: 14,
             borderRadius: 8, pointerEvents: 'none',
           }}
@@ -104,7 +107,7 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
       {element.type === 'badge' && (
         <div
           style={{
-            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            ...contentStyle, display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: element.bgColor, color: element.textColor, fontWeight: 700, fontSize: 12,
             letterSpacing: 0.4, textTransform: 'uppercase', borderRadius: 999, pointerEvents: 'none',
           }}
@@ -113,7 +116,7 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
         </div>
       )}
       {element.type === 'image' && (
-        <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 6, background: '#22243a', pointerEvents: 'none' }}>
+        <div style={{ ...contentStyle, overflow: 'hidden', borderRadius: 6, background: '#22243a', pointerEvents: 'none' }}>
           {element.imageUrl ? (
             <img src={element.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: element.fit || 'cover' }} />
           ) : (
@@ -122,6 +125,19 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
             </div>
           )}
         </div>
+      )}
+      {element.type === 'shape' && (
+        <div
+          style={{
+            ...contentStyle,
+            background: element.bgColor,
+            borderRadius: element.shape === 'circle' ? '50%' : 10,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {element.type === 'separator' && (
+        <div style={{ ...contentStyle, background: element.bgColor, pointerEvents: 'none' }} />
       )}
       {showHandles && CORNERS.map((corner) => (
         <div key={corner} onMouseDown={startResize(corner)} style={cornerStyle(corner)} />
