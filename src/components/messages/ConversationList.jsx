@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Edit, Inbox } from 'lucide-react';
+import { Search, Inbox } from 'lucide-react';
 import ConversationItem from './ConversationItem';
 
 const ConversationList = ({ conversations, selectedConversation, onSelect }) => {
@@ -22,9 +22,6 @@ const ConversationList = ({ conversations, selectedConversation, onSelect }) => 
       <div className="px-4 pt-4 pb-3 flex-shrink-0" style={{ background: '#075E54' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[20px] font-black text-white">Messages</h2>
-          <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
-            <Edit className="w-5 h-5 text-white" />
-          </button>
         </div>
 
         {/* Search pill */}
