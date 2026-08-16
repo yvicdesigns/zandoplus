@@ -6,7 +6,7 @@ import { fetchCityDeliveryConfig, extractCity } from '@/lib/deliveryUtils';
 import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
-  CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users,
+  CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,6 +15,7 @@ import RelatedListings from '@/components/listing/RelatedListings';
 import ReportListingDialog from '@/components/listing/ReportListingDialog';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import SendMessageDialog from '@/components/listing/SendMessageDialog';
+import ShareMenu from '@/components/listing/ShareMenu';
 import { Helmet } from 'react-helmet-async';
 import { useListings } from '@/contexts/ListingsContext';
 import { sanitizeHtml, sanitizeInput } from '@/lib/validationUtils';
@@ -515,9 +516,16 @@ const ListingDetailPage = () => {
                   <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500' : ''}`} />
                   {isFavorite ? 'Favori' : 'Ajouter aux favoris'}
                 </button>
+                <ShareMenu
+                  shareTitle={listing.title}
+                  shareText={`${listing.title} — ${listing.price?.toLocaleString()} ${listing.currency || 'FCFA'} sur Zando+`}
+                  shareUrl={`https://www.zandopluscg.com/listings/${listing.listing_slug || listing.id}`}
+                  triggerClassName="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors ml-auto"
+                  triggerContent={<><Share2 className="w-4 h-4" />Partager</>}
+                />
                 <button
                   onClick={() => setReportDialogOpen(true)}
-                  className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors ml-auto"
+                  className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-2 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
                 >
                   <Flag className="w-4 h-4" />
                   Signaler
