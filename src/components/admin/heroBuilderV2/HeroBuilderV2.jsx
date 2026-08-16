@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
 import {
-  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Tag, Circle, Minus, Sparkles, Save, Eye, X, Undo2, Redo2,
-  ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers, Copy,
+  Monitor, Tablet, Smartphone, Type, Square, Image as ImageIcon, Circle, Minus, Save, Eye, X, Undo2, Redo2,
+  ZoomIn, ZoomOut, Group, Ungroup, Trash2, Layers, Copy, LayoutGrid, LayoutTemplate, Presentation, Settings,
   AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
   ArrowUpToLine, ArrowDownToLine,
@@ -18,6 +18,15 @@ import { ICON_LIBRARY } from './iconLibrary';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
 const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5];
+const RAIL_ITEMS = [
+  { key: 'add', label: 'Ajouter', Icon: LayoutGrid },
+  { key: 'layers', label: 'Calques', Icon: Layers },
+  { key: 'templates', label: 'Modèles', Icon: LayoutTemplate },
+  { key: 'background', label: 'Fond', Icon: ImageIcon },
+  { key: 'slides', label: 'Slides', Icon: Presentation },
+  { key: 'settings', label: 'Réglages', Icon: Settings },
+];
+const addRowCls = 'flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-[12px] text-gray-700 hover:border-violet-300 hover:bg-violet-50';
 
 const emptyForm = () => ({
   name: 'Nouveau slide',
@@ -38,19 +47,7 @@ const HeroBuilderV2 = () => {
   const [zoom, setZoom] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [iconMenuOpen, setIconMenuOpen] = useState(false);
-  const [badgeMenuOpen, setBadgeMenuOpen] = useState(false);
-  const iconMenuRef = useRef(null);
-  const badgeMenuRef = useRef(null);
-
-  useEffect(() => {
-    const onClickOutside = (e) => {
-      if (iconMenuRef.current && !iconMenuRef.current.contains(e.target)) setIconMenuOpen(false);
-      if (badgeMenuRef.current && !badgeMenuRef.current.contains(e.target)) setBadgeMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, []);
+  const [activePanel, setActivePanel] = useState('add');
 
   const historyRef = useRef({ past: [], future: [] });
   const pendingSnapshotRef = useRef(null);
@@ -509,19 +506,156 @@ const HeroBuilderV2 = () => {
         </button>
       </div>
 
-      <div className="flex-1 grid grid-cols-[220px_1fr_260px] min-h-0">
-        {/* Left: slides */}
-        <div className="border-r border-gray-200 bg-white p-3 overflow-y-auto">
-          <SlideList
-            slides={slides}
-            selectedId={selectedId}
-            onSelect={selectSlide}
-            onAdd={handleAdd}
-            onDelete={handleDelete}
-            onDuplicate={duplicateSlide}
-            onMoveUp={(id) => handleReorder(id, 'up')}
-            onMoveDown={(id) => handleReorder(id, 'down')}
-          />
+      <div className="flex-1 grid grid-cols-[64px_280px_1fr_260px] min-h-0">
+        {/* Rail: tool categories */}
+        <div className="bg-white border-r border-gray-200 flex flex-col items-center py-3 gap-1 overflow-y-auto">
+          {RAIL_ITEMS.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActivePanel(key)}
+              className={`w-12 h-14 flex flex-col items-center justify-center gap-1 rounded-lg text-[10px] flex-shrink-0 ${
+                activePanel === key ? 'bg-violet-100 text-violet-700 font-semibold' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Flyout: content for the active tool category */}
+        <div className="bg-white border-r border-gray-200 overflow-y-auto">
+          {activePanel === 'add' && (
+            <div className="p-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Éléments</h3>
+              {!selectedId ? (
+                <p className="text-[11px] text-gray-400">Sélectionne ou crée un slide pour ajouter des éléments.</p>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-1.5 mb-4">
+                    <button onClick={() => addElement('text')} className={addRowCls}><Type className="w-4 h-4" /> Texte</button>
+                    <button onClick={() => addElement('button')} className={addRowCls}><Square className="w-4 h-4" /> Bouton</button>
+                    <button onClick={() => addElement('image')} className={addRowCls}><ImageIcon className="w-4 h-4" /> Image</button>
+                    <button onClick={() => addElement('shape')} className={addRowCls}><Circle className="w-4 h-4" /> Forme</button>
+                    <button onClick={() => addElement('separator')} className={addRowCls}><Minus className="w-4 h-4" /> Séparateur</button>
+                  </div>
+                  <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Bibliothèque de badges</h3>
+                  <div className="grid grid-cols-2 gap-1.5 mb-4">
+                    {BADGE_PRESETS.map((p) => (
+                      <button
+                        key={p.key}
+                        onClick={() => addElement('badge', { text: p.text, bgColor: p.bgColor, textColor: p.textColor })}
+                        className="flex items-center justify-center px-2 py-2 rounded-lg border border-gray-200 hover:border-violet-300"
+                      >
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase" style={{ background: p.bgColor, color: p.textColor }}>
+                          {p.text}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Bibliothèque d'icônes</h3>
+                  <div className="grid grid-cols-6 gap-1">
+                    {ICON_LIBRARY.map(({ name, Icon }) => (
+                      <button
+                        key={name}
+                        onClick={() => addElement('icon', { icon: name })}
+                        title={name}
+                        className="w-8 h-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-violet-100 hover:text-violet-700"
+                      >
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {activePanel === 'layers' && (
+            <div className="p-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Calques</h3>
+              {!selectedId ? (
+                <p className="text-[11px] text-gray-400">Sélectionne ou crée un slide.</p>
+              ) : (
+                <LayersPanel
+                  elements={form.elements}
+                  selectedIds={selectedElementIds}
+                  onSelect={handleSelect}
+                  onMoveLayer={moveLayer}
+                  onDelete={deleteElement}
+                />
+              )}
+            </div>
+          )}
+
+          {activePanel === 'templates' && (
+            <div className="p-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Nouveau slide depuis un modèle</h3>
+              <div className="flex flex-col gap-1.5">
+                {SLIDE_TEMPLATES.map((t) => (
+                  <button key={t.key} onClick={() => handleAdd(t.key)} className={addRowCls}>
+                    <LayoutTemplate className="w-4 h-4" /> {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activePanel === 'background' && (
+            <div className="p-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Arrière-plan ({device})</h3>
+              {!selectedId ? (
+                <p className="text-[11px] text-gray-400">Sélectionne ou crée un slide.</p>
+              ) : (
+                <BackgroundEditor
+                  value={form.background[device] || ''}
+                  onChange={(v) => commitForm((f) => ({ ...f, background: { ...f.background, [device]: v } }), { coalesce: true })}
+                />
+              )}
+            </div>
+          )}
+
+          {activePanel === 'slides' && (
+            <div className="p-3">
+              <SlideList
+                slides={slides}
+                selectedId={selectedId}
+                onSelect={selectSlide}
+                onAdd={handleAdd}
+                onDelete={handleDelete}
+                onDuplicate={duplicateSlide}
+                onMoveUp={(id) => handleReorder(id, 'up')}
+                onMoveDown={(id) => handleReorder(id, 'down')}
+              />
+            </div>
+          )}
+
+          {activePanel === 'settings' && (
+            <div className="p-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-2">Réglages du slide</h3>
+              {!selectedId ? (
+                <p className="text-[11px] text-gray-400">Sélectionne ou crée un slide.</p>
+              ) : (
+                <>
+                  <label className="block text-[10px] text-gray-500 mb-1">Nom</label>
+                  <input
+                    className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] outline-none focus:border-violet-400 mb-3"
+                    value={form.name}
+                    onChange={(e) => commitForm((f) => ({ ...f, name: e.target.value }), { coalesce: true })}
+                  />
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={(e) => commitForm((f) => ({ ...f, is_active: e.target.checked }))}
+                    />
+                    Actif (visible sur la page d'accueil)
+                  </label>
+                  <p className="text-[10px] text-gray-400">Dimensions du canvas ({device}) : {CANVAS_SIZE[device].label}</p>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Center: canvas */}
@@ -530,21 +664,10 @@ const HeroBuilderV2 = () => {
             <p className="text-gray-400 text-sm mt-20">Sélectionne ou crée un slide pour commencer.</p>
           ) : (
             <>
-              <div className="flex items-center gap-2 self-start bg-white border border-gray-200 rounded-lg px-3 py-2">
-                <input
-                  className="text-[12px] font-semibold outline-none"
-                  value={form.name}
-                  onChange={(e) => commitForm((f) => ({ ...f, name: e.target.value }), { coalesce: true })}
-                />
-                <span className="text-[10px] text-gray-400">{CANVAS_SIZE[device].label}</span>
-                <label className="flex items-center gap-1.5 text-[11px] text-gray-600 ml-3">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={(e) => commitForm((f) => ({ ...f, is_active: e.target.checked }))}
-                  />
-                  Actif
-                </label>
+              <div className="flex items-center gap-2 self-start text-[11px] text-gray-500">
+                <span className="font-semibold text-gray-700">{form.name}</span>
+                <span>· {CANVAS_SIZE[device].label}</span>
+                {form.is_active && <span className="text-emerald-600 font-semibold">· Actif</span>}
               </div>
 
               {selectedElementIds.length >= 1 && (
@@ -608,100 +731,20 @@ const HeroBuilderV2 = () => {
                 onGroupMove={updateGroupLayout}
                 zoom={zoom}
               />
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => addElement('text')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <Type className="w-3.5 h-3.5" /> Texte
-                </button>
-                <button onClick={() => addElement('button')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <Square className="w-3.5 h-3.5" /> Bouton
-                </button>
-                <button onClick={() => addElement('image')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <ImageIcon className="w-3.5 h-3.5" /> Image
-                </button>
-                <div className="relative" ref={badgeMenuRef}>
-                  <button onClick={() => setBadgeMenuOpen((v) => !v)} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                    <Tag className="w-3.5 h-3.5" /> Badge
-                  </button>
-                  {badgeMenuOpen && (
-                    <div className="absolute left-0 top-10 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-52">
-                      {BADGE_PRESETS.map((p) => (
-                        <button
-                          key={p.key}
-                          onClick={() => { addElement('badge', { text: p.text, bgColor: p.bgColor, textColor: p.textColor }); setBadgeMenuOpen(false); }}
-                          className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
-                        >
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase" style={{ background: p.bgColor, color: p.textColor }}>
-                            {p.text}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button onClick={() => addElement('shape')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <Circle className="w-3.5 h-3.5" /> Forme
-                </button>
-                <button onClick={() => addElement('separator')} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                  <Minus className="w-3.5 h-3.5" /> Séparateur
-                </button>
-                <div className="relative" ref={iconMenuRef}>
-                  <button onClick={() => setIconMenuOpen((v) => !v)} className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-[12px] flex items-center gap-1.5 hover:border-violet-300">
-                    <Sparkles className="w-3.5 h-3.5" /> Icône
-                  </button>
-                  {iconMenuOpen && (
-                    <div className="absolute left-0 top-10 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 grid grid-cols-7 gap-1 max-h-64 overflow-y-auto">
-                      {ICON_LIBRARY.map(({ name, Icon }) => (
-                        <button
-                          key={name}
-                          onClick={() => { addElement('icon', { icon: name }); setIconMenuOpen(false); }}
-                          title={name}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-gray-600 hover:bg-violet-100 hover:text-violet-700"
-                        >
-                          <Icon className="w-4 h-4" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="w-full max-w-[500px] bg-white border border-gray-200 rounded-lg p-3">
-                <label className="block text-[10px] text-gray-500 mb-2">Arrière-plan ({device})</label>
-                <BackgroundEditor
-                  value={form.background[device] || ''}
-                  onChange={(v) => commitForm((f) => ({ ...f, background: { ...f.background, [device]: v } }), { coalesce: true })}
-                />
-              </div>
             </>
           )}
         </div>
 
-        {/* Right: layers + properties */}
-        <div className="border-l border-gray-200 bg-white p-3 overflow-y-auto flex flex-col gap-4">
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <Layers className="w-3 h-3 text-gray-400" />
-              <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Calques</span>
-            </div>
-            <LayersPanel
-              elements={form.elements}
-              selectedIds={selectedElementIds}
-              onSelect={handleSelect}
-              onMoveLayer={moveLayer}
-              onDelete={deleteElement}
-            />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 block mb-2">Propriétés</span>
-            {selectedElementIds.length > 1 ? (
-              <p className="text-[12px] text-gray-400 bg-gray-50 border border-gray-100 rounded-xl p-4 leading-relaxed">
-                Plusieurs éléments sélectionnés. Groupe-les pour les déplacer ensemble, ou sélectionne-en un seul pour modifier ses propriétés.
-              </p>
-            ) : (
-              <PropertiesPanel element={selectedElement} device={device} onChange={updateElement} onDelete={deleteElement} onDuplicate={duplicateSelected} />
-            )}
-          </div>
+        {/* Right: properties */}
+        <div className="border-l border-gray-200 bg-white p-3 overflow-y-auto">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500 block mb-2">Propriétés</span>
+          {selectedElementIds.length > 1 ? (
+            <p className="text-[12px] text-gray-400 bg-gray-50 border border-gray-100 rounded-xl p-4 leading-relaxed">
+              Plusieurs éléments sélectionnés. Groupe-les pour les déplacer ensemble, ou sélectionne-en un seul pour modifier ses propriétés.
+            </p>
+          ) : (
+            <PropertiesPanel element={selectedElement} device={device} onChange={updateElement} onDelete={deleteElement} onDuplicate={duplicateSelected} />
+          )}
         </div>
       </div>
     </div>
