@@ -19,6 +19,7 @@ const buildGradient = ({ angle, stops }) =>
 
 const detectMode = (css) => {
   if (!css) return 'color';
+  if (/^video:/i.test(css)) return 'video';
   if (/^\s*#([0-9a-f]{3}|[0-9a-f]{6})\s*$/i.test(css)) return 'color';
   if (parseGradient(css)) return 'gradient';
   if (/url\(/i.test(css)) return 'image';
@@ -29,12 +30,13 @@ const DEFAULT_GRADIENT = { angle: 135, stops: [{ color: '#101657', pos: '' }, { 
 
 const inputCls = 'w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] outline-none focus:border-violet-400';
 
-const TABS = [['color', 'Couleur'], ['gradient', 'Dégradé'], ['image', 'Image'], ['css', 'CSS']];
+const TABS = [['color', 'Couleur'], ['gradient', 'Dégradé'], ['image', 'Image'], ['video', 'Vidéo'], ['css', 'CSS']];
 
 const BackgroundEditor = ({ value, onChange }) => {
   const [mode, setMode] = useState(() => detectMode(value));
   const [gradient, setGradient] = useState(() => parseGradient(value) || DEFAULT_GRADIENT);
   const [imageUrl, setImageUrl] = useState(() => /url\(['"]?([^'")]+)/i.exec(value || '')?.[1] || '');
+  const [videoUrl, setVideoUrl] = useState(() => (/^video:/i.test(value || '') ? value.replace(/^video:/i, '') : ''));
 
   useEffect(() => {
     setMode(detectMode(value));
@@ -42,6 +44,7 @@ const BackgroundEditor = ({ value, onChange }) => {
     if (g) setGradient(g);
     const u = /url\(['"]?([^'")]+)/i.exec(value || '');
     if (u) setImageUrl(u[1]);
+    setVideoUrl(/^video:/i.test(value || '') ? value.replace(/^video:/i, '') : '');
   }, [value]);
 
   const applyGradient = (next) => { setGradient(next); onChange(buildGradient(next)); };
@@ -113,6 +116,18 @@ const BackgroundEditor = ({ value, onChange }) => {
           value={imageUrl}
           onChange={(e) => { setImageUrl(e.target.value); onChange(`url('${e.target.value}') center/cover no-repeat`); }}
         />
+      )}
+
+      {mode === 'video' && (
+        <div className="flex flex-col gap-1.5">
+          <input
+            className={inputCls}
+            placeholder="https://.../video.mp4"
+            value={videoUrl}
+            onChange={(e) => { setVideoUrl(e.target.value); onChange(`video:${e.target.value}`); }}
+          />
+          <p className="text-[10px] text-gray-400 leading-relaxed">Vidéo en boucle, muette, lecture automatique. Utilise un fichier .mp4 léger et compressé.</p>
+        </div>
       )}
 
       {mode === 'css' && (

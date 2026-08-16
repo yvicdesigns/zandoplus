@@ -55,6 +55,10 @@ const Canvas = ({ device, background, elements, selectedId, onSelect, onLayoutCh
     onLayoutChange(elId, device, layout);
   };
 
+  const bg = background?.[device] || background?.desktop || '#171a32';
+  const isVideo = typeof bg === 'string' && bg.startsWith('video:');
+  const videoUrl = isVideo ? bg.slice(6) : null;
+
   return (
     <div
       onMouseDown={() => onSelect(null)}
@@ -65,10 +69,21 @@ const Canvas = ({ device, background, elements, selectedId, onSelect, onLayoutCh
         margin: '0 auto',
         borderRadius: 12,
         overflow: 'hidden',
-        background: background?.[device] || background?.desktop || '#171a32',
+        background: isVideo ? '#000' : bg,
         boxShadow: '0 18px 55px rgba(31,34,68,.25)',
       }}
     >
+      {isVideo && videoUrl && (
+        <video
+          key={videoUrl}
+          src={videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+        />
+      )}
       {elements.map((el) => {
         const layout = el.layout?.[device] || el.layout?.desktop;
         if (!layout) return null;
