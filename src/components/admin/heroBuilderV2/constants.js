@@ -29,6 +29,7 @@ export const ELEMENT_TYPES = {
       lineHeight: 1.15,
       letterSpacing: 0,
       color: '#ffffff',
+      bgColor: null,
       align: 'left',
       rotation: 0,
       opacity: 1,

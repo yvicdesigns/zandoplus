@@ -91,6 +91,7 @@ const CanvasElement = ({ element, layout, selected, showHandles, onSelect, onLay
             textDecoration: element.textDecoration || 'none',
             textTransform: element.textTransform || 'none',
             color: element.color, textAlign: element.align,
+            background: element.bgColor || 'transparent',
             lineHeight: element.lineHeight ?? 1.15,
             letterSpacing: element.letterSpacing ? `${element.letterSpacing}px` : undefined,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word', pointerEvents: 'none',
