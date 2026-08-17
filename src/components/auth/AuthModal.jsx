@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'react-router-dom';
 import GoogleIcon from '@/components/auth/GoogleIcon';
+import AppleIcon from '@/components/auth/AppleIcon';
 import AuthFormInput from './AuthFormInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -137,6 +138,17 @@ const AuthModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleAppleLogin = async () => {
+    setLoading(true);
+    try {
+      await signInWithProvider('apple');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const ErrorBox = ({ msg }) => msg ? (
     <motion.div initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-red-50 p-3 rounded-lg flex items-center text-red-700 text-sm gap-2">
       <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -180,6 +192,17 @@ const AuthModal = ({ isOpen, onClose }) => {
               >
                 <GoogleIcon className="w-5 h-5 flex-shrink-0" />
                 {loading ? 'Connexion...' : 'Continuer avec Google'}
+              </Button>
+
+              {/* Apple */}
+              <Button
+                type="button"
+                onClick={handleAppleLogin}
+                disabled={loading}
+                className="w-full h-12 bg-black hover:bg-gray-900 text-white rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-3 mb-3 cursor-pointer"
+              >
+                <AppleIcon className="w-5 h-5 flex-shrink-0" />
+                {loading ? 'Connexion...' : 'Continuer avec Apple'}
               </Button>
 
               {/* Divider */}
