@@ -2,7 +2,6 @@ package com.zandoplus.app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import com.airbnb.lottie.LottieAnimationView;
@@ -13,12 +12,6 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Plein écran
-        getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
 
         // Créer la vue Lottie
         LottieAnimationView lottieView = new LottieAnimationView(this);
