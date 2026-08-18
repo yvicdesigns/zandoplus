@@ -22,6 +22,7 @@ const ShareMenu = ({ shareTitle, shareText, shareUrl, triggerClassName, triggerC
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const ref = useRef(null);
+  const sharingRef = useRef(false);
 
   const url = shareUrl || window.location.href;
   const text = shareText || shareTitle || '';
@@ -63,7 +64,11 @@ const ShareMenu = ({ shareTitle, shareText, shareUrl, triggerClassName, triggerC
   // du système plutôt que notre menu web — c'est ce que l'OS et l'utilisateur attendent.
   const handleTriggerClick = () => {
     if (Capacitor.isNativePlatform()) {
-      Share.share({ title: shareTitle, text, url }).catch(() => {});
+      if (sharingRef.current) return;
+      sharingRef.current = true;
+      Share.share({ title: shareTitle, text, url })
+        .catch(() => {})
+        .finally(() => { sharingRef.current = false; });
       return;
     }
     setOpen((p) => !p);
