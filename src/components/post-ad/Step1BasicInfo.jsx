@@ -7,11 +7,40 @@ import { useCategories } from '@/hooks/useCategories';
 import FormError from './FormError';
 import { Label } from '@/components/ui/label';
 import ListingHelper from '@/components/ai/ListingHelper';
-import { Camera, X } from 'lucide-react';
+import { Camera as CameraIcon, ImagePlus, X } from 'lucide-react';
 import { getCategoryEmoji } from './categoryIcons';
+import { Capacitor } from '@capacitor/core';
+import { Camera } from '@capacitor/camera';
 
-const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage }) => {
+const mediaResultToFile = async (result, index = 0) => {
+  const res = await fetch(result.webPath);
+  const blob = await res.blob();
+  const ext = blob.type?.split('/')[1] || 'jpeg';
+  return new File([blob], `photo-${Date.now()}-${index}.${ext}`, { type: blob.type || `image/${ext}` });
+};
+
+const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage, onNativeImages }) => {
   const fileInputRef = useRef(null);
+  const isNative = Capacitor.isNativePlatform();
+
+  const takeNativePhoto = async () => {
+    try {
+      const result = await Camera.takePhoto({ quality: 85 });
+      onNativeImages?.([await mediaResultToFile(result)]);
+    } catch {
+      // Annulé par l'utilisateur — rien à faire
+    }
+  };
+
+  const chooseFromNativeGallery = async () => {
+    try {
+      const { results } = await Camera.chooseFromGallery({ allowMultipleSelection: true });
+      const files = await Promise.all(results.map(mediaResultToFile));
+      onNativeImages?.(files);
+    } catch {
+      // Annulé par l'utilisateur — rien à faire
+    }
+  };
   const { categories, categoriesMap } = useCategories();
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
@@ -160,12 +189,23 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
             <>
               <div
                 className={`aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-custom-green-400 transition-colors ${formErrors.images ? 'border-red-500' : 'border-gray-300'}`}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => (isNative ? chooseFromNativeGallery() : fileInputRef.current?.click())}
               >
-                <Camera className="w-6 h-6 text-gray-400 mb-1" />
+                <ImagePlus className="w-6 h-6 text-gray-400 mb-1" />
                 <span className="text-xs text-gray-500 text-center px-1">Ajouter</span>
               </div>
-              <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+              {isNative && (
+                <div
+                  className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-custom-green-400 transition-colors"
+                  onClick={takeNativePhoto}
+                >
+                  <CameraIcon className="w-6 h-6 text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-500 text-center px-1">Photo</span>
+                </div>
+              )}
+              {!isNative && (
+                <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+              )}
             </>
           )}
         </div>

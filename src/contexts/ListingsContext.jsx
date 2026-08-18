@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { robustQuery } from '@/lib/supabaseHelpers';
 import { logError } from '@/lib/errorLogger';
+import { hapticLight } from '@/lib/haptics';
 
 const ListingsContext = createContext();
 
@@ -174,6 +175,7 @@ export const ListingsProvider = ({ children }) => {
       return;
     }
 
+    hapticLight();
     const isCurrentlyFavorite = favorites.has(listingId);
     const newFavorites = new Set(favorites);
 

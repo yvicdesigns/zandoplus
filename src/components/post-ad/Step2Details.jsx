@@ -6,16 +6,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import FormError from './FormError';
 import { conditions, currencies } from './postAdConstants';
-import { Info } from 'lucide-react';
+import { Info, LocateFixed, Loader2 } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import PriceEstimator from '@/components/ai/PriceEstimator';
 import { supabase } from '@/lib/customSupabaseClient';
+import { Geolocation } from '@capacitor/geolocation';
+import { findNearestCity } from '@/lib/geoUtils';
+import { useToast } from '@/components/ui/use-toast';
 
 const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectChange, handleRadioChange, onAIPrice }) => {
   const { categoriesMap } = useCategories();
+  const { toast } = useToast();
   const [cities, setCities] = useState([]);
   const [neighborhood, setNeighborhood] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+  const [locating, setLocating] = useState(false);
   const initialized = useRef(false);
 
   // Fetch available cities from delivery_city_config
@@ -52,6 +57,23 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
     const hood = e.target.value;
     setNeighborhood(hood);
     if (selectedCity) updateLocation(selectedCity, hood);
+  };
+
+  const handleUseLocation = async () => {
+    setLocating(true);
+    try {
+      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+      const nearest = findNearestCity(pos.coords.latitude, pos.coords.longitude, cities);
+      if (nearest) {
+        handleCityChange(nearest);
+      } else {
+        toast({ title: "Ville non reconnue", description: "Sélectionnez votre ville manuellement.", variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: "Localisation indisponible", description: "Vérifiez que la localisation est autorisée pour Zando+.", variant: 'destructive' });
+    } finally {
+      setLocating(false);
+    }
   };
   const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
   const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
@@ -117,7 +139,18 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-3">
           <div>
-            <Label htmlFor="city">Ville *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="city">Ville *</Label>
+              <button
+                type="button"
+                onClick={handleUseLocation}
+                disabled={locating}
+                className="flex items-center gap-1 text-[12px] font-medium text-custom-green-600 hover:text-custom-green-700 disabled:opacity-50"
+              >
+                {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
+                Utiliser ma position
+              </button>
+            </div>
             <Select value={selectedCity} onValueChange={handleCityChange}>
               <SelectTrigger id="city" className={`mt-1 ${formErrors.location ? 'border-red-500' : ''}`}>
                 <SelectValue placeholder="Sélectionnez votre ville" />
