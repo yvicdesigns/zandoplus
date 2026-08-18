@@ -116,6 +116,7 @@ export default async function handler(req, res) {
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Vary', 'User-Agent');
   res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
   return res.send(html);
 }
