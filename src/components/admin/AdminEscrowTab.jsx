@@ -1,14 +1,16 @@
 import React, { memo, useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Search, ShieldCheck, Loader2, CheckCircle, XCircle,
-  AlertTriangle, Clock, Truck, Wallet, Banknote, RefreshCw, Zap, Eye,
+  AlertTriangle, Clock, Truck, Wallet, Banknote, RefreshCw, Zap, Eye, MessageCircle,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -89,7 +91,10 @@ const AdminEscrowTab = memo(() => {
   const [validateTarget, setValidateTarget] = useState(null);
   const [completeWithdrawTarget, setCompleteWithdrawTarget] = useState(null);
   const [zandroDeclareTarget, setZandoDeclareTarget] = useState(null);
+  const [messageTarget, setMessageTarget] = useState(null);
+  const [messageContent, setMessageContent] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -197,6 +202,21 @@ const AdminEscrowTab = memo(() => {
     if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Commande COD annulée.' });
     fetchData();
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageTarget || !messageContent.trim()) return;
+    setActionLoading({ id: messageTarget.id, type: 'message' });
+    const { data, error } = await supabase.rpc('admin_message_buyer', {
+      p_transaction_id: messageTarget.id,
+      p_content: messageContent.trim(),
+    });
+    setActionLoading(null);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    setMessageTarget(null);
+    setMessageContent('');
+    toast({ title: 'Message envoyé à l\'acheteur.' });
+    navigate(`/messages/${data}`);
   };
 
   const counts = useMemo(() => ({
@@ -558,6 +578,17 @@ const AdminEscrowTab = memo(() => {
                             <XCircle className="w-4 h-4 mr-1.5" /> Rembourser l'acheteur
                           </Button>
                         )}
+
+                        {/* Contacter l'acheteur (litige, preuve suspecte, etc.) */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                          onClick={() => setMessageTarget(tx)}
+                          disabled={!!actionLoading}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1.5" /> Contacter l'acheteur
+                        </Button>
                       </div>
 
                     </CardContent>
@@ -705,6 +736,35 @@ const AdminEscrowTab = memo(() => {
             >
               {actionLoading?.type === 'refund' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Confirmer le remboursement
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Dialog : Contacter l'acheteur */}
+      <Dialog open={!!messageTarget} onOpenChange={(open) => { if (!open) { setMessageTarget(null); setMessageContent(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Contacter {messageTarget?.acheteur?.full_name}</DialogTitle>
+            <DialogDescription>
+              Ce message ouvre une conversation directe (visible dans "Messages") au sujet de la commande{' '}
+              <strong>{messageTarget?.annonce?.title}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Ex : Bonjour, la capture d'écran de paiement envoyée ne correspond pas à une preuve valide. Pouvez-vous nous en renvoyer une nouvelle ?"
+            value={messageContent}
+            onChange={(e) => setMessageContent(e.target.value)}
+            rows={5}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setMessageTarget(null); setMessageContent(''); }}>Annuler</Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={handleSendMessage}
+              disabled={actionLoading?.id === messageTarget?.id || !messageContent.trim()}
+            >
+              {actionLoading?.type === 'message' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Envoyer
             </Button>
           </DialogFooter>
         </DialogContent>
