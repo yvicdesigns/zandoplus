@@ -149,8 +149,7 @@ const PostAdPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const processImageFiles = (files) => {
     const MAX_FILE_SIZE_MB = 5;
     const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -185,6 +184,10 @@ const PostAdPage = () => {
     setFormData(prev => ({ ...prev, images: [...prev.images, ...newImagePreviews] }));
     setImageFiles(newImageFiles);
     if (formErrors.images) setFormErrors(prev => ({ ...prev, images: null }));
+  };
+
+  const handleImageUpload = (e) => {
+    processImageFiles(Array.from(e.target.files));
   };
 
   const removeImage = (imageId) => {
@@ -302,7 +305,7 @@ const PostAdPage = () => {
   
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} handleImageUpload={handleImageUpload} removeImage={removeImage} />;
+      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} handleImageUpload={handleImageUpload} removeImage={removeImage} onNativeImages={processImageFiles} />;
       case 2: return <Step2Details formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} onAIPrice={(price) => setFormData(prev => ({ ...prev, price }))} />;
       case 3: return <Step4Review formData={formData} onBack={prevStep} onSubmit={handleSubmit} isSubmitting={loading} />;
       default: return null;

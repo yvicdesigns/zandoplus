@@ -47,6 +47,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Zando+ utilise votre position pour pré-remplir automatiquement votre ville lors de la publication d'une annonce.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Zando+ utilise l'appareil photo pour prendre des photos de vos annonces.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zando+ accède à vos photos pour illustrer vos annonces.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

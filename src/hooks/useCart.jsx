@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { hapticLight } from '@/lib/haptics';
 
 const CartContext = createContext(null);
 
@@ -26,6 +27,7 @@ export const CartProvider = ({ children }) => {
   }, [items]);
 
   const addItem = useCallback((listing, onAdded, customPrice) => {
+    hapticLight();
     setItems(prev => {
       if (prev.find(i => i.id === listing.id)) return prev;
       const basePrice = Number(listing.price) || 0;

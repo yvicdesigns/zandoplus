@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Share2, Link, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 const WhatsAppIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -57,14 +59,24 @@ const ShareMenu = ({ shareTitle, shareText, shareUrl, triggerClassName, triggerC
     setOpen(false);
   };
 
+  // Sur l'app native (iOS/Android), on ouvre directement la vraie feuille de partage
+  // du système plutôt que notre menu web — c'est ce que l'OS et l'utilisateur attendent.
+  const handleTriggerClick = () => {
+    if (Capacitor.isNativePlatform()) {
+      Share.share({ title: shareTitle, text, url }).catch(() => {});
+      return;
+    }
+    setOpen((p) => !p);
+  };
+
   return (
     <div className="relative" ref={ref}>
       {triggerContent ? (
-        <button type="button" onClick={() => setOpen(p => !p)} className={triggerClassName}>
+        <button type="button" onClick={handleTriggerClick} className={triggerClassName}>
           {triggerContent}
         </button>
       ) : (
-        <Button variant="ghost" onClick={() => setOpen(p => !p)} className="flex-col h-auto">
+        <Button variant="ghost" onClick={handleTriggerClick} className="flex-col h-auto">
           <Share2 className="mb-1" />
           <span className="text-xs">Partager</span>
         </Button>
