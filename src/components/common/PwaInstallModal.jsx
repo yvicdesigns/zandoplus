@@ -4,6 +4,7 @@ import { X, Download, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import { isMobile, isIOS } from 'react-device-detect';
+import { Capacitor } from '@capacitor/core';
 
 const APK_URL = 'https://axlpfskrrlwibcnxkfvb.supabase.co/storage/v1/object/public/downloads/zandoplus.apk';
 
@@ -15,7 +16,8 @@ const PwaInstallModal = () => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const shownThisSession = sessionStorage.getItem('pwaModalShown');
 
-    if (!isMobile || isStandalone || shownThisSession) return;
+    // Déjà dans l'app native (Capacitor) — proposer d'"installer" n'a aucun sens ici.
+    if (Capacitor.isNativePlatform() || !isMobile || isStandalone || shownThisSession) return;
 
     const timer = setTimeout(() => {
       setIsVisible(true);
@@ -32,7 +34,7 @@ const PwaInstallModal = () => {
     setIsVisible(false);
   };
 
-  if (!isMobile) return null;
+  if (!isMobile || Capacitor.isNativePlatform()) return null;
 
   return (
     <AnimatePresence>
