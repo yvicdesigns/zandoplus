@@ -20,34 +20,38 @@ async function saveToken(userId, tokenType, token) {
 }
 
 // ── Capacitor Native (Android / iOS) ─────────────────────────────────────────
+// @capacitor-firebase/messaging donne un vrai token FCM sur les deux plateformes
+// (contrairement à @capacitor/push-notifications, qui sur iOS ne remonte que le
+// token APNs brut — inutilisable tel quel par l'API FCM côté serveur).
 async function registerNativePush(userId) {
-  const { PushNotifications } = await import(/* @vite-ignore */ '@capacitor/push-notifications');
+  const { FirebaseMessaging } = await import(/* @vite-ignore */ '@capacitor-firebase/messaging');
 
-  const status = await PushNotifications.checkPermissions();
+  const status = await FirebaseMessaging.checkPermissions();
   let permission = status.receive;
 
   if (permission === 'prompt') {
-    const result = await PushNotifications.requestPermissions();
+    const result = await FirebaseMessaging.requestPermissions();
     permission = result.receive;
   }
 
   if (permission !== 'granted') return;
 
-  await PushNotifications.register();
-
   // Token FCM reçu → sauvegarder dans Supabase
-  PushNotifications.addListener('registration', async ({ value: token }) => {
-    await saveToken(userId, 'fcm', token);
+  const { token } = await FirebaseMessaging.getToken();
+  await saveToken(userId, 'fcm', token);
+
+  FirebaseMessaging.addListener('tokenReceived', async ({ token: newToken }) => {
+    await saveToken(userId, 'fcm', newToken);
   });
 
   // Notification reçue en foreground → afficher un toast natif
-  PushNotifications.addListener('pushNotificationReceived', (notification) => {
-    console.log('[Push] Reçu en foreground:', notification.title);
+  FirebaseMessaging.addListener('notificationReceived', (notification) => {
+    console.log('[Push] Reçu en foreground:', notification.notification?.title);
   });
 
   // Clic sur notification → naviguer vers le bon lien
-  PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-    const url = notification.data?.url;
+  FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
+    const url = notification.notification?.data?.url;
     if (url) window.location.href = url;
   });
 }
