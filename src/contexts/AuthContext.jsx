@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -283,6 +284,7 @@ export const AuthProvider = ({ children }) => {
         if (!url.startsWith('com.zando.app://') || !mounted) return;
         const code = new URL(url).searchParams.get('code');
         if (!code || !mounted) return;
+        await Browser.close().catch(() => {});
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error && data?.session && mounted) await updateUserSession(data.session);
         else if (error) logError(error, { context: 'appUrlOpen exchangeCodeForSession' });
@@ -398,6 +400,21 @@ export const AuthProvider = ({ children }) => {
       ? 'com.zando.app://login'
       : `${window.location.origin}/auth/callback`;
     try {
+        // Sur iOS natif, laisser Supabase faire une navigation plein écran fait sortir
+        // l'utilisateur vers l'app Safari externe (rejeté par Apple, guideline 4 — mauvaise
+        // UX). On récupère l'URL OAuth sans naviguer (skipBrowserRedirect) et on l'ouvre
+        // nous-mêmes dans une vue Safari intégrée à l'app (SFSafariViewController) via
+        // @capacitor/browser, qui se referme automatiquement au retour du appUrlOpen.
+        if (isIOSNative) {
+          const { data, error } = await supabase.auth.signInWithOAuth({
+              provider,
+              options: { redirectTo, skipBrowserRedirect: true },
+          });
+          if (error) throw new Error(translateSupabaseError(error));
+          if (data?.url) await Browser.open({ url: data.url, presentationStyle: 'popover' });
+          return;
+        }
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: { redirectTo },
