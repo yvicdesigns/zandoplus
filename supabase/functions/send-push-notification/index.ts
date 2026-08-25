@@ -20,8 +20,15 @@ serve(async (req) => {
     const fcmKey       = Deno.env.get('FCM_PRIVATE_KEY') || '';
     const fcmProject   = 'zandopluscg-c9bec';
 
+    let vapidReady = false;
     if (vapidPublic && vapidPrivate) {
-      webpush.setVapidDetails('mailto:zandopluscg@gmail.com', vapidPublic, vapidPrivate);
+      try {
+        webpush.setVapidDetails('mailto:zandopluscg@gmail.com', vapidPublic, vapidPrivate);
+        vapidReady = true;
+      } catch (e) {
+        // Une clé VAPID mal configurée ne doit pas empêcher l'envoi FCM (Android/iOS).
+        console.error('VAPID setup failed, web push disabled for this call:', e.message);
+      }
     }
 
     const supabase = createClient(
@@ -52,7 +59,7 @@ serve(async (req) => {
 
     const results = await Promise.allSettled(
       tokens.map(async (t) => {
-        if (t.token_type === 'web' && vapidPublic && vapidPrivate) {
+        if (t.token_type === 'web' && vapidReady) {
           try {
             const sub = JSON.parse(t.token);
             await webpush.sendNotification(sub, payload);
@@ -77,7 +84,10 @@ serve(async (req) => {
     }
 
     const sent = results.filter((r) => r.status === 'fulfilled').length;
-    return new Response(JSON.stringify({ sent, total: tokens.length }), {
+    const errors = results
+      .map((r, i) => r.status === 'rejected' ? { token_type: tokens[i].token_type, reason: String(r.reason?.message || r.reason) } : null)
+      .filter(Boolean);
+    return new Response(JSON.stringify({ sent, total: tokens.length, errors }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
@@ -113,10 +123,13 @@ async function sendFcmV1(fcmToken: string, payload: any, serviceAccountEmail: st
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
   });
-  const { access_token } = await tokenRes.json();
-  await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+  const tokenJson = await tokenRes.json();
+  if (!tokenJson.access_token) {
+    throw new Error(`OAuth token error: ${JSON.stringify(tokenJson)}`);
+  }
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenJson.access_token}` },
     body: JSON.stringify({
       message: {
         token: fcmToken,
@@ -127,4 +140,8 @@ async function sendFcmV1(fcmToken: string, payload: any, serviceAccountEmail: st
       },
     }),
   });
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`FCM send failed (${res.status}): ${errBody}`);
+  }
 }
