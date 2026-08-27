@@ -461,25 +461,27 @@ const Header = memo(({ onLoginClick }) => {
         <div className="max-w-[1280px] mx-auto px-6 flex items-center">
 
           {/* Bouton toutes catégories */}
-          <div className="relative group shrink-0 mr-1">
-            <button className="flex items-center gap-2 bg-custom-green-500 text-white text-[13px] font-semibold px-4 py-3 rounded-md hover:bg-custom-green-600 transition-colors">
-              <Menu className="w-4 h-4" />
-              Toutes les catégories
-            </button>
-            {/* Dropdown catégories */}
-            <div className="absolute left-0 top-full w-64 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="flex items-center gap-2 bg-custom-green-500 text-white text-[13px] font-semibold px-4 py-3 rounded-md hover:bg-custom-green-600 transition-colors shrink-0 mr-1 outline-none">
+                <Menu className="w-4 h-4" />
+                Toutes les catégories
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" collisionPadding={8} className="w-64 max-h-[70vh] overflow-y-auto rounded-xl shadow-xl border-gray-100 py-2">
               {allCategories.map(({ slug, name }) => (
-                <Link
-                  key={slug}
-                  to={`/listings?category=${slug}`}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors"
-                >
-                  <span className="text-base">{getCategoryEmoji(slug)}</span>
-                  {name}
-                </Link>
+                <DropdownMenuItem key={slug} asChild className="px-0 py-0 rounded-sm cursor-pointer">
+                  <Link
+                    to={`/listings?category=${slug}`}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-700 w-full"
+                  >
+                    <span className="text-base">{getCategoryEmoji(slug)}</span>
+                    {name}
+                  </Link>
+                </DropdownMenuItem>
               ))}
-            </div>
-          </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Liens de navigation */}
           <nav className="flex items-center">

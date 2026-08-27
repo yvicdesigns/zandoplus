@@ -60,7 +60,7 @@ const Step3Photos = ({ formData, handleImageUpload, removeImage, formErrors }) =
             <button
               type="button"
               onClick={() => removeImage(image.id)}
-              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-sm"
             >
               <X className="w-4 h-4" />
             </button>

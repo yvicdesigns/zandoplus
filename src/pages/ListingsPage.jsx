@@ -123,14 +123,14 @@ const ListingsPage = () => {
               <Button
                 variant="outline"
                 onClick={() => setIsSidebarOpen(true)}
-                className="flex-1 md:hidden bg-white border-custom-green-200 text-custom-green-700 hover:bg-custom-green-50"
+                className="flex-1 lg:hidden bg-white border-custom-green-200 text-custom-green-700 hover:bg-custom-green-50"
               >
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 Filtres & Tri
               </Button>
 
               {/* Desktop View Toggles */}
-              <div className="hidden md:flex items-center gap-1 bg-white p-1 rounded-lg border shadow-sm">
+              <div className="hidden lg:flex items-center gap-1 bg-white p-1 rounded-lg border shadow-sm">
                 <Button
                   variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                   size="icon"
