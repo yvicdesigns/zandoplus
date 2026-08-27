@@ -178,7 +178,7 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
               <button
                 type="button"
                 onClick={() => removeImage(image.id)}
-                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1.5 -right-1.5 p-0.5 bg-red-500 text-white rounded-full shadow-sm"
               >
                 <X className="w-3 h-3" />
               </button>

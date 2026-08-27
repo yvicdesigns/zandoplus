@@ -33,7 +33,7 @@ const AdBanner = ({ position = 'listings' }) => {
       <span className="absolute bottom-1 left-2 text-[9px] text-white/70 bg-black/30 rounded px-1">Publicité</span>
       <button
         onClick={(e) => { e.preventDefault(); setClosed(true); }}
-        className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center"
         aria-label="Fermer la publicité"
       >
         <X className="w-3 h-3" />
