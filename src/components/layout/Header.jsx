@@ -17,6 +17,12 @@ import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import useUnreadMessages from '@/hooks/useUnreadMessages';
 import { getCategoryEmoji } from '@/components/post-ad/categoryIcons';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 /* ── Barre de recherche isolée ── */
 const SearchBar = memo(({ onSubmit }) => {
@@ -324,18 +330,20 @@ const Header = memo(({ onLoginClick }) => {
                 </Link>
 
                 {/* Avatar + dropdown */}
-                <div className="relative group hidden md:block">
-                  <div className="flex items-center gap-2 cursor-pointer">
-                    <Avatar className="w-8 h-8 border-2 border-gray-200 group-hover:border-custom-green-400 transition-colors shrink-0">
-                      <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-[10px] text-gray-400 leading-none">Mon compte</p>
-                      <p className="text-[13px] font-bold leading-snug max-w-[80px] truncate">{userName.split(' ')[0]}</p>
-                    </div>
-                  </div>
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" className="hidden md:flex items-center gap-2 cursor-pointer outline-none">
+                      <Avatar className="w-8 h-8 border-2 border-gray-200 shrink-0">
+                        <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
+                        <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-[10px] text-gray-400 leading-none text-left">Mon compte</p>
+                        <p className="text-[13px] font-bold leading-snug max-w-[80px] truncate">{userName.split(' ')[0]}</p>
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" collisionPadding={8} className="w-56 rounded-xl shadow-xl border-gray-100 p-0 overflow-hidden">
                     <div className="p-3 border-b border-gray-100">
                       <p className="font-bold text-sm truncate">{userName}</p>
                       <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
@@ -343,10 +351,12 @@ const Header = memo(({ onLoginClick }) => {
                     <div className="py-1.5">
                       {/* Espace vendeur — visible si vendeur ou admin */}
                       {(user?.is_seller || isAdmin) && (
-                        <Link to="/espace-vendeur" className="flex items-center px-3 py-2 mx-1.5 mb-1 text-[13px] font-bold text-white bg-custom-green-500 hover:bg-custom-green-600 rounded-lg transition-colors">
-                          <Store className="w-4 h-4 mr-2.5" />
-                          Espace vendeur
-                        </Link>
+                        <DropdownMenuItem asChild className="mx-1.5 mb-1 rounded-lg cursor-pointer">
+                          <Link to="/espace-vendeur" className="flex items-center px-1.5 py-2 text-[13px] font-bold text-white bg-custom-green-500 hover:!bg-custom-green-600 focus:!bg-custom-green-600 focus:!text-white rounded-lg transition-colors">
+                            <Store className="w-4 h-4 mr-2.5" />
+                            Espace vendeur
+                          </Link>
+                        </DropdownMenuItem>
                       )}
                       {/* Bloc compte */}
                       {[
@@ -354,33 +364,38 @@ const Header = memo(({ onLoginClick }) => {
                         { to: null, icon: MessageCircle, label: 'Mes Messages', action: openMessages },
                         { to: '/transactions', icon: ShieldCheck,   label: 'Mes Commandes' },
                         { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
+                        { to: '/settings',     icon: Settings,      label: 'Paramètres' },
                       ].map(({ to, icon: Icon, label, action }) => (
                         action ? (
-                          <button key={label} onClick={action} className="flex items-center w-full px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors text-left">
+                          <DropdownMenuItem key={label} onClick={action} className="px-3 py-2 text-[13px] text-gray-700 rounded-sm cursor-pointer">
                             <Icon className="w-4 h-4 mr-2.5 opacity-60" />
                             {label}
-                          </button>
+                          </DropdownMenuItem>
                         ) : (
-                          <Link key={to} to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-custom-green-500 transition-colors">
-                            <Icon className="w-4 h-4 mr-2.5 opacity-60" />
-                            {label}
-                          </Link>
+                          <DropdownMenuItem key={to} asChild className="px-0 py-0 rounded-sm cursor-pointer">
+                            <Link to={to} className="flex items-center px-3 py-2 text-[13px] text-gray-700 w-full">
+                              <Icon className="w-4 h-4 mr-2.5 opacity-60" />
+                              {label}
+                            </Link>
+                          </DropdownMenuItem>
                         )
                       ))}
                       {/* Dashboard Admin séparé */}
                       {isAdmin && (
-                        <Link to="/admin" className="flex items-center px-3 py-2 text-[13px] text-gray-500 hover:bg-gray-50 hover:text-custom-green-500 transition-colors border-t border-gray-100 mt-1">
-                          <LayoutDashboard className="w-4 h-4 mr-2.5 opacity-60" />
-                          Dashboard Admin
-                        </Link>
+                        <DropdownMenuItem asChild className="px-0 py-0 rounded-sm cursor-pointer border-t border-gray-100 mt-1">
+                          <Link to="/admin" className="flex items-center px-3 py-2 text-[13px] text-gray-500 w-full">
+                            <LayoutDashboard className="w-4 h-4 mr-2.5 opacity-60" />
+                            Dashboard Admin
+                          </Link>
+                        </DropdownMenuItem>
                       )}
-                      <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 transition-colors mt-1 border-t border-gray-100">
+                      <DropdownMenuItem onClick={handleLogout} className="px-3 py-2 text-[13px] text-red-500 focus:!bg-red-50 focus:!text-red-600 rounded-sm cursor-pointer mt-1 border-t border-gray-100">
                         <LogOut className="w-4 h-4 mr-2.5" />
                         Déconnexion
-                      </button>
+                      </DropdownMenuItem>
                     </div>
-                  </div>
-                </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* Publier */}
                 <Link to={user?.is_seller || isAdmin ? "/post-ad" : "/devenir-vendeur"} className="hidden md:block shrink-0">
@@ -543,6 +558,7 @@ const Header = memo(({ onLoginClick }) => {
                     { to: '/cart',         icon: ShoppingCart,  label: 'Mon Panier'       },
                     { to: '/transactions', icon: ShieldCheck,   label: 'Mes Commandes' },
                     { to: '/wallet',       icon: Wallet,        label: 'Mon Portefeuille' },
+                    { to: '/settings',     icon: Settings,      label: 'Paramètres' },
                   ].map(({ to, icon: Icon, label, action }) => action ? (
                     <button key={label} onClick={action}
                       className="flex items-center w-full py-2.5 px-3 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg text-left">
