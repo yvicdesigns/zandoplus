@@ -87,7 +87,7 @@ const SearchBar = memo(({ onSubmit }) => {
         <select
           value={cat}
           onChange={e => setCat(e.target.value)}
-          className="border-r border-gray-200 px-3 text-[13px] text-gray-600 bg-white h-[42px] cursor-pointer outline-none shrink-0 hidden md:block"
+          className="border-r border-gray-200 px-3 text-[13px] text-gray-600 bg-white h-[42px] cursor-pointer outline-none shrink-0 hidden lg:block"
         >
           <option value="">Toutes les catégories</option>
           <option value="electronics">Électronique</option>
@@ -213,7 +213,7 @@ const Header = memo(({ onLoginClick }) => {
     <header className="sticky top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] bg-card-bg">
 
       {/* ── 1. Barre d'annonces verte ── */}
-      <div className="bg-custom-green-500 text-white text-[12px] font-medium hidden md:block">
+      <div className="bg-custom-green-500 text-white text-[12px] font-medium hidden lg:block">
         <div className="max-w-[1280px] mx-auto px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <span>{siteSettings?.ann_msg1 || '🚚 Livraison rapide à Brazzaville et partout au Congo'}</span>
@@ -244,7 +244,7 @@ const Header = memo(({ onLoginClick }) => {
       <div className="bg-card-bg border-b border-gray-200">
 
         {/* ── Mobile uniquement : burger | logo centré | panier ── */}
-        <div className="md:hidden flex items-center px-4 py-3 relative">
+        <div className="lg:hidden flex items-center px-4 py-3 relative">
           <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 z-10 shrink-0">
             {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
           </button>
@@ -265,7 +265,7 @@ const Header = memo(({ onLoginClick }) => {
         </div>
 
         {/* ── Desktop : layout inchangé ── */}
-        <div className="hidden md:flex max-w-[1280px] mx-auto px-6 py-3 items-center gap-5">
+        <div className="hidden lg:flex max-w-[1280px] mx-auto px-6 py-3 items-center gap-5">
 
           {/* Logo */}
           <Link to="/" className="flex flex-col shrink-0 text-decoration-none">
@@ -284,12 +284,12 @@ const Header = memo(({ onLoginClick }) => {
           </Link>
 
           {/* Barre de recherche */}
-          <div className="flex-1 hidden md:flex justify-center">
+          <div className="flex-1 hidden lg:flex justify-center">
             <SearchBar onSubmit={() => setIsMenuOpen(false)} />
           </div>
 
           {/* Actions droite */}
-          <div className="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
+          <div className="flex items-center gap-4 shrink-0 ml-auto lg:ml-0">
             {authPending ? (
               <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
             ) : user ? (
@@ -298,7 +298,7 @@ const Header = memo(({ onLoginClick }) => {
                 <NotificationsPopover />
 
                 {/* Messages — ouvre le drawer */}
-                <button onClick={() => user ? openMessages() : onLoginClick()} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
+                <button onClick={() => user ? openMessages() : onLoginClick()} className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors cursor-pointer">
                   <div className="relative shrink-0">
                     <MessageCircle className="w-[22px] h-[22px]" />
                     {unreadCount > 0 && (
@@ -314,7 +314,7 @@ const Header = memo(({ onLoginClick }) => {
                 </button>
 
                 {/* Panier */}
-                <Link to="/cart" className="relative hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                <Link to="/cart" className="relative hidden lg:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
                   <div className="relative shrink-0">
                     <ShoppingCart className="w-[22px] h-[22px]" />
                     {cartCount > 0 && (
@@ -332,7 +332,7 @@ const Header = memo(({ onLoginClick }) => {
                 {/* Avatar + dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" className="hidden md:flex items-center gap-2 cursor-pointer outline-none">
+                    <button type="button" className="hidden lg:flex items-center gap-2 cursor-pointer outline-none">
                       <Avatar className="w-8 h-8 border-2 border-gray-200 shrink-0">
                         <AvatarImage src={userAvatar} alt={userName} className="object-cover" />
                         <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -398,7 +398,7 @@ const Header = memo(({ onLoginClick }) => {
                 </DropdownMenu>
 
                 {/* Publier */}
-                <Link to={user?.is_seller || isAdmin ? "/post-ad" : "/devenir-vendeur"} className="hidden md:block shrink-0">
+                <Link to={user?.is_seller || isAdmin ? "/post-ad" : "/devenir-vendeur"} className="hidden lg:block shrink-0">
                   <button className="h-[38px] px-5 bg-custom-green-500 text-white text-[13px] font-bold rounded-lg flex items-center gap-1.5 hover:bg-custom-green-600 transition-colors">
                     <Plus className="w-4 h-4" />
                     Publier
@@ -408,7 +408,7 @@ const Header = memo(({ onLoginClick }) => {
             ) : (
               <>
                 {/* Compte (visiteur) */}
-                <button onClick={handleLoginClick} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                <button onClick={handleLoginClick} className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
                   <User className="w-[22px] h-[22px] shrink-0" />
                   <div className="text-left">
                     <p className="text-[10px] text-gray-400 leading-none">Se connecter</p>
@@ -417,7 +417,7 @@ const Header = memo(({ onLoginClick }) => {
                 </button>
 
                 {/* Favoris (visiteur) */}
-                <button onClick={handleLoginClick} className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                <button onClick={handleLoginClick} className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
                   <Heart className="w-[22px] h-[22px] shrink-0" />
                   <div className="text-left">
                     <p className="text-[10px] text-gray-400 leading-none">Mes</p>
@@ -426,7 +426,7 @@ const Header = memo(({ onLoginClick }) => {
                 </button>
 
                 {/* Panier (visiteur) */}
-                <Link to="/cart" className="hidden md:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
+                <Link to="/cart" className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-custom-green-500 transition-colors">
                   <div className="relative shrink-0">
                     <ShoppingCart className="w-[22px] h-[22px]" />
                     {cartCount > 0 && (
@@ -444,20 +444,20 @@ const Header = memo(({ onLoginClick }) => {
             )}
 
             {/* Burger mobile */}
-            <button className="md:hidden p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button className="lg:hidden p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
             </button>
           </div>
         </div>
 
         {/* Barre de recherche mobile */}
-        <div className="md:hidden px-5 pb-3">
+        <div className="lg:hidden px-5 pb-3">
           <SearchBar onSubmit={() => setIsMenuOpen(false)} />
         </div>
       </div>
 
       {/* ── 3. Navbar verte ── */}
-      <div className="bg-card-bg border-b border-gray-200 hidden md:block">
+      <div className="bg-card-bg border-b border-gray-200 hidden lg:block">
         <div className="max-w-[1280px] mx-auto px-6 flex items-center">
 
           {/* Bouton toutes catégories */}
@@ -516,7 +516,7 @@ const Header = memo(({ onLoginClick }) => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-white border-t border-gray-100 shadow-lg overflow-hidden"
+            className="lg:hidden bg-white border-t border-gray-100 shadow-lg overflow-hidden"
           >
             <div className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] max-h-[calc(100dvh-8rem-env(safe-area-inset-top))] overflow-y-auto">
               {/* Catégories */}
