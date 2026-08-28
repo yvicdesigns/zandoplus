@@ -483,15 +483,18 @@ const Header = memo(({ onLoginClick }) => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Liens de navigation */}
-          <nav className="flex items-center">
+          {/* Liens de navigation — scrollable horizontalement : sur tablette (iPad
+              portrait notamment) la rangée entière ne tient pas dans la largeur
+              visible ; sans ça les derniers liens (ex. Aide & Support) sortaient
+              purement et simplement de l'écran, inatteignables. */}
+          <nav className="flex items-center overflow-x-auto scrollbar-hide min-w-0">
             {navLinks.map(({ label, href }) => {
               const isActive = location.pathname === href || (href !== '/' && location.pathname + location.search === href);
               return (
                 <Link
                   key={href}
                   to={href}
-                  className={`px-3.5 py-3 text-[13px] border-b-2 transition-colors whitespace-nowrap ${
+                  className={`px-3.5 py-3 text-[13px] border-b-2 transition-colors whitespace-nowrap shrink-0 ${
                     isActive
                       ? 'text-custom-green-500 border-custom-green-500 font-bold'
                       : 'text-gray-500 border-transparent hover:text-custom-green-500 hover:border-custom-green-200'
