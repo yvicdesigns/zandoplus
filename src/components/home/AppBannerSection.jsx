@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Tag, Package, Lock, X, Clock } from 'lucide-react';
+import { Bell, Tag, Package } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const features = [
@@ -10,43 +10,25 @@ const features = [
 
 const IMG_SIZE_W = { sm: 'w-[70px]', md: 'w-[100px]', lg: 'w-[130px]', xl: 'w-[160px]' };
 
-/* ── Popup "Bientôt disponible" ── */
-const ComingSoonPopup = ({ store, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0" onClick={onClose}>
-    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-    <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10" onClick={e => e.stopPropagation()}>
-      <button onClick={onClose} className="absolute top-4 right-4 w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-        <X className="w-4 h-4 text-gray-600" />
-      </button>
-      <div className="w-14 h-14 bg-custom-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <Clock className="w-7 h-7 text-custom-green-500" />
-      </div>
-      <h3 className="text-[18px] font-black text-gray-900 text-center mb-2">Bientôt disponible !</h3>
-      <p className="text-[13px] text-gray-500 text-center leading-relaxed">
-        L'application <strong className="text-gray-800">Zando+</strong> sera très bientôt disponible sur{' '}
-        <strong className="text-gray-800">{store === 'android' ? 'Google Play' : 'l\'App Store'}</strong>.
-      </p>
-      <p className="text-[12px] text-custom-green-600 text-center mt-3 font-semibold">Restez connecté, ça arrive vite !</p>
-      <button onClick={onClose} className="mt-5 w-full h-11 bg-custom-green-500 hover:bg-custom-green-600 text-white font-bold text-[14px] rounded-xl transition-colors">
-        OK, j'attends !
-      </button>
-    </div>
-  </div>
-);
+// Zando+ est en ligne sur les deux stores — liens directs vers les fiches réelles.
+const STORE_URLS = {
+  android: 'https://play.google.com/store/apps/details?id=com.zando.app',
+  ios: 'https://apps.apple.com/app/id6800881634',
+};
 
 /* ── Bouton store ── */
-const StoreButton = ({ store, onOpenPopup }) => (
-  <button onClick={() => onOpenPopup(store)} className="w-fit hover:opacity-80 active:opacity-60 transition-opacity">
+const StoreButton = ({ store }) => (
+  <a href={STORE_URLS[store]} target="_blank" rel="noopener noreferrer" className="w-fit hover:opacity-80 active:opacity-60 transition-opacity">
     <img
       src={store === 'android' ? '/play-store.png' : '/app-store.png'}
       alt={store === 'android' ? 'Google Play' : 'App Store'}
       className="h-16 w-auto object-contain"
     />
-  </button>
+  </a>
 );
 
 /* ── Carte mobile dynamique ── */
-const MobileCard = ({ card, onOpenPopup }) => {
+const MobileCard = ({ card }) => {
   const imgLeft = card.image_position === 'left';
   const sizeW   = IMG_SIZE_W[card.image_size] || 'w-[100px]';
   const isApp   = card.key === 'app';
@@ -70,8 +52,8 @@ const MobileCard = ({ card, onOpenPopup }) => {
         </p>
         {isApp ? (
           <div className="flex flex-row gap-2">
-            <StoreButton store="android" onOpenPopup={onOpenPopup} />
-            <StoreButton store="ios"     onOpenPopup={onOpenPopup} />
+            <StoreButton store="android" />
+            <StoreButton store="ios" />
           </div>
         ) : card.btn_enabled && card.btn_text ? (
           <a href={card.btn_link || '#'}
@@ -90,7 +72,6 @@ const MobileCard = ({ card, onOpenPopup }) => {
 const AppBannerSection = () => {
   const [cards, setCards]           = useState([]);
   const [desktopImg, setDesktopImg] = useState(null);
-  const [popupStore, setPopupStore] = useState(null);
 
   useEffect(() => {
     // Cartes mobiles depuis home_cards
@@ -103,7 +84,6 @@ const AppBannerSection = () => {
   }, []);
 
   return (
-    <>
       <section className="py-0 sm:py-6 bg-page-bg">
         <div className="max-w-[1280px] mx-auto sm:px-6">
 
@@ -111,7 +91,7 @@ const AppBannerSection = () => {
           {cards.length > 0 && (
             <div className="sm:hidden flex flex-col gap-3 px-4 py-6">
               {cards.map(card => (
-                <MobileCard key={card.key} card={card} onOpenPopup={setPopupStore} />
+                <MobileCard key={card.key} card={card} />
               ))}
             </div>
           )}
@@ -142,21 +122,14 @@ const AppBannerSection = () => {
                 </div>
               </div>
               <div className="flex-shrink-0 flex flex-row justify-center items-center gap-3">
-                <button onClick={() => setPopupStore('android')} className="hover:opacity-80 active:opacity-60 transition-opacity">
-                  <img src="/play-store.png" alt="Google Play" className="h-16 w-auto object-contain" />
-                </button>
-                <button onClick={() => setPopupStore('ios')} className="hover:opacity-80 active:opacity-60 transition-opacity">
-                  <img src="/app-store.png" alt="App Store" className="h-16 w-auto object-contain" />
-                </button>
+                <StoreButton store="android" />
+                <StoreButton store="ios" />
               </div>
             </div>
           )}
 
         </div>
       </section>
-
-      {popupStore && <ComingSoonPopup store={popupStore} onClose={() => setPopupStore(null)} />}
-    </>
   );
 };
 
