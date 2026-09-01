@@ -271,6 +271,16 @@ const AdminListingsTab = memo(() => {
                             🚨 IA: {listing.moderation_flags[0]}
                           </Badge>
                         )}
+                        {listing.featured && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 text-[10px]">
+                            ⭐ Vedette
+                          </Badge>
+                        )}
+                        {listing.is_daily_offer && (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300 text-[10px]">
+                            🔥 Offre du jour
+                          </Badge>
+                        )}
                       </p>
                       <p>Posté le: {formatDate(listing.created_at)}</p>
                     </div>
