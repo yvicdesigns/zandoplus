@@ -131,10 +131,13 @@ const AdminListingsTab = memo(() => {
   const handleToggleDailyOffer = async (listingId, currentStatus) => {
     setLoadingAction(listingId);
     try {
-      const { error } = await supabase
-        .from('listings')
-        .update({ is_daily_offer: !currentStatus })
-        .eq('id', listingId);
+      // RPC sécurisée (comme set_featured_status_as_admin) : un simple .update() client est
+      // bloqué en silence par la RLS "Users can update their own listings" quand l'admin
+      // n'est pas le propriétaire — pas d'erreur renvoyée, le toggle ne persiste juste jamais.
+      const { error } = await supabase.rpc('set_daily_offer_status_as_admin', {
+        p_listing_id: listingId,
+        p_daily_offer: !currentStatus,
+      });
       if (error) throw error;
       toast({ title: 'Succès', description: `Offre du jour ${currentStatus ? 'retirée' : 'activée'}.`, className: 'bg-green-100 text-green-800' });
       fetchListings();
