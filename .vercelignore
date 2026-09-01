@@ -1,0 +1,9 @@
+# Projets natifs Capacitor — inutiles pour le build web Vercel, énormes (2Go+)
+ios
+android
+
+# Captures de tests locaux
+tests/screenshots
+
+# Dépendances (réinstallées par Vercel)
+node_modules
