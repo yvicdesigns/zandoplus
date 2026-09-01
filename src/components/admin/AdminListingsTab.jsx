@@ -161,6 +161,8 @@ const AdminListingsTab = memo(() => {
       const matchesStatus =
         statusFilter === 'all' ? true :
         statusFilter === 'zero_stock' ? (l.quantity === 0 || l.status === 'inactive') :
+        statusFilter === 'daily_offer' ? l.is_daily_offer === true :
+        statusFilter === 'featured' ? l.featured === true :
         l.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -168,6 +170,8 @@ const AdminListingsTab = memo(() => {
 
   const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review' || l.status === 'needs_changes').length, [listings]);
   const zeroStockCount = useMemo(() => listings.filter(l => l.quantity === 0 || l.status === 'inactive').length, [listings]);
+  const dailyOfferCount = useMemo(() => listings.filter(l => l.is_daily_offer === true).length, [listings]);
+  const featuredCount = useMemo(() => listings.filter(l => l.featured === true).length, [listings]);
 
   if (loading) {
     return (
@@ -229,6 +233,8 @@ const AdminListingsTab = memo(() => {
               { value: 'needs_changes', label: 'Modif. requises' },
               { value: 'inactive', label: 'Inactives' },
               { value: 'zero_stock', label: `Stock = 0${zeroStockCount > 0 ? ` (${zeroStockCount})` : ''}` },
+              { value: 'daily_offer', label: `🔥 Offres du jour${dailyOfferCount > 0 ? ` (${dailyOfferCount})` : ''}` },
+              { value: 'featured', label: `⭐ Vedette${featuredCount > 0 ? ` (${featuredCount})` : ''}` },
             ].map(f => (
               <Button
                 key={f.value}
