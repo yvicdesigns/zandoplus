@@ -357,6 +357,7 @@ const ListingDetailPage = () => {
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-[36px] font-black text-custom-green-500 leading-none tabular-nums">
                     {(listing.price || 0).toLocaleString('fr-FR')} {listing.currency || 'FCFA'}
+                    {listing.category === 'maison-a-louer' && <span className="text-[18px] font-bold text-gray-400"> / mois</span>}
                   </span>
                   {listing.original_price > listing.price && (
                     <span className="text-[16px] text-gray-400 line-through tabular-nums">
@@ -574,7 +575,7 @@ const ListingDetailPage = () => {
                         ['Localisation', listing.location],
                         ['État',         listing.condition === 'new' ? 'Neuf' : listing.condition === 'used' ? 'Occasion' : listing.condition],
                         listing.brand && ['Marque', listing.brand],
-                        ['Prix',         `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}`],
+                        [listing.category === 'maison-a-louer' ? 'Loyer' : 'Prix', `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}${listing.category === 'maison-a-louer' ? ' / mois' : ''}`],
                         listing.bedrooms && ['Chambres', `${listing.bedrooms} chambre${listing.bedrooms > 1 ? 's' : ''}`],
                         listing.bathroom_location && ['Toilettes / douche', listing.bathroom_location === 'interior' ? 'Intérieures' : 'Extérieures'],
                         listing.is_furnished != null && ['Meublée', listing.is_furnished ? 'Oui' : 'Non'],
