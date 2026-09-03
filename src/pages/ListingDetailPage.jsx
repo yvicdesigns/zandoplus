@@ -583,6 +583,7 @@ const ListingDetailPage = () => {
                         listing.has_electricity != null && ['Électricité', listing.has_electricity ? 'Oui' : 'Non'],
                         listing.has_annex != null && ['Annexe', listing.has_annex ? 'Oui' : 'Non'],
                         listing.advance_months != null && ['Avance demandée', `${listing.advance_months} mois`],
+                        listing.caution_amount != null && ['Caution', `${listing.caution_amount.toLocaleString('fr-FR')} FCFA`],
                         ['Vendeur',      listing.seller?.full_name || '—'],
                       ].filter(Boolean).map(([label, value]) => value ? (
                         <tr key={label}>

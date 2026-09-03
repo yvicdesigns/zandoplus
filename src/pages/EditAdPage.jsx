@@ -77,6 +77,7 @@ const EditAdPage = () => {
         has_electricity: listing.has_electricity || false,
         has_annex: listing.has_annex || false,
         advance_months: listing.advance_months?.toString() || '',
+        caution_amount: listing.caution_amount?.toString() || '',
       });
       setExistingImages(listing.images || []);
       setPageLoading(false);
@@ -259,6 +260,7 @@ const EditAdPage = () => {
         has_electricity: isHousingCategory ? !!formData.has_electricity : null,
         has_annex: isHousingCategory ? !!formData.has_annex : null,
         advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
+        caution_amount: (isHousingCategory && formData.caution_amount && !isNaN(parseFloat(formData.caution_amount))) ? parseFloat(formData.caution_amount) : null,
       };
 
       await updateListing(id, listingData);

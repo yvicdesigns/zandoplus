@@ -238,6 +238,21 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
               />
               <p className="text-xs text-gray-500 mt-1">Nombre de mois de loyer à payer d'avance.</p>
             </div>
+
+            <div>
+              <Label htmlFor="caution_amount">Caution demandée (FCFA)</Label>
+              <Input
+                id="caution_amount"
+                name="caution_amount"
+                type="number"
+                min="0"
+                placeholder="Ex: 50000"
+                value={formData.caution_amount}
+                onChange={handleInputChange}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Dépôt de garantie, en principe remboursable. Laisser vide si aucune.</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

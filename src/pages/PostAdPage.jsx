@@ -61,7 +61,7 @@ const PostAdPage = () => {
       negotiated_price: '',
       bedrooms: '', is_furnished: false, has_separate_living_room: false,
       bathroom_location: '', has_running_water: false, has_electricity: false,
-      has_annex: false, advance_months: ''
+      has_annex: false, advance_months: '', caution_amount: ''
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -288,6 +288,7 @@ const PostAdPage = () => {
         has_electricity: isHousingCategory ? !!formData.has_electricity : null,
         has_annex: isHousingCategory ? !!formData.has_annex : null,
         advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
+        caution_amount: (isHousingCategory && formData.caution_amount && !isNaN(parseFloat(formData.caution_amount))) ? parseFloat(formData.caution_amount) : null,
       };
 
       const newListing = await addListing(listingData);
@@ -340,7 +341,7 @@ const PostAdPage = () => {
               className="underline font-medium hover:text-amber-900"
               onClick={() => {
                 localStorage.removeItem(DRAFT_KEY);
-                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '' });
+                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '', caution_amount: '' });
                 setDraftRestored(false);
               }}
             >
