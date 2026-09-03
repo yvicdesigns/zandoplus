@@ -58,7 +58,10 @@ const PostAdPage = () => {
       phone: '', quantity: '', accepts_cash_on_delivery: false,
       national_delivery: false, national_delivery_fee: '',
       offers_seller_delivery: false, offers_pickup: false,
-      negotiated_price: ''
+      negotiated_price: '',
+      bedrooms: '', is_furnished: false, has_separate_living_room: false,
+      bathroom_location: '', has_running_water: false, has_electricity: false,
+      has_annex: false, advance_months: ''
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -251,6 +254,7 @@ const PostAdPage = () => {
       const uploadedImageUrls = await uploadImagesWithWatermark(imageFiles, user.id, siteSettings?.watermark_logo_url);
       
       const isJobOrService = ['job', 'service'].includes(formData.categoryType);
+      const isHousingCategory = formData.category === 'maison-a-louer';
 
       // Deep sanitize user inputs before inserting
       const listingData = {
@@ -275,6 +279,15 @@ const PostAdPage = () => {
         offers_seller_delivery: isJobOrService ? false : !!formData.offers_seller_delivery,
         offers_pickup: isJobOrService ? false : !!formData.offers_pickup,
         negotiated_price: (formData.negotiable && formData.negotiated_price && !isNaN(parseFloat(formData.negotiated_price))) ? parseFloat(formData.negotiated_price) : null,
+        // Caractéristiques du logement — uniquement pour "Maison à louer"
+        bedrooms: (isHousingCategory && formData.bedrooms && !isNaN(parseInt(formData.bedrooms, 10))) ? parseInt(formData.bedrooms, 10) : null,
+        is_furnished: isHousingCategory ? !!formData.is_furnished : null,
+        has_separate_living_room: isHousingCategory ? !!formData.has_separate_living_room : null,
+        bathroom_location: isHousingCategory ? (formData.bathroom_location || null) : null,
+        has_running_water: isHousingCategory ? !!formData.has_running_water : null,
+        has_electricity: isHousingCategory ? !!formData.has_electricity : null,
+        has_annex: isHousingCategory ? !!formData.has_annex : null,
+        advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
       };
 
       const newListing = await addListing(listingData);
@@ -327,7 +340,7 @@ const PostAdPage = () => {
               className="underline font-medium hover:text-amber-900"
               onClick={() => {
                 localStorage.removeItem(DRAFT_KEY);
-                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false });
+                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '' });
                 setDraftRestored(false);
               }}
             >

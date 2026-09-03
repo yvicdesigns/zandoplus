@@ -77,6 +77,7 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
   };
   const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
   const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
+  const isHousingCategory = formData.category === 'maison-a-louer';
 
   return (
     <motion.div
@@ -188,7 +189,79 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
           <FormError message={formErrors.phone} />
         </div>
       </div>
-      
+
+      {/* ── Caractéristiques du logement — uniquement pour "Maison à louer" ── */}
+      {isHousingCategory && (
+        <div className="space-y-4 pt-4 border-t">
+          <Label className="text-base">Caractéristiques du logement</Label>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="bedrooms">Nombre de chambres</Label>
+              <Select name="bedrooms" value={formData.bedrooms || ''} onValueChange={(value) => handleSelectChange('bedrooms', value)}>
+                <SelectTrigger id="bedrooms" className="mt-1">
+                  <SelectValue placeholder="Sélectionnez" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <SelectItem key={n} value={String(n)}>{n} chambre{n > 1 ? 's' : ''}</SelectItem>
+                  ))}
+                  <SelectItem value="6">6 chambres et +</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="bathroom_location">Toilettes / douche</Label>
+              <Select name="bathroom_location" value={formData.bathroom_location || ''} onValueChange={(value) => handleSelectChange('bathroom_location', value)}>
+                <SelectTrigger id="bathroom_location" className="mt-1">
+                  <SelectValue placeholder="Sélectionnez" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interior">Intérieures</SelectItem>
+                  <SelectItem value="exterior">Extérieures</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="advance_months">Avance demandée (mois)</Label>
+              <Input
+                id="advance_months"
+                name="advance_months"
+                type="number"
+                min="0"
+                placeholder="Ex: 3"
+                value={formData.advance_months}
+                onChange={handleInputChange}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Nombre de mois de loyer à payer d'avance.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { key: 'is_furnished',             label: 'Meublée' },
+              { key: 'has_separate_living_room', label: 'Salon & cuisine séparés' },
+              { key: 'has_running_water',        label: 'Eau courante' },
+              { key: 'has_electricity',          label: 'Électricité' },
+              { key: 'has_annex',                label: 'Annexe' },
+            ].map(({ key, label }) => (
+              <div key={key} className="flex items-start space-x-2 p-3 border rounded-lg">
+                <Checkbox
+                  id={key}
+                  checked={!!formData[key]}
+                  onCheckedChange={(checked) => handleSelectChange(key, checked)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor={key} className="cursor-pointer font-normal">{label}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!isJobCategory && !isServiceCategory && (
         <>
           <div>

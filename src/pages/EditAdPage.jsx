@@ -69,6 +69,14 @@ const EditAdPage = () => {
         offers_seller_delivery: listing.offers_seller_delivery || false,
         offers_pickup: listing.offers_pickup || false,
         negotiated_price: listing.negotiated_price?.toString() || '',
+        bedrooms: listing.bedrooms?.toString() || '',
+        is_furnished: listing.is_furnished || false,
+        has_separate_living_room: listing.has_separate_living_room || false,
+        bathroom_location: listing.bathroom_location || '',
+        has_running_water: listing.has_running_water || false,
+        has_electricity: listing.has_electricity || false,
+        has_annex: listing.has_annex || false,
+        advance_months: listing.advance_months?.toString() || '',
       });
       setExistingImages(listing.images || []);
       setPageLoading(false);
@@ -145,6 +153,7 @@ const EditAdPage = () => {
   const validateStep = (step) => {
     const errors = {};
     const isJob = formData.category && categories[formData.category]?.type === 'job';
+    const isService = formData.category && categories[formData.category]?.type === 'service';
 
     switch (step) {
       case 1:
@@ -156,9 +165,9 @@ const EditAdPage = () => {
         break;
       case 2:
         if (!isJob && (!formData.price || parseFloat(formData.price) <= 0)) errors.price = "Le prix doit être un nombre positif.";
-        if (!isJob && !formData.condition) errors.condition = "L'état est requis.";
+        if (!isJob && !isService && !formData.condition) errors.condition = "L'état est requis.";
         if (!formData.location.trim()) errors.location = "La localisation est requise.";
-        if (!isJob && formData.quantity && (parseInt(formData.quantity, 10) < 0 || !Number.isInteger(Number(formData.quantity)))) errors.quantity = "La quantité doit être un nombre entier positif.";
+        if (!isJob && !isService && formData.quantity && (parseInt(formData.quantity, 10) < 0 || !Number.isInteger(Number(formData.quantity)))) errors.quantity = "La quantité doit être un nombre entier positif.";
         break;
       default: break;
     }
@@ -216,6 +225,8 @@ const EditAdPage = () => {
       }
 
       const isJob = formData.category && categories[formData.category]?.type === 'job';
+      const isService = formData.category && categories[formData.category]?.type === 'service';
+      const isHousingCategory = formData.category === 'maison-a-louer';
 
       const listingData = {
         title: sanitizeInput(formData.title),
@@ -229,16 +240,25 @@ const EditAdPage = () => {
         quantity: (formData.quantity && !isNaN(parseInt(formData.quantity, 10))) ? parseInt(formData.quantity, 10) : null,
         images: finalImageUrls,
         status: formData.quantity === '0' ? 'inactive' : 'active',
-        condition: isJob ? null : formData.condition,
+        condition: (isJob || isService) ? null : formData.condition,
         negotiable: isJob ? false : formData.negotiable,
-        delivery_method: isJob ? 'pickup' : formData.delivery_method,
+        delivery_method: (isJob || isService) ? 'pickup' : formData.delivery_method,
         is_urgent: formData.is_urgent,
-        accepts_cash_on_delivery: isJob ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
-        national_delivery_enabled: isJob ? false : !!formData.national_delivery,
-        national_delivery_fee: (!isJob && formData.national_delivery && formData.national_delivery_fee && !isNaN(parseFloat(formData.national_delivery_fee))) ? parseFloat(formData.national_delivery_fee) : 0,
-        offers_seller_delivery: isJob ? false : !!formData.offers_seller_delivery,
-        offers_pickup: isJob ? false : !!formData.offers_pickup,
+        accepts_cash_on_delivery: (isJob || isService) ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
+        national_delivery_enabled: (isJob || isService) ? false : !!formData.national_delivery,
+        national_delivery_fee: (!isJob && !isService && formData.national_delivery && formData.national_delivery_fee && !isNaN(parseFloat(formData.national_delivery_fee))) ? parseFloat(formData.national_delivery_fee) : 0,
+        offers_seller_delivery: (isJob || isService) ? false : !!formData.offers_seller_delivery,
+        offers_pickup: (isJob || isService) ? false : !!formData.offers_pickup,
         negotiated_price: (formData.negotiable && formData.negotiated_price && !isNaN(parseFloat(formData.negotiated_price))) ? parseFloat(formData.negotiated_price) : null,
+        // Caractéristiques du logement — uniquement pour "Maison à louer"
+        bedrooms: (isHousingCategory && formData.bedrooms && !isNaN(parseInt(formData.bedrooms, 10))) ? parseInt(formData.bedrooms, 10) : null,
+        is_furnished: isHousingCategory ? !!formData.is_furnished : null,
+        has_separate_living_room: isHousingCategory ? !!formData.has_separate_living_room : null,
+        bathroom_location: isHousingCategory ? (formData.bathroom_location || null) : null,
+        has_running_water: isHousingCategory ? !!formData.has_running_water : null,
+        has_electricity: isHousingCategory ? !!formData.has_electricity : null,
+        has_annex: isHousingCategory ? !!formData.has_annex : null,
+        advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
       };
 
       await updateListing(id, listingData);

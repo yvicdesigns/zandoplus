@@ -575,6 +575,14 @@ const ListingDetailPage = () => {
                         ['État',         listing.condition === 'new' ? 'Neuf' : listing.condition === 'used' ? 'Occasion' : listing.condition],
                         listing.brand && ['Marque', listing.brand],
                         ['Prix',         `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}`],
+                        listing.bedrooms && ['Chambres', `${listing.bedrooms} chambre${listing.bedrooms > 1 ? 's' : ''}`],
+                        listing.bathroom_location && ['Toilettes / douche', listing.bathroom_location === 'interior' ? 'Intérieures' : 'Extérieures'],
+                        listing.is_furnished != null && ['Meublée', listing.is_furnished ? 'Oui' : 'Non'],
+                        listing.has_separate_living_room != null && ['Salon & cuisine séparés', listing.has_separate_living_room ? 'Oui' : 'Non'],
+                        listing.has_running_water != null && ['Eau courante', listing.has_running_water ? 'Oui' : 'Non'],
+                        listing.has_electricity != null && ['Électricité', listing.has_electricity ? 'Oui' : 'Non'],
+                        listing.has_annex != null && ['Annexe', listing.has_annex ? 'Oui' : 'Non'],
+                        listing.advance_months != null && ['Avance demandée', `${listing.advance_months} mois`],
                         ['Vendeur',      listing.seller?.full_name || '—'],
                       ].filter(Boolean).map(([label, value]) => value ? (
                         <tr key={label}>
