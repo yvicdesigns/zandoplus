@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, ShoppingBag, MessageCircle, Truck, Shield, ChevronRight, BadgeCheck, User, Phone, MapPin } from 'lucide-react';
+import { Loader2, ShoppingBag, MessageCircle, Truck, Shield, ChevronRight, BadgeCheck, User, Phone, MapPin, LogIn } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const BENEFITS = [
@@ -14,7 +14,7 @@ const BENEFITS = [
 ];
 
 const BecomeSellerPage = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -31,6 +31,16 @@ const BecomeSellerPage = () => {
       });
     }
   }, [user]);
+
+  // Cette page est aussi le lien direct qu'on partage quand un client demande
+  // "comment créer ma boutique ?" (WhatsApp, Instagram...). Sans connexion, le
+  // formulaire s'affichait normalement mais échouait silencieusement à
+  // l'activation (redirection vers l'accueil sans explication). On invite donc
+  // explicitement à se connecter, sans quitter cette page, pour qu'un lien
+  // direct fonctionne même pour quelqu'un qui n'a pas encore de compte.
+  useEffect(() => {
+    if (!authLoading && !user) openAuthModal();
+  }, [authLoading, user, openAuthModal]);
 
   const validate = () => {
     const e = {};
@@ -95,6 +105,26 @@ const BecomeSellerPage = () => {
             </p>
           </div>
 
+          {authLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-green-600" />
+            </div>
+          ) : !user ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-green-50 mb-3">
+                <LogIn className="w-6 h-6 text-green-700" />
+              </div>
+              <p className="font-bold text-gray-900 mb-1">Connectez-vous pour continuer</p>
+              <p className="text-sm text-gray-500 mb-4">Il faut un compte Zando+ pour activer votre espace vendeur.</p>
+              <button
+                onClick={openAuthModal}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-bold text-sm transition-colors"
+              >
+                Se connecter / Créer un compte
+              </button>
+            </div>
+          ) : (
+          <>
           {/* Form */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 space-y-4">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Vos informations</p>
@@ -197,6 +227,8 @@ const BecomeSellerPage = () => {
               </p>
             </div>
           </div>
+          </>
+          )}
 
         </div>
       </div>

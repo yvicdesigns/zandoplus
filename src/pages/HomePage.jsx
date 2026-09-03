@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 const HeroSection = lazy(() => import('@/components/home/HeroSection'));
 const TrustBarSection = lazy(() => import('@/components/home/TrustBarSection'));
 const CategoriesSection = lazy(() => import('@/components/home/CategoriesSection'));
+const SellerCtaSection = lazy(() => import('@/components/home/SellerCtaSection'));
 const ListingsSection = lazy(() => import('@/components/home/ListingsSection'));
 const OffresSection = lazy(() => import('@/components/home/OffresSection'));
 const AppBannerSection = lazy(() => import('@/components/home/AppBannerSection'));
@@ -127,6 +128,7 @@ const HomePage = () => {
           <StatsSection />
           <UrgentSection />
           <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
+          <SellerCtaSection />
           <BoostedSection />
           <HomepageAdBanner placement="after_categories" />
           <ListingsSection />
