@@ -7,6 +7,7 @@ import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
   CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
+  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -566,34 +567,58 @@ const ListingDetailPage = () => {
               )}
 
               {activeTab === 'Caractéristiques' && (
-                <div className="bg-white rounded-xl p-6 border border-gray-100">
-                  <div className="overflow-x-auto"><table className="w-full text-[13px]">
-                    <tbody className="divide-y divide-gray-100">
-                      {[
-                        ['Catégorie',   categoryName],
-                        listing.subcategory && ['Sous-catégorie', listing.subcategory],
-                        ['Localisation', listing.location],
-                        ['État',         listing.condition === 'new' ? 'Neuf' : listing.condition === 'used' ? 'Occasion' : listing.condition],
-                        listing.brand && ['Marque', listing.brand],
-                        [listing.category === 'maison-a-louer' ? 'Loyer' : 'Prix', `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}${listing.category === 'maison-a-louer' ? ' / mois' : ''}`],
-                        listing.bedrooms && ['Chambres', `${listing.bedrooms} chambre${listing.bedrooms > 1 ? 's' : ''}`],
-                        listing.bathroom_location && ['Toilettes / douche', listing.bathroom_location === 'interior' ? 'Intérieures' : 'Extérieures'],
-                        listing.is_furnished != null && ['Meublée', listing.is_furnished ? 'Oui' : 'Non'],
-                        listing.has_separate_living_room != null && ['Salon & cuisine séparés', listing.has_separate_living_room ? 'Oui' : 'Non'],
-                        listing.has_running_water != null && ['Eau courante', listing.has_running_water ? 'Oui' : 'Non'],
-                        listing.has_electricity != null && ['Électricité', listing.has_electricity ? 'Oui' : 'Non'],
-                        listing.has_annex != null && ['Annexe', listing.has_annex ? 'Oui' : 'Non'],
-                        listing.advance_months != null && ['Avance demandée', `${listing.advance_months} mois`],
-                        listing.caution_amount != null && ['Caution', `${listing.caution_amount.toLocaleString('fr-FR')} FCFA`],
-                        ['Vendeur',      listing.seller?.full_name || '—'],
-                      ].filter(Boolean).map(([label, value]) => value ? (
-                        <tr key={label}>
-                          <td className="py-2.5 pr-6 text-gray-500 font-medium w-36">{label}</td>
-                          <td className="py-2.5 text-gray-900 font-semibold">{value}</td>
-                        </tr>
-                      ) : null)}
-                    </tbody>
-                  </table></div>
+                <div className="space-y-4">
+                  {/* Logement — pictos, pour rester lisible même sans bien lire le français */}
+                  {listing.category === 'maison-a-louer' && (
+                    <div className="bg-white rounded-xl p-6 border border-gray-100">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {[
+                          listing.bedrooms && { icon: Bed, label: `${listing.bedrooms} chambre${listing.bedrooms > 1 ? 's' : ''}`, on: true },
+                          listing.bathroom_location && { icon: ShowerHead, label: listing.bathroom_location === 'interior' ? 'Douche intérieure' : 'Douche extérieure', on: true },
+                          listing.is_furnished != null && { icon: Armchair, label: 'Meublée', on: listing.is_furnished },
+                          listing.has_separate_living_room != null && { icon: Sofa, label: 'Salon & cuisine séparés', on: listing.has_separate_living_room },
+                          listing.has_running_water != null && { icon: Droplet, label: 'Eau courante', on: listing.has_running_water },
+                          listing.has_electricity != null && { icon: Zap, label: 'Électricité', on: listing.has_electricity },
+                          listing.has_annex != null && { icon: Warehouse, label: 'Annexe', on: listing.has_annex },
+                          listing.advance_months != null && { icon: CalendarClock, label: `${listing.advance_months} mois d'avance`, on: true },
+                          listing.caution_amount != null && { icon: Wallet, label: `Caution ${listing.caution_amount.toLocaleString('fr-FR')} FCFA`, on: true },
+                        ].filter(Boolean).map(({ icon: Icon, label, on }) => (
+                          <div
+                            key={label}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border ${
+                              on ? 'bg-custom-green-50 border-custom-green-200 text-custom-green-800' : 'bg-gray-50 border-gray-200 text-gray-400'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${on ? 'bg-custom-green-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                              {on ? <Icon className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                            </div>
+                            <span className="text-[12px] font-semibold leading-tight">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-white rounded-xl p-6 border border-gray-100">
+                    <div className="overflow-x-auto"><table className="w-full text-[13px]">
+                      <tbody className="divide-y divide-gray-100">
+                        {[
+                          ['Catégorie',   categoryName],
+                          listing.subcategory && ['Sous-catégorie', listing.subcategory],
+                          ['Localisation', listing.location],
+                          listing.category !== 'maison-a-louer' && ['État', listing.condition === 'new' ? 'Neuf' : listing.condition === 'used' ? 'Occasion' : listing.condition],
+                          listing.brand && ['Marque', listing.brand],
+                          [listing.category === 'maison-a-louer' ? 'Loyer' : 'Prix', `${(listing.price || 0).toLocaleString('fr-FR')} ${listing.currency || 'FCFA'}${listing.category === 'maison-a-louer' ? ' / mois' : ''}`],
+                          ['Vendeur',      listing.seller?.full_name || '—'],
+                        ].filter(Boolean).map(([label, value]) => value ? (
+                          <tr key={label}>
+                            <td className="py-2.5 pr-6 text-gray-500 font-medium w-36">{label}</td>
+                            <td className="py-2.5 text-gray-900 font-semibold">{value}</td>
+                          </tr>
+                        ) : null)}
+                      </tbody>
+                    </table></div>
+                  </div>
                 </div>
               )}
 
