@@ -131,6 +131,133 @@ const ManualCertificationSection = () => {
   );
 };
 
+// ── Section : vérifications "Maison à louer" (gratuite, distincte du flux payant) ──
+const HousingVerificationsSection = () => {
+  const { toast } = useToast();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [rejecting, setRejecting] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  // Bucket privé — il faut des liens signés (createSignedUrl), pas getPublicUrl().
+  const signDoc = async (path) => {
+    if (!path) return null;
+    const { data } = await supabase.storage.from('verification_documents').createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  };
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('housing_verification_requests')
+      .select('id, status, id_document_url, selfie_url, proof_of_address_url, rejection_reason, created_at, profile:profiles(id, full_name, avatar_url, phone)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true });
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
+    const withSignedUrls = await Promise.all((data || []).map(async (req) => ({
+      ...req,
+      id_document_signed_url: await signDoc(req.id_document_url),
+      selfie_signed_url: await signDoc(req.selfie_url),
+      proof_of_address_signed_url: await signDoc(req.proof_of_address_url),
+    })));
+    setRequests(withSignedUrls);
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  const handleReview = async (requestId, status, reason = null) => {
+    setActionLoading(requestId);
+    const { error } = await supabase.rpc('admin_review_housing_verification', {
+      p_request_id: requestId, p_status: status, p_rejection_reason: reason,
+    });
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: status === 'approved' ? 'Propriétaire vérifié ✅' : 'Demande rejetée', className: status === 'approved' ? 'bg-green-100 text-green-800' : undefined });
+      setRequests(prev => prev.filter(r => r.id !== requestId));
+    }
+    setActionLoading(null);
+    setRejecting(null);
+    setRejectionReason('');
+  };
+
+  if (loading) return <Skeleton className="h-24 w-full" />;
+  if (requests.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold text-teal-700 flex items-center gap-2 text-sm uppercase tracking-wide">
+        <Home className="w-4 h-4" /> Vérifications "Maison à louer" — gratuites ({requests.length})
+      </h3>
+      {requests.map(req => (
+        <Card key={req.id} className="border-teal-100">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-9 h-9">
+                <AvatarImage src={req.profile?.avatar_url} />
+                <AvatarFallback>{req.profile?.full_name?.charAt(0) || '?'}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-semibold">{req.profile?.full_name || 'Sans nom'}</p>
+                <p className="text-xs text-gray-400">{req.profile?.phone || '—'}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {req.id_document_signed_url && (
+                <a href={req.id_document_signed_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline border border-blue-200 rounded-lg px-2.5 py-1.5">
+                  <FileText className="w-3.5 h-3.5" /> Pièce d'identité <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {req.selfie_signed_url && (
+                <a href={req.selfie_signed_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline border border-blue-200 rounded-lg px-2.5 py-1.5">
+                  <Camera className="w-3.5 h-3.5" /> Selfie <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {req.proof_of_address_signed_url && (
+                <a href={req.proof_of_address_signed_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline border border-blue-200 rounded-lg px-2.5 py-1.5">
+                  <Home className="w-3.5 h-3.5" /> Facture/titre <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+
+            {rejecting === req.id ? (
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Raison du rejet (visible par le propriétaire)…"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={2}
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setRejecting(null); setRejectionReason(''); }}>Annuler</Button>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700" disabled={actionLoading === req.id || !rejectionReason.trim()} onClick={() => handleReview(req.id, 'rejected', rejectionReason)}>
+                    {actionLoading === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer le rejet'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700" disabled={actionLoading === req.id} onClick={() => handleReview(req.id, 'approved')}>
+                  {actionLoading === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-1" /> Approuver</>}
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" disabled={actionLoading === req.id} onClick={() => setRejecting(req.id)}>
+                  <XCircle className="w-4 h-4 mr-1" /> Rejeter
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 // ── Composant principal ───────────────────────────────────────────────────────
 const AdminVerificationsTab = () => {
   const [requests, setRequests] = useState([]);
@@ -228,6 +355,9 @@ const AdminVerificationsTab = () => {
 
         {/* Certification manuelle */}
         <ManualCertificationSection />
+
+        {/* Vérifications gratuites "Maison à louer" */}
+        <HousingVerificationsSection />
 
         {/* Demandes via documents */}
         {pending.length > 0 && (

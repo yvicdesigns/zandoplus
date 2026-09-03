@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, Package, Plus, Pencil, Eye, Trash2, Zap, Key, RotateCcw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import HousingVerificationCard from './HousingVerificationCard';
 
 const STATUS_CFG = {
   active:   { label: 'En ligne',  cls: 'bg-emerald-100 text-emerald-700' },
@@ -78,6 +79,8 @@ const SellerListingsInline = () => {
           <Plus className="w-4 h-4" /> Ajouter un produit
         </button>
       </div>
+
+      {listings.some(l => l.category === 'maison-a-louer') && <HousingVerificationCard />}
 
       {listings.length === 0 ? (
         <div className="text-center py-16">

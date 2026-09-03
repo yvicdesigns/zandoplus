@@ -18,7 +18,19 @@ const reportReasons = [
   { value: 'other', label: 'Autre' },
 ];
 
-const ReportListingDialog = ({ open, onOpenChange, listingId, listingTitle }) => {
+// Motifs spécifiques "Maison à louer" — Zando ne prend jamais de commission, donc
+// tout signalement de commission demandée pointe vers un démarcheur, pas vers nous.
+const housingReportReasons = [
+  { value: 'commission_asked',  label: 'On me demande une commission' },
+  { value: 'not_owner',         label: "Cette personne n'est pas le propriétaire" },
+  { value: 'already_rented',    label: 'Maison déjà louée' },
+  { value: 'fraud',             label: 'Tentative de fraude ou arnaque' },
+  { value: 'misleading',        label: 'Annonce trompeuse ou incorrecte' },
+  { value: 'other',             label: 'Autre' },
+];
+
+const ReportListingDialog = ({ open, onOpenChange, listingId, listingTitle, isHousing }) => {
+  const reasons = isHousing ? housingReportReasons : reportReasons;
   const { user } = useAuth();
   const { toast } = useToast();
   const [reason, setReason] = useState('');
@@ -91,7 +103,7 @@ const ReportListingDialog = ({ open, onOpenChange, listingId, listingTitle }) =>
                   <SelectValue placeholder="Sélectionnez un motif..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {reportReasons.map((r) => (
+                  {reasons.map((r) => (
                     <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                   ))}
                 </SelectContent>

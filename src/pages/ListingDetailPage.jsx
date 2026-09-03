@@ -7,7 +7,7 @@ import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
   CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
-  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X,
+  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -349,6 +349,11 @@ const ListingDetailPage = () => {
                 {listing.seller?.verified && (
                   <span className="flex items-center gap-1 text-custom-green-600 text-[12px] font-semibold">
                     <BadgeCheck className="w-4 h-4" /> Produit certifié
+                  </span>
+                )}
+                {listing.category === 'maison-a-louer' && listing.seller?.housing_verified && (
+                  <span className="flex items-center gap-1 text-teal-600 text-[12px] font-semibold">
+                    <ShieldCheck className="w-4 h-4" /> Propriétaire vérifié
                   </span>
                 )}
               </div>
@@ -721,10 +726,11 @@ const ListingDetailPage = () => {
       </div>
 
       <ReportListingDialog
-        isOpen={isReportDialogOpen}
+        open={isReportDialogOpen}
         onOpenChange={setReportDialogOpen}
         listingId={listing.id}
         listingTitle={listing.title}
+        isHousing={listing.category === 'maison-a-louer'}
       />
       <SendMessageDialog
         isOpen={isMessageDialogOpen}
