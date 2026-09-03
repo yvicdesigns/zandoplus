@@ -115,12 +115,12 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
           </div>
           {!isJobCategory && <FormError message={formErrors.price} />}
           {isJobCategory && <p className="text-xs text-gray-500 mt-1">Indiquez un salaire mensuel ou annuel.</p>}
-          {!isJobCategory && onAIPrice && (
+          {!isJobCategory && !isServiceCategory && onAIPrice && (
             <PriceEstimator formData={formData} onApply={onAIPrice} />
           )}
         </div>
 
-        {!isJobCategory && (
+        {!isJobCategory && !isServiceCategory && (
           <div>
             <Label htmlFor="condition">État *</Label>
             <Select name="condition" value={formData.condition} onValueChange={(value) => handleSelectChange('condition', value)}>
