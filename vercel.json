@@ -7,7 +7,7 @@
   ],
   "headers": [
     {
-      "source": "/index.html",
+      "source": "/((?!assets/).*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
