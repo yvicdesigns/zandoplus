@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2, Package, Plus, Pencil, Eye, Trash2, Zap } from 'lucide-react';
+import { Loader2, Package, Plus, Pencil, Eye, Trash2, Zap, Key, RotateCcw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const STATUS_CFG = {
@@ -10,6 +10,7 @@ const STATUS_CFG = {
   pending:  { label: 'En attente',cls: 'bg-orange-100 text-orange-700'  },
   archived: { label: 'Archivée',  cls: 'bg-gray-100 text-gray-500'      },
   rejected: { label: 'Rejetée',   cls: 'bg-red-100 text-red-700'        },
+  rented:   { label: 'Louée',     cls: 'bg-gray-100 text-gray-500'      },
 };
 
 const SellerListingsInline = () => {
@@ -25,7 +26,7 @@ const SellerListingsInline = () => {
     setLoading(true);
     const { data } = await supabase
       .from('listings')
-      .select('id, title, price, images, status, views_count, created_at, listing_slug, is_boosted')
+      .select('id, title, price, images, status, views_count, created_at, listing_slug, is_boosted, category')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     setListings(data || []);
@@ -45,6 +46,23 @@ const SellerListingsInline = () => {
       toast({ title: 'Annonce supprimée', className: 'bg-custom-green-500 text-white' });
     }
     setDeleting(null);
+  };
+
+  // "Maison à louer" : le propriétaire marque lui-même son annonce comme louée
+  // (statut dédié 'rented', exclu de la recherche publique comme 'inactive') pour
+  // qu'elle disparaisse immédiatement de la liste — pas besoin de repasser par un admin.
+  const [togglingRented, setTogglingRented] = useState(null);
+  const handleToggleRented = async (id, currentStatus) => {
+    setTogglingRented(id);
+    const nextStatus = currentStatus === 'rented' ? 'active' : 'rented';
+    const { error } = await supabase.from('listings').update({ status: nextStatus }).eq('id', id).eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      setListings(prev => prev.map(l => l.id === id ? { ...l, status: nextStatus } : l));
+      toast({ title: nextStatus === 'rented' ? 'Marquée comme louée' : 'Remise en ligne', className: 'bg-custom-green-500 text-white' });
+    }
+    setTogglingRented(null);
   };
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-custom-green-500" /></div>;
@@ -108,6 +126,21 @@ const SellerListingsInline = () => {
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
+                  {l.category === 'maison-a-louer' && (l.status === 'active' || l.status === 'rented') && (
+                    <button
+                      onClick={() => handleToggleRented(l.id, l.status)}
+                      disabled={togglingRented === l.id}
+                      title={l.status === 'rented' ? 'Remettre en ligne' : 'Marquer comme louée'}
+                      className={`flex items-center gap-1 px-2.5 h-8 rounded-lg text-[11px] font-bold transition-colors border disabled:opacity-50 ${
+                        l.status === 'rented'
+                          ? 'bg-white border-gray-200 text-gray-400 hover:border-custom-green-400 hover:text-custom-green-500'
+                          : 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100'
+                      }`}
+                    >
+                      {togglingRented === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : l.status === 'rented' ? <RotateCcw className="w-3.5 h-3.5" /> : <Key className="w-3.5 h-3.5" />}
+                      {l.status === 'rented' ? 'Remettre en ligne' : 'Marquer louée'}
+                    </button>
+                  )}
                   {l.status === 'active' && (
                     <button
                       onClick={() => navigate(`/boost/${l.id}`)}

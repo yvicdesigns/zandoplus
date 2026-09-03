@@ -3,6 +3,7 @@ export const CATEGORY_ICONS = {
   'phones-tablets':          { emoji: '📱', color: 'from-teal-500 to-cyan-600',      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200&h=200&fit=crop&q=80' },
   'vehicles':                { emoji: '🚗', color: 'from-sky-500 to-blue-600',       image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=200&h=200&fit=crop&q=80' },
   'real-estate':             { emoji: '🏠', color: 'from-orange-500 to-red-600',     image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&h=200&fit=crop&q=80' },
+  'maison-a-louer':          { emoji: '🔑', color: 'from-teal-500 to-emerald-600',   image: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=200&h=200&fit=crop&q=80' },
   'fashion':                 { emoji: '👗', color: 'from-pink-500 to-rose-600',      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop&q=80' },
   'maison-meubles':          { emoji: '🛋️', color: 'from-amber-500 to-orange-600',  image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop&q=80' },
   'beaute-soins':            { emoji: '💄', color: 'from-fuchsia-500 to-pink-600',   image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=200&h=200&fit=crop&q=80' },

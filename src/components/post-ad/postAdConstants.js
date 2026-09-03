@@ -14,6 +14,11 @@ export const categories = {
         type: 'product',
         subcategories: ['Appartements', 'Maisons', 'Terrains', 'Commerces', 'Locations de Vacances']
       },
+      'maison-a-louer': {
+        name: 'Maison à louer',
+        type: 'service',
+        subcategories: ['Studio', 'Chambre', 'Appartement', 'Maison', 'Villa', 'Terrain']
+      },
       fashion: {
         name: 'Mode',
         type: 'product',
