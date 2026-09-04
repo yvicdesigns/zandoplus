@@ -36,6 +36,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
+    // Nombre à afficher sur le badge de l'icône (façon WhatsApp) — calculé
+    // côté serveur pour rester juste même si l'app est fermée quand la
+    // notification arrive (iOS applique aps.badge sans jamais réveiller le JS).
+    const { count: badgeCount } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user_id)
+      .eq('is_read', false);
+
     const { data: tokens } = await supabase
       .from('push_tokens')
       .select('id, token_type, token')
@@ -73,7 +82,7 @@ serve(async (req) => {
         }
 
         if (t.token_type === 'fcm' && fcmEmail && fcmKey) {
-          await sendFcmV1(t.token, JSON.parse(payload), fcmEmail, fcmKey, fcmProject);
+          await sendFcmV1(t.token, JSON.parse(payload), fcmEmail, fcmKey, fcmProject, badgeCount ?? 0);
         }
       })
     );
@@ -104,7 +113,7 @@ function b64url(arr: Uint8Array): string {
   return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-async function sendFcmV1(fcmToken: string, payload: any, serviceAccountEmail: string, privateKeyPem: string, projectId: string) {
+async function sendFcmV1(fcmToken: string, payload: any, serviceAccountEmail: string, privateKeyPem: string, projectId: string, badgeCount: number) {
   const now = Math.floor(Date.now() / 1000);
   const header = b64url(new TextEncoder().encode(JSON.stringify({ alg: 'RS256', typ: 'JWT' })));
   const claims = b64url(new TextEncoder().encode(JSON.stringify({
@@ -134,8 +143,8 @@ async function sendFcmV1(fcmToken: string, payload: any, serviceAccountEmail: st
       message: {
         token: fcmToken,
         notification: { title: payload.title || 'Zando+', body: payload.body || payload.message || '' },
-        android: { notification: { sound: 'default', channel_id: 'zandoplus_default' } },
-        apns: { payload: { aps: { sound: 'default' } } },
+        android: { notification: { sound: 'default', channel_id: 'zandoplus_default', notification_count: badgeCount } },
+        apns: { payload: { aps: { sound: 'default', badge: badgeCount } } },
         data: { url: payload.url || '/' },
       },
     }),

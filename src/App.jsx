@@ -30,6 +30,7 @@ const GoogleAnalytics  = lazy(() => import('@/components/analytics/GoogleAnalyti
 const MetaPixel        = lazy(() => import('@/components/analytics/MetaPixel'));
 const TikTokPixel      = lazy(() => import('@/components/analytics/TikTokPixel'));
 const PwaInstallModal  = lazy(() => import('@/components/common/PwaInstallModal'));
+const AppUpdateBanner  = lazy(() => import('@/components/AppUpdateBanner'));
 const BugReportButton  = lazy(() => import('@/components/beta/BugReportButton'));
 const ChatWidget       = lazy(() => import('@/components/ai/ChatWidget'));
 const AuthModal        = lazy(() => import('@/components/auth/AuthModal'));
@@ -245,6 +246,7 @@ const AppContent = () => {
     return (
         <>
             <Suspense fallback={null}><PwaInstallModal /></Suspense>
+            <Suspense fallback={null}><AppUpdateBanner /></Suspense>
             <DynamicFavicon />
             <Suspense fallback={null}><GoogleAnalytics /></Suspense>
             <Suspense fallback={null}><MetaPixel /></Suspense>

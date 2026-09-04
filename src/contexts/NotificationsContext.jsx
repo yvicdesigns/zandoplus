@@ -6,6 +6,8 @@ import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { robustQuery } from '@/lib/supabaseHelpers';
 import { logError } from '@/lib/errorLogger';
+import { Capacitor } from '@capacitor/core';
+import { Badge } from '@capawesome/capacitor-badge';
 
 const NotificationsContext = createContext();
 
@@ -53,8 +55,19 @@ export const NotificationsProvider = ({ children }) => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Badge PWA sur l'icône de l'application
+  // Badge sur l'icône de l'application — l'API web `setAppBadge` ne fonctionne
+  // quasiment jamais dans l'app native réelle (Capacitor n'est pas une PWA
+  // installée aux yeux d'iOS/Android) ; on utilise donc le plugin natif dans
+  // l'app, et l'API web reste en repli pour le navigateur/PWA installée.
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      if (unreadCount > 0) {
+        Badge.set({ count: unreadCount }).catch(() => {});
+      } else {
+        Badge.clear().catch(() => {});
+      }
+      return;
+    }
     if (!('setAppBadge' in navigator)) return;
     if (unreadCount > 0) {
       navigator.setAppBadge(unreadCount).catch(() => {});
