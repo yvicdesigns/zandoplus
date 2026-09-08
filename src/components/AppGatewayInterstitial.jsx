@@ -19,15 +19,15 @@ const STORE_URLS = {
 const SEEN_KEY = 'zando_gateway_seen';
 
 const AppleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="#111" aria-hidden="true">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M16.7 12.7c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.6-1.3-.1-2.5.7-3.1.7-.6 0-1.6-.7-2.7-.7-1.4 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2.1 2.6 2 1-.1 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4-.1 0-2.1-.8-2.3-3.1zM14.5 6.2c.6-.7 1-1.7.9-2.7-.9.1-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.6 1 .1 1.9-.5 2.5-1.2z" />
   </svg>
 );
 
 const PlayIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M4 4l13 8-13 8V4z" fill="#00A657" />
-    <path d="M4 4l9.5 8L4 20" fill="#0B7F42" opacity=".55" />
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 4l13 8-13 8V4z" fill="currentColor" />
+    <path d="M4 4l9.5 8L4 20" fill="currentColor" opacity=".45" />
   </svg>
 );
 
@@ -37,12 +37,12 @@ const StoreBadge = ({ href, icon, kicker, label, onClick }) => (
     target="_blank"
     rel="noopener noreferrer"
     onClick={onClick}
-    className="flex items-center gap-2.5 rounded-xl border border-black/5 bg-white px-4 py-2.5 text-left shadow-[0_10px_22px_-12px_rgba(18,22,14,0.35)] transition-shadow hover:shadow-[0_12px_26px_-12px_rgba(18,22,14,0.42)] active:scale-[.98]"
+    className="flex items-center gap-3 rounded-2xl bg-custom-green-500 px-5 py-4 text-left text-white shadow-[0_10px_22px_-10px_rgba(0,82,42,0.5)] transition-shadow hover:bg-custom-green-600 hover:shadow-[0_14px_28px_-10px_rgba(0,82,42,0.6)] active:scale-[.98]"
   >
     {icon}
     <span className="flex flex-col leading-tight">
-      <span className="text-[10px] text-gray-500">{kicker}</span>
-      <span className="text-sm font-bold text-gray-900">{label}</span>
+      <span className="text-[11px] text-white/75">{kicker}</span>
+      <span className="text-base font-bold text-white">{label}</span>
     </span>
   </a>
 );
