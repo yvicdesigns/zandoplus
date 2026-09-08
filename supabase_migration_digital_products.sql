@@ -95,6 +95,19 @@ INSERT INTO categories (slug, name, type, display_order)
 VALUES ('digital-goods', 'Produits numériques', 'digital', 17)
 ON CONFLICT (slug) DO NOTHING;
 
+-- 5bis. Contenu numérique par lien externe (formations vidéo hébergées par
+-- le vendeur lui-même — YouTube non répertorié, Drive privé, etc.) au lieu
+-- d'un fichier envoyé chez nous. + un lien d'aperçu public (ex: 30s sur
+-- YouTube) visible par tous, séparé du contenu protégé.
+ALTER TABLE listings
+  ADD COLUMN IF NOT EXISTS digital_delivery_type text NOT NULL DEFAULT 'file',
+  ADD COLUMN IF NOT EXISTS digital_external_url text,
+  ADD COLUMN IF NOT EXISTS preview_video_url text;
+
+ALTER TABLE listings DROP CONSTRAINT IF EXISTS listings_digital_delivery_type_check;
+ALTER TABLE listings ADD CONSTRAINT listings_digital_delivery_type_check
+  CHECK (digital_delivery_type = ANY (ARRAY['file','link']));
+
 -- 6. Notification "livré" adaptée au numérique -----------------------------
 -- notify_escrow_parties() envoyait toujours "📦 Votre commande a été
 -- envoyée" au passage à 'livre' — trompeur pour un fichier qu'on télécharge.

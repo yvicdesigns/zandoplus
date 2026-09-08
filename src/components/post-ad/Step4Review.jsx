@@ -44,8 +44,13 @@ const Step4Review = ({ formData, onBack, onSubmit, isSubmitting, submitButtonTex
                     )}
                 </>
             )}
-            {isDigital && digitalFile && (
+            {isDigital && formData.digital_delivery_type === 'link' ? (
+              <div className="md:col-span-2"><strong>Lien complet (privé):</strong> <p className="text-gray-700 truncate">{formData.digital_external_url}</p></div>
+            ) : isDigital && digitalFile ? (
               <div><strong>Fichier à vendre:</strong> <p className="text-gray-700 truncate">{digitalFile.name}</p></div>
+            ) : null}
+            {isDigital && formData.preview_video_url && (
+              <div className="md:col-span-2"><strong>Lien d'aperçu (public):</strong> <p className="text-gray-700 truncate">{formData.preview_video_url}</p></div>
             )}
           </div>
         </div>

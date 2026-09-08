@@ -7,7 +7,7 @@ import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
   CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
-  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck, Download,
+  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck, Download, PlayCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -31,6 +31,15 @@ import { categories as CATEGORY_DEFS } from '@/components/post-ad/postAdConstant
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TABS = ['Description', 'Caractéristiques', 'Avis', 'Livraison & retours'];
+
+// Extrait un id vidéo YouTube (watch?v=, youtu.be/, shorts/, déjà embed/) pour
+// l'aperçu public d'un produit numérique — retourne null si ce n'est pas
+// une URL YouTube reconnue (Vimeo, Drive… restent un simple lien externe).
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+};
 
 const COLOR_MAP = {
   'Noir': '#1a1a1a', 'Gris': '#6b7280', 'Blanc': '#f5f5f5',
@@ -342,6 +351,36 @@ const ListingDetailPage = () => {
               {/* Sous-titre court */}
               {shortDesc && (
                 <p className="text-[13px] text-gray-500 leading-relaxed">{shortDesc}</p>
+              )}
+
+              {/* Aperçu public — produit numérique uniquement, visible même sans achat */}
+              {isDigital && listing.preview_video_url && (
+                <div className="rounded-xl overflow-hidden border border-gray-200 bg-black">
+                  {getYoutubeEmbedUrl(listing.preview_video_url) ? (
+                    <div className="aspect-video">
+                      <iframe
+                        src={getYoutubeEmbedUrl(listing.preview_video_url)}
+                        title="Aperçu"
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      href={listing.preview_video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 text-white hover:bg-white/5 transition-colors"
+                    >
+                      <PlayCircle className="w-8 h-8 flex-shrink-0" />
+                      <span>
+                        <span className="block text-sm font-semibold">Voir l'aperçu</span>
+                        <span className="block text-xs text-gray-300">Ouvre un extrait dans un nouvel onglet</span>
+                      </span>
+                    </a>
+                  )}
+                </div>
               )}
 
               {/* Étoiles + Produit certifié sur la même ligne */}

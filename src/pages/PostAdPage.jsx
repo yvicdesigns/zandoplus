@@ -62,7 +62,8 @@ const PostAdPage = () => {
       negotiated_price: '',
       bedrooms: '', is_furnished: false, has_separate_living_room: false,
       bathroom_location: '', has_running_water: false, has_electricity: false,
-      has_annex: false, advance_months: '', caution_amount: ''
+      has_annex: false, advance_months: '', caution_amount: '',
+      digital_delivery_type: 'file', digital_external_url: '', preview_video_url: ''
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -232,7 +233,8 @@ const PostAdPage = () => {
         if (!formData.title.trim() || formData.title.trim().length < 5) errors.title = "Le titre doit comporter au moins 5 caractères.";
         if (!formData.description.trim() || formData.description.trim().length < 20) errors.description = "La description doit comporter au moins 20 caractères.";
         if (imageFiles.length === 0) errors.images = "Au moins une photo est requise.";
-        if (isDigital && !digitalFile) errors.digitalFile = "Le fichier à vendre est requis.";
+        if (isDigital && formData.digital_delivery_type !== 'link' && !digitalFile) errors.digitalFile = "Le fichier à vendre est requis.";
+        if (isDigital && formData.digital_delivery_type === 'link' && !formData.digital_external_url?.trim()) errors.digitalExternalUrl = "Le lien vers le contenu est requis.";
         break;
       case 2:
         if (!isJobOrService && (!formData.price || parseFloat(formData.price) <= 0)) errors.price = "Le prix doit être un nombre positif.";
@@ -277,9 +279,10 @@ const PostAdPage = () => {
 
       const isJobOrService = ['job', 'service'].includes(formData.categoryType);
       const isDigital = formData.categoryType === 'digital';
+      const isDigitalLink = isDigital && formData.digital_delivery_type === 'link';
       const isHousingCategory = formData.category === 'maison-a-louer';
 
-      const digitalFilePath = isDigital && digitalFile ? await uploadDigitalFile(digitalFile, user.id) : null;
+      const digitalFilePath = isDigital && !isDigitalLink && digitalFile ? await uploadDigitalFile(digitalFile, user.id) : null;
 
       // Deep sanitize user inputs before inserting
       const listingData = {
@@ -304,11 +307,15 @@ const PostAdPage = () => {
         offers_seller_delivery: (isJobOrService || isDigital) ? false : !!formData.offers_seller_delivery,
         offers_pickup: (isJobOrService || isDigital) ? false : !!formData.offers_pickup,
         negotiated_price: (formData.negotiable && formData.negotiated_price && !isNaN(parseFloat(formData.negotiated_price))) ? parseFloat(formData.negotiated_price) : null,
-        // Produit numérique — fichier privé, jamais d'URL publique (cf. digitalFileUtils.js)
+        // Produit numérique — fichier privé (jamais d'URL publique, cf. digitalFileUtils.js)
+        // ou lien externe privé (vidéo hébergée par le vendeur) ; aperçu public séparé et optionnel.
         is_digital: isDigital,
-        digital_file_path: isDigital ? digitalFilePath : null,
-        digital_file_name: isDigital && digitalFile ? digitalFile.name : null,
-        digital_file_size: isDigital && digitalFile ? digitalFile.size : null,
+        digital_delivery_type: isDigital ? (isDigitalLink ? 'link' : 'file') : 'file',
+        digital_file_path: isDigital && !isDigitalLink ? digitalFilePath : null,
+        digital_file_name: isDigital && !isDigitalLink && digitalFile ? digitalFile.name : null,
+        digital_file_size: isDigital && !isDigitalLink && digitalFile ? digitalFile.size : null,
+        digital_external_url: isDigitalLink ? sanitizeInput(formData.digital_external_url?.trim()) : null,
+        preview_video_url: isDigital && formData.preview_video_url?.trim() ? sanitizeInput(formData.preview_video_url.trim()) : null,
         // Caractéristiques du logement — uniquement pour "Maison à louer"
         bedrooms: (isHousingCategory && formData.bedrooms && !isNaN(parseInt(formData.bedrooms, 10))) ? parseInt(formData.bedrooms, 10) : null,
         is_furnished: isHousingCategory ? !!formData.is_furnished : null,
@@ -372,7 +379,7 @@ const PostAdPage = () => {
               className="underline font-medium hover:text-amber-900"
               onClick={() => {
                 localStorage.removeItem(DRAFT_KEY);
-                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '', caution_amount: '' });
+                setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '', caution_amount: '', digital_delivery_type: 'file', digital_external_url: '', preview_video_url: '' });
                 setDigitalFile(null);
                 setDraftRestored(false);
               }}

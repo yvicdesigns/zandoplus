@@ -51,13 +51,23 @@ serve(async (req) => {
 
     const { data: listing, error: listingError } = await admin
       .from('listings')
-      .select('is_digital, digital_file_path, digital_file_name')
+      .select('is_digital, digital_delivery_type, digital_file_path, digital_file_name, digital_external_url')
       .eq('id', tx.annonce_id)
       .single();
     if (listingError || !listing) throw new Error('Annonce introuvable');
-    if (!listing.is_digital || !listing.digital_file_path) {
-      throw new Error("Cette annonce n'a pas de fichier numérique associé");
+    if (!listing.is_digital) throw new Error("Cette annonce n'a pas de contenu numérique associé");
+
+    // Contenu hébergé par le vendeur lui-même (vidéo YouTube non répertoriée,
+    // dossier Drive privé…) — on révèle juste le lien, aucun fichier à signer.
+    if (listing.digital_delivery_type === 'link') {
+      if (!listing.digital_external_url) throw new Error('Aucun lien associé à cette annonce');
+      return new Response(JSON.stringify({ type: 'link', url: listing.digital_external_url }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    if (!listing.digital_file_path) throw new Error("Cette annonce n'a pas de fichier numérique associé");
 
     const { data: signed, error: signError } = await admin
       .storage
@@ -65,7 +75,7 @@ serve(async (req) => {
       .createSignedUrl(listing.digital_file_path, 3600, { download: listing.digital_file_name || true });
     if (signError || !signed) throw new Error(signError?.message || 'Impossible de générer le lien de téléchargement');
 
-    return new Response(JSON.stringify({ url: signed.signedUrl, file_name: listing.digital_file_name }), {
+    return new Response(JSON.stringify({ type: 'file', url: signed.signedUrl, file_name: listing.digital_file_name }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

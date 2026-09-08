@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
 import {
   ShieldCheck, PackageCheck, AlertTriangle, Loader2,
-  Clock, CheckCircle, XCircle, Truck, ArrowLeft, Wallet, Download,
+  Clock, CheckCircle, XCircle, Truck, ArrowLeft, Wallet, Download, Link2,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -111,7 +111,7 @@ const TransactionsPage = () => {
         date_livraison_declaree, date_confirmation,
         paiement_valide_at, auto_confirm_at,
         withdrawal_available_at, withdrawal_requested_at,
-        annonce:annonce_id(id, title, images, is_digital),
+        annonce:annonce_id(id, title, images, is_digital, digital_delivery_type),
         acheteur:acheteur_id(full_name),
         vendeur:vendeur_id(full_name)
       `)
@@ -294,8 +294,10 @@ const TransactionsPage = () => {
                             >
                               {downloadingId === tx.id
                                 ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                : <Download className="w-4 h-4 mr-2" />}
-                              Télécharger le fichier
+                                : tx.annonce.digital_delivery_type === 'link'
+                                  ? <Link2 className="w-4 h-4 mr-2" />
+                                  : <Download className="w-4 h-4 mr-2" />}
+                              {tx.annonce.digital_delivery_type === 'link' ? 'Ouvrir le lien' : 'Télécharger le fichier'}
                             </Button>
                           )}
                           {tx.auto_confirm_at && (
@@ -331,8 +333,10 @@ const TransactionsPage = () => {
                         >
                           {downloadingId === tx.id
                             ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            : <Download className="w-4 h-4 mr-2" />}
-                          Retélécharger le fichier
+                            : tx.annonce?.digital_delivery_type === 'link'
+                              ? <Link2 className="w-4 h-4 mr-2" />
+                              : <Download className="w-4 h-4 mr-2" />}
+                          {tx.annonce?.digital_delivery_type === 'link' ? 'Rouvrir le lien' : 'Retélécharger le fichier'}
                         </Button>
                       )}
                       {isAchats && canLitige(tx) && (
@@ -422,27 +426,32 @@ const TransactionsPage = () => {
         <DialogContent>
           {(() => {
             const isDigitalConfirm = !!confirmDialog?.annonce?.is_digital;
-            const Icon = isDigitalConfirm ? Download : PackageCheck;
+            const isLinkConfirm = confirmDialog?.annonce?.digital_delivery_type === 'link';
+            const Icon = isLinkConfirm ? Link2 : isDigitalConfirm ? Download : PackageCheck;
             return (
               <>
                 <DialogHeader>
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 ${isDigitalConfirm ? 'bg-indigo-100' : 'bg-green-100'}`}>
                     <Icon className={`w-6 h-6 ${isDigitalConfirm ? 'text-indigo-600' : 'text-green-600'}`} />
                   </div>
-                  <DialogTitle>{isDigitalConfirm ? 'Confirmer la réception du fichier' : 'Confirmer la réception'}</DialogTitle>
+                  <DialogTitle>{isLinkConfirm ? 'Confirmer la réception du lien' : isDigitalConfirm ? 'Confirmer la réception du fichier' : 'Confirmer la réception'}</DialogTitle>
                   <DialogDescription>
-                    {isDigitalConfirm
-                      ? "En confirmant, vous indiquez avoir bien téléchargé et vérifié votre fichier."
-                      : "En confirmant, vous indiquez avoir bien reçu l'article."}
+                    {isLinkConfirm
+                      ? "En confirmant, vous indiquez avoir bien ouvert et vérifié le lien reçu."
+                      : isDigitalConfirm
+                        ? "En confirmant, vous indiquez avoir bien téléchargé et vérifié votre fichier."
+                        : "En confirmant, vous indiquez avoir bien reçu l'article."}
                     {' '}Le vendeur pourra retirer ses fonds 24h après votre confirmation.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex items-start gap-2.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
-                    {isDigitalConfirm
-                      ? "Vérifiez que le fichier s'ouvre correctement avant de confirmer."
-                      : "Vérifiez l'article avant de confirmer."}
+                    {isLinkConfirm
+                      ? "Vérifiez que le lien fonctionne et donne bien accès au contenu avant de confirmer."
+                      : isDigitalConfirm
+                        ? "Vérifiez que le fichier s'ouvre correctement avant de confirmer."
+                        : "Vérifiez l'article avant de confirmer."}
                     {' '}Cette action est <strong>irréversible</strong> — en cas de problème, ouvrez un litige plutôt que de confirmer.
                   </span>
                 </div>

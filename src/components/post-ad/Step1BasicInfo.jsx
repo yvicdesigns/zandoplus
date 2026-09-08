@@ -12,7 +12,7 @@ import { getCategoryEmoji } from './categoryIcons';
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { BLOCKED_DIGITAL_EXTENSIONS, MAX_DIGITAL_FILE_SIZE_MB } from './postAdConstants';
-import { FileUp, FileCheck2, X as XIcon } from 'lucide-react';
+import { FileUp, FileCheck2, X as XIcon, Link2, Youtube } from 'lucide-react';
 
 const mediaResultToFile = async (result, index = 0) => {
   const res = await fetch(result.webPath);
@@ -22,6 +22,7 @@ const mediaResultToFile = async (result, index = 0) => {
 };
 
 const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage, onNativeImages, digitalFile, onDigitalFileChange }) => {
+  const deliveryType = formData.digital_delivery_type || 'file';
   const fileInputRef = useRef(null);
   const digitalFileInputRef = useRef(null);
   const isNative = Capacitor.isNativePlatform();
@@ -241,39 +242,107 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
         <FormError message={formErrors.images} />
       </div>
 
-      {/* Fichier numérique — uniquement pour la catégorie Produits numériques */}
+      {/* Contenu numérique — uniquement pour la catégorie Produits numériques */}
       {isDigitalCategory && (
-        <div>
-          <Label className="block text-sm font-medium mb-1">
-            Fichier à vendre <span className="text-red-500">*</span>
-            <span className="text-xs font-normal text-gray-400 ml-2">{MAX_DIGITAL_FILE_SIZE_MB} Mo max</span>
-          </Label>
-          <p className="text-xs text-gray-500 mb-2">
-            Envoyé une seule fois ici — l'acheteur le télécharge automatiquement une fois son paiement validé, via un lien sécurisé propre à sa commande.
-          </p>
-
-          {digitalFile ? (
-            <div className="flex items-center gap-3 border border-custom-green-200 bg-custom-green-50 rounded-lg px-4 py-3">
-              <FileCheck2 className="w-5 h-5 text-custom-green-600 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-800 truncate">{digitalFile.name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(digitalFile.size)}</p>
-              </div>
-              <button type="button" onClick={() => onDigitalFileChange?.(null, null)} className="p-1 text-gray-400 hover:text-red-500 shrink-0">
-                <XIcon className="w-4 h-4" />
+        <div className="space-y-4">
+          <div>
+            <Label className="block text-sm font-medium mb-2">Comment livrer le contenu ? <span className="text-red-500">*</span></Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleSelectChange('digital_delivery_type', 'file')}
+                className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-colors ${deliveryType === 'file' ? 'border-custom-green-500 bg-custom-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <FileUp className={`w-4 h-4 shrink-0 ${deliveryType === 'file' ? 'text-custom-green-600' : 'text-gray-400'}`} />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-800">Envoyer un fichier</span>
+                  <span className="block text-xs text-gray-500">E-book, template, logiciel…</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectChange('digital_delivery_type', 'link')}
+                className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-colors ${deliveryType === 'link' ? 'border-custom-green-500 bg-custom-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <Link2 className={`w-4 h-4 shrink-0 ${deliveryType === 'link' ? 'text-custom-green-600' : 'text-gray-400'}`} />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-800">Coller un lien</span>
+                  <span className="block text-xs text-gray-500">Vidéo hébergée ailleurs (YouTube, Drive…)</span>
+                </span>
               </button>
             </div>
+          </div>
+
+          {deliveryType === 'file' ? (
+            <div>
+              <Label className="block text-sm font-medium mb-1">
+                Fichier à vendre <span className="text-red-500">*</span>
+                <span className="text-xs font-normal text-gray-400 ml-2">{MAX_DIGITAL_FILE_SIZE_MB} Mo max</span>
+              </Label>
+              <p className="text-xs text-gray-500 mb-2">
+                Envoyé une seule fois ici — l'acheteur le télécharge automatiquement une fois son paiement validé, via un lien sécurisé propre à sa commande.
+              </p>
+
+              {digitalFile ? (
+                <div className="flex items-center gap-3 border border-custom-green-200 bg-custom-green-50 rounded-lg px-4 py-3">
+                  <FileCheck2 className="w-5 h-5 text-custom-green-600 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-800 truncate">{digitalFile.name}</p>
+                    <p className="text-xs text-gray-500">{formatFileSize(digitalFile.size)}</p>
+                  </div>
+                  <button type="button" onClick={() => onDigitalFileChange?.(null, null)} className="p-1 text-gray-400 hover:text-red-500 shrink-0">
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center py-8 cursor-pointer hover:border-custom-green-400 transition-colors ${formErrors.digitalFile ? 'border-red-500' : 'border-gray-300'}`}
+                  onClick={() => digitalFileInputRef.current?.click()}
+                >
+                  <FileUp className="w-6 h-6 text-gray-400 mb-1" />
+                  <span className="text-sm text-gray-500">Choisir le fichier à vendre</span>
+                  <input ref={digitalFileInputRef} type="file" onChange={pickDigitalFile} className="hidden" />
+                </div>
+              )}
+              <FormError message={formErrors.digitalFile} />
+            </div>
           ) : (
-            <div
-              className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center py-8 cursor-pointer hover:border-custom-green-400 transition-colors ${formErrors.digitalFile ? 'border-red-500' : 'border-gray-300'}`}
-              onClick={() => digitalFileInputRef.current?.click()}
-            >
-              <FileUp className="w-6 h-6 text-gray-400 mb-1" />
-              <span className="text-sm text-gray-500">Choisir le fichier à vendre</span>
-              <input ref={digitalFileInputRef} type="file" onChange={pickDigitalFile} className="hidden" />
+            <div>
+              <Label htmlFor="digital_external_url" className="block text-sm font-medium mb-1">
+                Lien complet (privé) <span className="text-red-500">*</span>
+              </Label>
+              <p className="text-xs text-gray-500 mb-2">
+                Le lien vers votre contenu complet (vidéo non répertoriée, dossier Drive privé…). Il n'est révélé à l'acheteur qu'une fois son paiement validé — gardez-le privé de votre côté.
+              </p>
+              <Input
+                id="digital_external_url"
+                name="digital_external_url"
+                type="url"
+                placeholder="https://..."
+                value={formData.digital_external_url || ''}
+                onChange={handleInputChange}
+                className={formErrors.digitalExternalUrl ? 'border-red-500' : ''}
+              />
+              <FormError message={formErrors.digitalExternalUrl} />
             </div>
           )}
-          <FormError message={formErrors.digitalFile} />
+
+          <div>
+            <Label htmlFor="preview_video_url" className="block text-sm font-medium mb-1 flex items-center gap-1.5">
+              <Youtube className="w-4 h-4 text-red-500" /> Lien d'aperçu <span className="text-gray-400 font-normal">(optionnel)</span>
+            </Label>
+            <p className="text-xs text-gray-500 mb-2">
+              Un extrait public (30 secondes suffisent) que <strong>tout le monde</strong> peut voir sur votre annonce, avant achat — ça rassure les acheteurs.
+            </p>
+            <Input
+              id="preview_video_url"
+              name="preview_video_url"
+              type="url"
+              placeholder="https://youtube.com/watch?v=..."
+              value={formData.preview_video_url || ''}
+              onChange={handleInputChange}
+            />
+          </div>
         </div>
       )}
     </motion.div>
