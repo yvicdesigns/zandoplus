@@ -10,13 +10,18 @@ const STORE_URLS = {
   android: 'https://play.google.com/store/apps/details?id=com.zando.app',
 };
 
-// Mémorisé pour toujours (pas juste la session) : un visiteur qui a fait un
-// choix, quel qu'il soit, ne doit plus jamais revoir cet écran sur cet
-// appareil. On ne peut pas savoir si l'appli est réellement installée
-// (Apple/Google ne donnent pas cette info à un navigateur) — "première
-// visite jamais vue" + "choix mémorisé" est le seul signal fiable dont on
-// dispose côté web.
+// Un navigateur ne peut pas savoir si l'appli a été réellement installée
+// (Apple/Google ne donnent pas cette info à une page web) — donc deux
+// niveaux de mémoire, selon ce qu'on peut raisonnablement déduire du geste :
+//  - Fermer (X / "Continuer sur le site") = "pas maintenant", pas "jamais" —
+//    mémorisé pour la session en cours seulement (sessionStorage), donc
+//    l'écran revient à la prochaine visite.
+//  - Cliquer un badge App Store / Google Play = signal fort qu'on part
+//    installer — mémorisé pour de bon (localStorage), ne revient plus.
+//  - Ouvrir le site depuis l'appli native elle-même = preuve réelle
+//    d'installation, garantie par Capacitor.isNativePlatform() ci-dessous.
 const SEEN_KEY = 'zando_gateway_seen';
+const SESSION_DISMISS_KEY = 'zando_gateway_dismissed_session';
 
 const AppleIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -61,21 +66,33 @@ const AppGatewayInterstitial = () => {
     if (window.matchMedia('(display-mode: standalone)').matches) return;
 
     // Pratique pour retester sans vider tout le localStorage du site :
-    // ?zando_gateway=reset efface juste ce choix mémorisé.
+    // ?zando_gateway=reset efface les deux choix mémorisés.
     try {
       if (new URLSearchParams(window.location.search).get('zando_gateway') === 'reset') {
         localStorage.removeItem(SEEN_KEY);
+        sessionStorage.removeItem(SESSION_DISMISS_KEY);
       }
     } catch {}
 
-    let seen = false;
-    try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch {}
-    if (seen) return;
+    let installedOrChosen = false;
+    try { installedOrChosen = localStorage.getItem(SEEN_KEY) === '1'; } catch {}
+    if (installedOrChosen) return;
+
+    let dismissedThisVisit = false;
+    try { dismissedThisVisit = sessionStorage.getItem(SESSION_DISMISS_KEY) === '1'; } catch {}
+    if (dismissedThisVisit) return;
 
     setVisible(true);
   }, []);
 
-  const dismiss = () => {
+  // "Pas maintenant" — revient à la prochaine visite.
+  const dismissSoft = () => {
+    try { sessionStorage.setItem(SESSION_DISMISS_KEY, '1'); } catch {}
+    setVisible(false);
+  };
+
+  // Part vers un store — considéré comme un choix définitif.
+  const dismissHard = () => {
     try { localStorage.setItem(SEEN_KEY, '1'); } catch {}
     setVisible(false);
   };
@@ -96,7 +113,7 @@ const AppGatewayInterstitial = () => {
         >
           <div className="flex justify-end p-4">
             <button
-              onClick={dismiss}
+              onClick={dismissSoft}
               aria-label="Fermer et continuer sur le site"
               title="Fermer"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-gray-50 text-gray-900 hover:bg-gray-100"
@@ -125,20 +142,20 @@ const AppGatewayInterstitial = () => {
                 icon={<AppleIcon />}
                 kicker="Télécharger sur l'"
                 label="App Store"
-                onClick={dismiss}
+                onClick={dismissHard}
               />
               <StoreBadge
                 href={STORE_URLS.android}
                 icon={<PlayIcon />}
                 kicker="Disponible sur"
                 label="Google Play"
-                onClick={dismiss}
+                onClick={dismissHard}
               />
             </div>
 
             <div className="self-start pt-4">
               <button
-                onClick={dismiss}
+                onClick={dismissSoft}
                 className="text-[13px] font-bold text-custom-green-600 underline underline-offset-4"
               >
                 Continuer sur le site →
