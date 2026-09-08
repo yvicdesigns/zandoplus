@@ -39,8 +39,14 @@ export const AuthProvider = ({ children }) => {
 
   const authService = useAuthService(user, toast);
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
+  // useCallback ici n'est pas juste une optimisation : sans référence stable,
+  // un composant qui les met dans un tableau de dépendances (ex. pour rouvrir
+  // la modale tant qu'on n'est pas connecté) se retrouve à rappeler
+  // openAuthModal() à chaque nouveau rendu de ce contexte — y compris juste
+  // après closeAuthModal(), ce qui rouvre la modale en boucle et empêche de
+  // la fermer. Bug réel trouvé sur /devenir-vendeur le 08/09/2026.
+  const openAuthModal = useCallback(() => setIsAuthModalOpen(true), []);
+  const closeAuthModal = useCallback(() => setIsAuthModalOpen(false), []);
   
   const setUserSafe = useCallback((newUser) => {
     userRef.current = newUser;
