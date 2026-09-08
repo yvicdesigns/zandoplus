@@ -29,7 +29,6 @@ import MessagesDrawer from '@/components/messages/MessagesDrawer';
 const GoogleAnalytics  = lazy(() => import('@/components/analytics/GoogleAnalytics'));
 const MetaPixel        = lazy(() => import('@/components/analytics/MetaPixel'));
 const TikTokPixel      = lazy(() => import('@/components/analytics/TikTokPixel'));
-const PwaInstallModal  = lazy(() => import('@/components/common/PwaInstallModal'));
 const AppUpdateBanner  = lazy(() => import('@/components/AppUpdateBanner'));
 const AppGatewayInterstitial = lazy(() => import('@/components/AppGatewayInterstitial'));
 const BugReportButton  = lazy(() => import('@/components/beta/BugReportButton'));
@@ -247,7 +246,6 @@ const AppContent = () => {
     return (
         <>
             <Suspense fallback={null}><AppGatewayInterstitial /></Suspense>
-            <Suspense fallback={null}><PwaInstallModal /></Suspense>
             <Suspense fallback={null}><AppUpdateBanner /></Suspense>
             <DynamicFavicon />
             <Suspense fallback={null}><GoogleAnalytics /></Suspense>

@@ -60,15 +60,19 @@ const AppGatewayInterstitial = () => {
     // PWA déjà installée sur l'écran d'accueil : elle a déjà fait son choix.
     if (window.matchMedia('(display-mode: standalone)').matches) return;
 
+    // Pratique pour retester sans vider tout le localStorage du site :
+    // ?zando_gateway=reset efface juste ce choix mémorisé.
+    try {
+      if (new URLSearchParams(window.location.search).get('zando_gateway') === 'reset') {
+        localStorage.removeItem(SEEN_KEY);
+      }
+    } catch {}
+
     let seen = false;
     try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch {}
     if (seen) return;
 
     setVisible(true);
-    // Évite d'empiler ce second écran avec la modale d'installation PWA
-    // existante (PwaInstallModal), qui se déclenche après 4s sur la même
-    // session pour le même visiteur.
-    try { sessionStorage.setItem('pwaModalShown', 'true'); } catch {}
   }, []);
 
   const dismiss = () => {
