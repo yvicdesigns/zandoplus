@@ -184,6 +184,7 @@ const Header = memo(({ onLoginClick }) => {
   const navLinks = [
     { label: 'Accueil',                href: '/' },
     { label: 'Maison à louer 🔑',      href: '/listings?category=maison-a-louer' },
+    { label: 'Produits numériques 💾', href: '/listings?category=digital-goods' },
     { label: 'Offres du jour 🔥',      href: '/listings?daily=true' },
     { label: 'Nouveautés',             href: '/listings?sortBy=newest' },
     { label: 'Meilleures ventes',      href: '/listings?sortBy=popularity' },
@@ -197,6 +198,7 @@ const Header = memo(({ onLoginClick }) => {
     { slug: 'vehicles',               name: 'Véhicules' },
     { slug: 'real-estate',            name: 'Immobilier' },
     { slug: 'maison-a-louer',         name: 'Maison à louer 🔑' },
+    { slug: 'digital-goods',          name: 'Produits numériques 💾' },
     { slug: 'fashion',                name: 'Mode' },
     { slug: 'jobs',                   name: 'Emplois' },
     { slug: 'maison-meubles',         name: 'Maison & Meubles' },
