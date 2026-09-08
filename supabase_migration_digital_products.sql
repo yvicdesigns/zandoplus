@@ -95,6 +95,13 @@ INSERT INTO categories (slug, name, type, display_order)
 VALUES ('digital-goods', 'Produits numériques', 'digital', 17)
 ON CONFLICT (slug) DO NOTHING;
 
+-- 6. Notification "livré" adaptée au numérique -----------------------------
+-- notify_escrow_parties() envoyait toujours "📦 Votre commande a été
+-- envoyée" au passage à 'livre' — trompeur pour un fichier qu'on télécharge.
+-- Voir la définition complète mise à jour de la fonction (avec la branche
+-- v_is_digital) appliquée directement via psql pendant la session du
+-- 08/09/2026 ; reproduite ici pour l'historique si besoin de la rejouer.
+
 INSERT INTO subcategories (category_id, name, display_order)
 SELECT c.id, s.name, s.ord
 FROM categories c

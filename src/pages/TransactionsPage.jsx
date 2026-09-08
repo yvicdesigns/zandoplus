@@ -420,19 +420,45 @@ const TransactionsPage = () => {
       {/* Dialog : Confirmer réception */}
       <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer la réception</DialogTitle>
-            <DialogDescription>
-              En confirmant, vous indiquez avoir bien reçu l'article. Le vendeur pourra retirer ses fonds 24h après votre confirmation.
-              Cette action est <strong>irréversible</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDialog(null)}>Annuler</Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => doConfirmReception(confirmDialog)} disabled={actionLoading}>
-              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Confirmer
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const isDigitalConfirm = !!confirmDialog?.annonce?.is_digital;
+            const Icon = isDigitalConfirm ? Download : PackageCheck;
+            return (
+              <>
+                <DialogHeader>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 ${isDigitalConfirm ? 'bg-indigo-100' : 'bg-green-100'}`}>
+                    <Icon className={`w-6 h-6 ${isDigitalConfirm ? 'text-indigo-600' : 'text-green-600'}`} />
+                  </div>
+                  <DialogTitle>{isDigitalConfirm ? 'Confirmer la réception du fichier' : 'Confirmer la réception'}</DialogTitle>
+                  <DialogDescription>
+                    {isDigitalConfirm
+                      ? "En confirmant, vous indiquez avoir bien téléchargé et vérifié votre fichier."
+                      : "En confirmant, vous indiquez avoir bien reçu l'article."}
+                    {' '}Le vendeur pourra retirer ses fonds 24h après votre confirmation.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-start gap-2.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {isDigitalConfirm
+                      ? "Vérifiez que le fichier s'ouvre correctement avant de confirmer."
+                      : "Vérifiez l'article avant de confirmer."}
+                    {' '}Cette action est <strong>irréversible</strong> — en cas de problème, ouvrez un litige plutôt que de confirmer.
+                  </span>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setConfirmDialog(null)}>Annuler</Button>
+                  <Button
+                    className={isDigitalConfirm ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}
+                    onClick={() => doConfirmReception(confirmDialog)}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Confirmer
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
@@ -440,10 +466,20 @@ const TransactionsPage = () => {
       <Dialog open={!!litigeDialog} onOpenChange={() => setLitigeDialog(null)}>
         <DialogContent>
           <DialogHeader>
+            <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
             <DialogTitle>Ouvrir un litige</DialogTitle>
             <DialogDescription>Décrivez le problème. Notre équipe examinera votre demande et vous contactera.</DialogDescription>
           </DialogHeader>
-          <Textarea placeholder="Ex: l'article reçu ne correspond pas à la description..." value={litigeNote} onChange={e => setLitigeNote(e.target.value)} rows={4} />
+          <Textarea
+            placeholder={litigeDialog?.annonce?.is_digital
+              ? "Ex: le fichier reçu est corrompu, incomplet, ou ne correspond pas à la description..."
+              : "Ex: l'article reçu ne correspond pas à la description..."}
+            value={litigeNote}
+            onChange={e => setLitigeNote(e.target.value)}
+            rows={4}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setLitigeDialog(null)}>Annuler</Button>
             <Button variant="destructive" onClick={() => doOuvrirLitige(litigeDialog)} disabled={actionLoading}>
@@ -457,6 +493,9 @@ const TransactionsPage = () => {
       <Dialog open={!!livraisonDialog} onOpenChange={() => setLivraisonDialog(null)}>
         <DialogContent>
           <DialogHeader>
+            <div className="w-12 h-12 rounded-2xl bg-custom-green-50 flex items-center justify-center mb-2">
+              <Truck className="w-6 h-6 text-custom-green-600" />
+            </div>
             <DialogTitle>Déclarer la livraison</DialogTitle>
             <DialogDescription>
               Confirmez que l'article a été remis à l'acheteur. L'acheteur aura <strong>24h</strong> pour confirmer la réception. Passé ce délai, la commande est confirmée automatiquement.
