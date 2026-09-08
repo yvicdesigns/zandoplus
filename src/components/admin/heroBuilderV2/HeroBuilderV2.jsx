@@ -245,20 +245,12 @@ const HeroBuilderV2 = () => {
       toast({ variant: 'destructive', title: 'Erreur', description: error.message });
       return;
     }
-    let updatedSlides = slides.map((s) => (s.id === selectedId ? { ...s, ...form } : s));
-    if (form.is_active) {
-      const others = slides.filter((s) => s.id !== selectedId && s.is_active);
-      if (others.length > 0) {
-        const { error: deactivateError } = await supabase
-          .from('hero_slides_v2')
-          .update({ is_active: false })
-          .neq('id', selectedId)
-          .eq('is_active', true);
-        if (!deactivateError) {
-          updatedSlides = updatedSlides.map((s) => (s.id !== selectedId ? { ...s, is_active: false } : s));
-        }
-      }
-    }
+    // Chaque slide a son propre interrupteur "actif" indépendant — plusieurs slides actifs
+    // forment le carrousel tournant sur l'accueil (comme dans l'ancien éditeur). Enregistrer
+    // ce slide ne doit JAMAIS désactiver les autres : c'était le bug signalé le 08/09/2026
+    // ("ajouter un slide remplace l'ancien au lieu d'en avoir deux") — cette section
+    // désactivait silencieusement tous les autres slides actifs à chaque sauvegarde.
+    const updatedSlides = slides.map((s) => (s.id === selectedId ? { ...s, ...form } : s));
     setSlides(updatedSlides);
     setSaving(false);
     toast({ title: 'Enregistré', className: 'bg-custom-green-500 text-white' });
