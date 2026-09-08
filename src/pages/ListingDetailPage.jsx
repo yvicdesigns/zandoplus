@@ -7,7 +7,7 @@ import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
   CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
-  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck,
+  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck, Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -178,6 +178,7 @@ const ListingDetailPage = () => {
   const isOwner = user && listing && user.id === listing.user_id;
   const categoryType = CATEGORY_DEFS[listing.category]?.type ?? 'product';
   const isProduct = !['job', 'service'].includes(categoryType);
+  const isDigital = !!listing.is_digital;
   const categoryName = categoriesMap[listing.category]?.name || listing.category || '';
 
   const discountPct = listing.original_price > listing.price
@@ -381,7 +382,9 @@ const ListingDetailPage = () => {
               {/* Mini badges de confiance */}
               <div className="flex items-start gap-4 py-3 border-y border-gray-100">
                 {[
-                  { icon: Truck,     title: 'Livraison rapide',         sub: 'Partout au Congo' },
+                  isDigital
+                    ? { icon: Download, title: 'Téléchargement immédiat', sub: 'Dès le paiement validé' }
+                    : { icon: Truck,    title: 'Livraison rapide',        sub: 'Partout au Congo' },
                   { icon: Shield,    title: 'Paiements 100% sécurisés', sub: 'Par mobile money ou carte' },
                   { icon: RotateCcw, title: 'Retour facile',            sub: 'Sous 7 jours' },
                 ].map(({ icon: Icon, title, sub }) => (
@@ -396,7 +399,7 @@ const ListingDetailPage = () => {
               </div>
 
               {/* Couleur + Quantité sur la MÊME ligne */}
-              {isProduct && !isOwner && (
+              {isProduct && !isOwner && !isDigital && (
                 <div className="grid grid-cols-2 gap-6">
                   {/* Couleur */}
                   {listing.colors?.length > 0 ? (
@@ -458,20 +461,26 @@ const ListingDetailPage = () => {
               ) : isProduct ? (
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <button
-                      onClick={handleAddToCart}
-                      className={`flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-colors ${
-                        inCart
-                          ? 'bg-green-50 text-custom-green-600 border-2 border-custom-green-500'
-                          : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
-                      }`}
-                    >
-                      {inCart ? <CheckCircle className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-                      {inCart ? 'Dans le panier' : 'Ajouter au panier'}
-                    </button>
+                    {!isDigital && (
+                      <button
+                        onClick={handleAddToCart}
+                        className={`flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-colors ${
+                          inCart
+                            ? 'bg-green-50 text-custom-green-600 border-2 border-custom-green-500'
+                            : 'bg-custom-green-500 text-white hover:bg-custom-green-600'
+                        }`}
+                      >
+                        {inCart ? <CheckCircle className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
+                        {inCart ? 'Dans le panier' : 'Ajouter au panier'}
+                      </button>
+                    )}
                     <button
                       onClick={handleEscrow}
-                      className="flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 border-2 border-custom-green-500 text-custom-green-500 hover:bg-green-50 transition-colors"
+                      className={`flex-1 h-[52px] rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-colors ${
+                        isDigital
+                          ? 'bg-custom-green-500 text-white hover:bg-custom-green-600'
+                          : 'border-2 border-custom-green-500 text-custom-green-500 hover:bg-green-50'
+                      }`}
                     >
                       <Lock className="w-5 h-5" />
                       Acheter maintenant

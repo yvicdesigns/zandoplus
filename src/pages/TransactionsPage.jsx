@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
 import {
   ShieldCheck, PackageCheck, AlertTriangle, Loader2,
-  Clock, CheckCircle, XCircle, Truck, ArrowLeft, Wallet,
+  Clock, CheckCircle, XCircle, Truck, ArrowLeft, Wallet, Download,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -92,6 +92,7 @@ const TransactionsPage = () => {
   const [livraisonDialog, setLivraisonDialog] = useState(null);
   const [litigeNote, setLitigeNote]           = useState('');
   const [actionLoading, setActionLoading]     = useState(false);
+  const [downloadingId, setDownloadingId]     = useState(null);
 
   // Utiliser user.id (primitif stable) plutôt que l'objet user entier
   // pour éviter les re-fetch à chaque refresh de token
@@ -110,7 +111,7 @@ const TransactionsPage = () => {
         date_livraison_declaree, date_confirmation,
         paiement_valide_at, auto_confirm_at,
         withdrawal_available_at, withdrawal_requested_at,
-        annonce:annonce_id(id, title, images),
+        annonce:annonce_id(id, title, images, is_digital),
         acheteur:acheteur_id(full_name),
         vendeur:vendeur_id(full_name)
       `)
@@ -126,6 +127,21 @@ const TransactionsPage = () => {
     if (!user) { openAuthModal(); navigate('/'); return; }
     fetchTransactions();
   }, [user, fetchTransactions, openAuthModal, navigate]);
+
+  const handleDownloadDigital = async (tx) => {
+    setDownloadingId(tx.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-digital-download-url', {
+        body: { transaction_id: tx.id },
+      });
+      if (error || !data?.url) throw new Error(data?.error || error?.message || 'Lien indisponible');
+      window.open(data.url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      toast({ title: 'Téléchargement impossible', description: err.message, variant: 'destructive' });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const doConfirmReception = async (tx) => {
     setActionLoading(true);
@@ -270,6 +286,18 @@ const TransactionsPage = () => {
                       )}
                       {isAchats && tx.statut === 'livre' && (
                         <div className="space-y-3">
+                          {tx.annonce?.is_digital && (
+                            <Button
+                              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                              onClick={() => handleDownloadDigital(tx)}
+                              disabled={downloadingId === tx.id}
+                            >
+                              {downloadingId === tx.id
+                                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                : <Download className="w-4 h-4 mr-2" />}
+                              Télécharger le fichier
+                            </Button>
+                          )}
                           {tx.auto_confirm_at && (
                             <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 space-y-1">
                               <Countdown targetDate={tx.auto_confirm_at} label="Confirmation automatique dans" />
@@ -281,7 +309,8 @@ const TransactionsPage = () => {
                               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                               onClick={() => setConfirmDialog(tx)}
                             >
-                              <PackageCheck className="w-4 h-4 mr-2" /> Confirmer la réception
+                              <PackageCheck className="w-4 h-4 mr-2" />
+                              {tx.annonce?.is_digital ? "J'ai bien reçu mon fichier" : 'Confirmer la réception'}
                             </Button>
                             <Button
                               variant="outline"
@@ -292,6 +321,19 @@ const TransactionsPage = () => {
                             </Button>
                           </div>
                         </div>
+                      )}
+                      {isAchats && tx.annonce?.is_digital && ['confirme', 'retrait_demande', 'complete'].includes(tx.statut) && (
+                        <Button
+                          variant="outline"
+                          className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                          onClick={() => handleDownloadDigital(tx)}
+                          disabled={downloadingId === tx.id}
+                        >
+                          {downloadingId === tx.id
+                            ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            : <Download className="w-4 h-4 mr-2" />}
+                          Retélécharger le fichier
+                        </Button>
                       )}
                       {isAchats && canLitige(tx) && (
                         <Button
@@ -334,7 +376,9 @@ const TransactionsPage = () => {
                       {!isAchats && tx.statut === 'livre' && (
                         <div className="flex items-center gap-2 text-sm text-purple-700 bg-purple-50 rounded-lg px-4 py-3">
                           <Truck className="w-4 h-4 flex-shrink-0" />
-                          Livraison déclarée — en attente de confirmation de l'acheteur (24h max).
+                          {tx.annonce?.is_digital
+                            ? "Fichier disponible pour l'acheteur — en attente de sa confirmation (ou automatique)."
+                            : "Livraison déclarée — en attente de confirmation de l'acheteur (24h max)."}
                         </div>
                       )}
                       {!isAchats && tx.statut === 'confirme' && (

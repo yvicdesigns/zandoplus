@@ -43,8 +43,22 @@ export const categories = {
         name: 'Médecine traditionnelle',
         type: 'product',
         subcategories: ['Herbes et plantes', 'Potions et remèdes', 'Traitements', 'Consultations']
+      },
+      'digital-goods': {
+        name: 'Produits numériques',
+        type: 'digital',
+        subcategories: ['E-books', 'Templates & Designs', 'Logiciels & Applications', 'Formations & Cours', 'Musique & Audio', 'Photos & Vidéos', 'Autres fichiers numériques']
       }
     };
+
+    // Extensions bloquées à l'envoi d'un fichier numérique — on privilégie
+    // une liste noire (plutôt qu'une liste blanche restrictive) pour ne pas
+    // bloquer des formats légitimes qu'on n'aurait pas anticipés, tout en
+    // écartant les vecteurs de malware les plus évidents.
+    export const BLOCKED_DIGITAL_EXTENSIONS = [
+      'exe', 'bat', 'cmd', 'msi', 'scr', 'vbs', 'js', 'jar', 'com', 'app', 'sh', 'ps1'
+    ];
+    export const MAX_DIGITAL_FILE_SIZE_MB = 100;
 
     export const conditions = [
       { value: 'new', label: 'Neuf' },

@@ -77,7 +77,9 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
   };
   const isJobCategory = formData.category && categoriesMap[formData.category]?.type === 'job';
   const isServiceCategory = formData.category && categoriesMap[formData.category]?.type === 'service';
+  const isDigitalCategory = formData.category && categoriesMap[formData.category]?.type === 'digital';
   const isHousingCategory = formData.category === 'maison-a-louer';
+  const skipsPhysicalDetails = isJobCategory || isServiceCategory || isDigitalCategory;
 
   return (
     <motion.div
@@ -121,7 +123,7 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
           )}
         </div>
 
-        {!isJobCategory && !isServiceCategory && (
+        {!skipsPhysicalDetails && (
           <div>
             <Label htmlFor="condition">État *</Label>
             <Select name="condition" value={formData.condition} onValueChange={(value) => handleSelectChange('condition', value)}>
@@ -277,7 +279,19 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
         </div>
       )}
 
-      {!isJobCategory && !isServiceCategory && (
+      {isDigitalCategory && (
+        <div className="flex items-start gap-3 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <span className="text-lg">⬇️</span>
+          <div>
+            <p className="text-sm font-semibold text-indigo-800">Livraison automatique</p>
+            <p className="text-xs text-indigo-700 mt-0.5">
+              Rien à expédier : dès que le paiement est validé, l'acheteur reçoit un lien de téléchargement sécurisé. Le paiement à la livraison n'est pas proposé pour ce type d'annonce.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {!isJobCategory && !isServiceCategory && !isDigitalCategory && (
         <>
           <div>
             <Label htmlFor="quantity">Quantité en stock</Label>

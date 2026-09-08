@@ -51,7 +51,7 @@ const EscrowPaymentPage = () => {
     if (!user) { openAuthModal(); navigate('/'); return; }
     const fetchData = async () => {
       const [{ data: listingData }, { data: settings }] = await Promise.all([
-        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, accepts_cash_on_delivery, location, seller:profiles(full_name, phone)').eq('id', listingId).single(),
+        supabase.from('listings').select('id, title, price, currency, images, user_id, delivery_method, delivery_fee, accepts_cash_on_delivery, location, is_digital, seller:profiles(full_name, phone)').eq('id', listingId).single(),
         supabase.from('site_settings').select('whatsapp_number').eq('id', 1).single(),
       ]);
       if (!listingData) { navigate('/listings'); return; }
@@ -69,7 +69,9 @@ const EscrowPaymentPage = () => {
       if (settings) setPaymentNumber(settings.whatsapp_number);
 
       // Déterminer le choix de livraison initial
-      if (listingData.delivery_method === 'pickup') {
+      if (listingData.is_digital) {
+        setDeliveryChoice('digital');
+      } else if (listingData.delivery_method === 'pickup') {
         setDeliveryChoice('pickup');
       } else if (cityConf && !cityConf.zando_delivery_enabled) {
         setDeliveryChoice('pickup');
@@ -92,6 +94,7 @@ const EscrowPaymentPage = () => {
   // Options de livraison disponibles selon le vendeur et la config ville
   const availableOptions = () => {
     if (!listing) return [];
+    if (listing.is_digital) return []; // téléchargement — aucune option de livraison
     if (listing.delivery_method === 'pickup') return [DELIVERY_OPTIONS[2]];
     const opts = [];
     if (!cityConfig || cityConfig.zando_delivery_enabled) {
@@ -254,9 +257,11 @@ const EscrowPaymentPage = () => {
         <h2 className="text-2xl font-bold mb-2">Paiement reçu !</h2>
         <p className="text-gray-600 mb-2">Votre paiement est <strong>sécurisé</strong> chez Zando+.</p>
         <p className="text-gray-500 text-sm mb-6">
-          {deliveryChoice === 'pickup'
-            ? 'Contactez le vendeur pour organiser le retrait.'
-            : 'Le vendeur va être notifié pour préparer la livraison. Vous aurez 72h pour confirmer la réception.'}
+          {listing?.is_digital
+            ? 'Votre fichier est disponible dès maintenant — téléchargez-le depuis Mes transactions.'
+            : deliveryChoice === 'pickup'
+              ? 'Contactez le vendeur pour organiser le retrait.'
+              : 'Le vendeur va être notifié pour préparer la livraison. Vous aurez 72h pour confirmer la réception.'}
         </p>
         <Button onClick={() => navigate('/transactions')} className="gradient-bg w-full mb-3">Suivre ma transaction</Button>
         <Button variant="outline" onClick={() => navigate('/listings')} className="w-full">Retour aux annonces</Button>
@@ -290,15 +295,25 @@ const EscrowPaymentPage = () => {
 
               {/* Choix livraison / paiement */}
               <div className="space-y-2">
-                <p className="font-semibold text-gray-800">Mode de livraison</p>
-                {listing.delivery_method === 'pickup' && (
-                  <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    Ce vendeur propose uniquement le retrait en boutique.
+                {listing.is_digital ? (
+                  <div className="flex items-start gap-2 text-sm text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2.5">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>Produit numérique — lien de téléchargement disponible immédiatement dans <strong>Mes transactions</strong> dès le paiement validé. Pas de paiement à la livraison pour ce type d'annonce.</span>
                   </div>
+                ) : (
+                  <>
+                    <p className="font-semibold text-gray-800">Mode de livraison</p>
+                    {listing.delivery_method === 'pickup' && (
+                      <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        Ce vendeur propose uniquement le retrait en boutique.
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Options fonds protégés (mobile money) */}
+                {!listing.is_digital && (
                 <div className="space-y-2">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> Payer par Mobile Money
@@ -326,6 +341,7 @@ const EscrowPaymentPage = () => {
                     );
                   })}
                 </div>
+                )}
 
                 {/* Option COD */}
                 {listing.accepts_cash_on_delivery && (!cityConfig || cityConfig.cod_enabled) && (

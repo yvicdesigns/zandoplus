@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 import { deliveryMethods } from './postAdConstants';
 
-const Step4Review = ({ formData, onBack, onSubmit, isSubmitting, submitButtonText = "Publier l'annonce", isSubmittingText = "Publication..." }) => {
-  
+const Step4Review = ({ formData, onBack, onSubmit, isSubmitting, submitButtonText = "Publier l'annonce", isSubmittingText = "Publication...", digitalFile }) => {
+
   const getDeliveryMethodLabel = (value) => {
+    if (value === 'digital') return 'Téléchargement immédiat après paiement';
     const method = deliveryMethods.find(m => m.value === value);
     return method ? method.label : 'Non spécifié';
   };
 
   const isJobOrService = ['job', 'service'].includes(formData.categoryType);
+  const isDigital = formData.categoryType === 'digital';
 
   return (
     <Card className="w-full max-w-3xl mx-auto border-0 shadow-none bg-transparent">
@@ -29,7 +31,7 @@ const Step4Review = ({ formData, onBack, onSubmit, isSubmitting, submitButtonTex
             <div><strong>Titre:</strong> <p className="text-gray-700">{formData.title}</p></div>
             <div><strong>Catégorie:</strong> <p className="text-gray-700">{formData.categoryName} {formData.subcategory && `> ${formData.subcategory}`}</p></div>
             <div><strong>{isJobOrService ? 'Rémunération' : 'Prix'}:</strong> <p className="text-custom-green-600 font-bold">{formData.price ? `${parseFloat(formData.price).toLocaleString()} ${formData.currency}` : 'Non spécifié'}</p></div>
-            {!isJobOrService && <div><strong>État:</strong> <p className="text-gray-700">{formData.condition || 'N/A'}</p></div>}
+            {!isJobOrService && !isDigital && <div><strong>État:</strong> <p className="text-gray-700">{formData.condition || 'N/A'}</p></div>}
             <div className="md:col-span-2"><strong>Localisation:</strong> <p className="text-gray-700">{formData.location}</p></div>
             <div className="md:col-span-2"><strong>Description:</strong> <p className="text-gray-700 whitespace-pre-wrap">{formData.description}</p></div>
             {!isJobOrService && <div><strong>Négociable:</strong> <Badge variant={formData.negotiable ? 'default' : 'secondary'}>{formData.negotiable ? 'Oui' : 'Non'}</Badge></div>}
@@ -42,11 +44,14 @@ const Step4Review = ({ formData, onBack, onSubmit, isSubmitting, submitButtonTex
                     )}
                 </>
             )}
+            {isDigital && digitalFile && (
+              <div><strong>Fichier à vendre:</strong> <p className="text-gray-700 truncate">{digitalFile.name}</p></div>
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-bold text-lg text-gray-800">Photos</h3>
+          <h3 className="font-bold text-lg text-gray-800">{isDigital ? 'Image de présentation' : 'Photos'}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {formData.images.map((image, index) => (
               <div key={image.id || index} className="relative aspect-square">

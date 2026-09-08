@@ -11,6 +11,8 @@ import { Camera as CameraIcon, ImagePlus, X } from 'lucide-react';
 import { getCategoryEmoji } from './categoryIcons';
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
+import { BLOCKED_DIGITAL_EXTENSIONS, MAX_DIGITAL_FILE_SIZE_MB } from './postAdConstants';
+import { FileUp, FileCheck2, X as XIcon } from 'lucide-react';
 
 const mediaResultToFile = async (result, index = 0) => {
   const res = await fetch(result.webPath);
@@ -19,9 +21,31 @@ const mediaResultToFile = async (result, index = 0) => {
   return new File([blob], `photo-${Date.now()}-${index}.${ext}`, { type: blob.type || `image/${ext}` });
 };
 
-const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage, onNativeImages }) => {
+const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formErrors, onAIDescription, handleImageUpload, removeImage, onNativeImages, digitalFile, onDigitalFileChange }) => {
   const fileInputRef = useRef(null);
+  const digitalFileInputRef = useRef(null);
   const isNative = Capacitor.isNativePlatform();
+
+  const formatFileSize = (bytes) => {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+    return `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+  };
+
+  const pickDigitalFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (BLOCKED_DIGITAL_EXTENSIONS.includes(ext)) {
+      onDigitalFileChange?.(null, `Le format ".${ext}" n'est pas autorisé pour un produit numérique.`);
+      return;
+    }
+    if (file.size > MAX_DIGITAL_FILE_SIZE_MB * 1024 * 1024) {
+      onDigitalFileChange?.(null, `Le fichier dépasse la taille maximale de ${MAX_DIGITAL_FILE_SIZE_MB} Mo.`);
+      return;
+    }
+    onDigitalFileChange?.(file, null);
+  };
 
   const takeNativePhoto = async () => {
     try {
@@ -44,6 +68,7 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
   const { categories, categoriesMap } = useCategories();
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
+  const isDigitalCategory = selectedCategoryType === 'digital';
   const [showCustomSub, setShowCustomSub] = useState(false);
 
   // Reset custom sub when category changes
@@ -165,9 +190,12 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
       {/* Photos */}
       <div>
         <Label className="block text-sm font-medium mb-1">
-          Photos <span className="text-red-500">*</span>
+          {isDigitalCategory ? 'Image de présentation' : 'Photos'} <span className="text-red-500">*</span>
           <span className="text-xs font-normal text-gray-400 ml-2">max 10 · JPG/PNG · 5 Mo max</span>
         </Label>
+        {isDigitalCategory && (
+          <p className="text-xs text-gray-500 mb-2">Sert de couverture pour l'annonce — ce n'est pas le fichier vendu, il se télécharge juste en dessous.</p>
+        )}
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-2">
           {(formData.images || []).map((image) => (
@@ -212,6 +240,42 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
 
         <FormError message={formErrors.images} />
       </div>
+
+      {/* Fichier numérique — uniquement pour la catégorie Produits numériques */}
+      {isDigitalCategory && (
+        <div>
+          <Label className="block text-sm font-medium mb-1">
+            Fichier à vendre <span className="text-red-500">*</span>
+            <span className="text-xs font-normal text-gray-400 ml-2">{MAX_DIGITAL_FILE_SIZE_MB} Mo max</span>
+          </Label>
+          <p className="text-xs text-gray-500 mb-2">
+            Envoyé une seule fois ici — l'acheteur le télécharge automatiquement une fois son paiement validé, via un lien sécurisé propre à sa commande.
+          </p>
+
+          {digitalFile ? (
+            <div className="flex items-center gap-3 border border-custom-green-200 bg-custom-green-50 rounded-lg px-4 py-3">
+              <FileCheck2 className="w-5 h-5 text-custom-green-600 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-800 truncate">{digitalFile.name}</p>
+                <p className="text-xs text-gray-500">{formatFileSize(digitalFile.size)}</p>
+              </div>
+              <button type="button" onClick={() => onDigitalFileChange?.(null, null)} className="p-1 text-gray-400 hover:text-red-500 shrink-0">
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center py-8 cursor-pointer hover:border-custom-green-400 transition-colors ${formErrors.digitalFile ? 'border-red-500' : 'border-gray-300'}`}
+              onClick={() => digitalFileInputRef.current?.click()}
+            >
+              <FileUp className="w-6 h-6 text-gray-400 mb-1" />
+              <span className="text-sm text-gray-500">Choisir le fichier à vendre</span>
+              <input ref={digitalFileInputRef} type="file" onChange={pickDigitalFile} className="hidden" />
+            </div>
+          )}
+          <FormError message={formErrors.digitalFile} />
+        </div>
+      )}
     </motion.div>
   );
 };

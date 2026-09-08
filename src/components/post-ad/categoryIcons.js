@@ -16,6 +16,7 @@ export const CATEGORY_ICONS = {
   'agro-alimentaire':        { emoji: '🌾', color: 'from-lime-600 to-green-600',     image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop&q=80' },
   'jobs':                    { emoji: '💼', color: 'from-purple-500 to-violet-600',  image: 'https://images.unsplash.com/photo-1664575602554-2087b04935a5?w=200&h=200&fit=crop&q=80' },
   'traditional-medicine':    { emoji: '🌿', color: 'from-emerald-500 to-green-600',  image: 'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=200&h=200&fit=crop&q=80' },
+  'digital-goods':           { emoji: '💾', color: 'from-indigo-500 to-purple-600',  image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=200&fit=crop&q=80' },
 };
 
 export const getCategoryEmoji = (slug) => CATEGORY_ICONS[slug]?.emoji ?? '🏷️';

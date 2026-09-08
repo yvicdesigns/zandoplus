@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { uploadImagesWithWatermark } from '@/lib/imageUtils';
+import { uploadDigitalFile } from '@/lib/digitalFileUtils';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { sanitizeInput } from '@/lib/validationUtils';
 import { moderateListing } from '@/hooks/useModeration';
@@ -65,6 +66,12 @@ const PostAdPage = () => {
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
+  const [digitalFile, setDigitalFile] = useState(null);
+
+  const handleDigitalFileChange = (file, errorMessage) => {
+    setDigitalFile(file);
+    setFormErrors(prev => ({ ...prev, digitalFile: errorMessage || null }));
+  };
 
   // Show "draft restored" notice if non-empty draft was found
   const isFirstRender = useRef(true);
@@ -133,8 +140,20 @@ const PostAdPage = () => {
         newFormData.quantity = '';
         newFormData.negotiable = false;
         newFormData.delivery_method = 'none';
+      } else if (categoryInfo.type === 'digital') {
+        // Rien à livrer physiquement : téléchargement immédiat après paiement.
+        newFormData.condition = '';
+        newFormData.quantity = '';
+        newFormData.delivery_method = 'digital';
+        newFormData.accepts_cash_on_delivery = false;
+        newFormData.national_delivery = false;
+        newFormData.offers_seller_delivery = false;
+        newFormData.offers_pickup = false;
       } else {
         newFormData.delivery_method = 'pickup';
+      }
+      if (categoryInfo.type !== 'digital') {
+        setDigitalFile(null);
       }
     }
 
@@ -203,7 +222,9 @@ const PostAdPage = () => {
   const validateStep = (step) => {
     const errors = {};
     const isJobOrService = ['job', 'service'].includes(formData.categoryType);
-    
+    const isDigital = formData.categoryType === 'digital';
+    const skipsCondition = isJobOrService || isDigital;
+
     switch (step) {
       case 1:
         if (!formData.category) errors.category = "La catégorie est requise.";
@@ -211,12 +232,13 @@ const PostAdPage = () => {
         if (!formData.title.trim() || formData.title.trim().length < 5) errors.title = "Le titre doit comporter au moins 5 caractères.";
         if (!formData.description.trim() || formData.description.trim().length < 20) errors.description = "La description doit comporter au moins 20 caractères.";
         if (imageFiles.length === 0) errors.images = "Au moins une photo est requise.";
+        if (isDigital && !digitalFile) errors.digitalFile = "Le fichier à vendre est requis.";
         break;
       case 2:
         if (!isJobOrService && (!formData.price || parseFloat(formData.price) <= 0)) errors.price = "Le prix doit être un nombre positif.";
-        if (!isJobOrService && !formData.condition) errors.condition = "L'état est requis.";
+        if (!skipsCondition && !formData.condition) errors.condition = "L'état est requis.";
         if (!formData.location.trim()) errors.location = "La localisation est requise.";
-        if (!isJobOrService && formData.quantity && (parseInt(formData.quantity, 10) < 0 || !Number.isInteger(Number(formData.quantity)))) errors.quantity = "La quantité doit être un nombre entier positif.";
+        if (!isJobOrService && !isDigital && formData.quantity && (parseInt(formData.quantity, 10) < 0 || !Number.isInteger(Number(formData.quantity)))) errors.quantity = "La quantité doit être un nombre entier positif.";
         break;
       default: break;
     }
@@ -252,9 +274,12 @@ const PostAdPage = () => {
       }
 
       const uploadedImageUrls = await uploadImagesWithWatermark(imageFiles, user.id, siteSettings?.watermark_logo_url);
-      
+
       const isJobOrService = ['job', 'service'].includes(formData.categoryType);
+      const isDigital = formData.categoryType === 'digital';
       const isHousingCategory = formData.category === 'maison-a-louer';
+
+      const digitalFilePath = isDigital && digitalFile ? await uploadDigitalFile(digitalFile, user.id) : null;
 
       // Deep sanitize user inputs before inserting
       const listingData = {
@@ -264,21 +289,26 @@ const PostAdPage = () => {
         currency: formData.currency,
         category: formData.category,
         subcategory: formData.subcategory,
-        condition: isJobOrService ? null : formData.condition,
+        condition: (isJobOrService || isDigital) ? null : formData.condition,
         location: sanitizeInput(formData.location),
         negotiable: isJobOrService ? false : formData.negotiable,
         is_urgent: formData.is_urgent,
         images: uploadedImageUrls,
-        quantity: (formData.quantity && !isNaN(parseInt(formData.quantity, 10))) ? parseInt(formData.quantity, 10) : null,
+        quantity: (!isDigital && formData.quantity && !isNaN(parseInt(formData.quantity, 10))) ? parseInt(formData.quantity, 10) : null,
         status: formData.quantity === '0' ? 'inactive' : 'active',
-        delivery_method: isJobOrService ? 'none' : formData.delivery_method,
+        delivery_method: isJobOrService ? 'none' : (isDigital ? 'digital' : formData.delivery_method),
         delivery_fee: (formData.delivery_fee && !isNaN(parseFloat(formData.delivery_fee))) ? parseFloat(formData.delivery_fee) : null,
-        accepts_cash_on_delivery: isJobOrService ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
-        national_delivery_enabled: isJobOrService ? false : !!formData.national_delivery,
-        national_delivery_fee: (!isJobOrService && formData.national_delivery && formData.national_delivery_fee && !isNaN(parseFloat(formData.national_delivery_fee))) ? parseFloat(formData.national_delivery_fee) : 0,
-        offers_seller_delivery: isJobOrService ? false : !!formData.offers_seller_delivery,
-        offers_pickup: isJobOrService ? false : !!formData.offers_pickup,
+        accepts_cash_on_delivery: (isJobOrService || isDigital) ? false : (formData.delivery_method !== 'pickup' && !!formData.accepts_cash_on_delivery),
+        national_delivery_enabled: (isJobOrService || isDigital) ? false : !!formData.national_delivery,
+        national_delivery_fee: (!isJobOrService && !isDigital && formData.national_delivery && formData.national_delivery_fee && !isNaN(parseFloat(formData.national_delivery_fee))) ? parseFloat(formData.national_delivery_fee) : 0,
+        offers_seller_delivery: (isJobOrService || isDigital) ? false : !!formData.offers_seller_delivery,
+        offers_pickup: (isJobOrService || isDigital) ? false : !!formData.offers_pickup,
         negotiated_price: (formData.negotiable && formData.negotiated_price && !isNaN(parseFloat(formData.negotiated_price))) ? parseFloat(formData.negotiated_price) : null,
+        // Produit numérique — fichier privé, jamais d'URL publique (cf. digitalFileUtils.js)
+        is_digital: isDigital,
+        digital_file_path: isDigital ? digitalFilePath : null,
+        digital_file_name: isDigital && digitalFile ? digitalFile.name : null,
+        digital_file_size: isDigital && digitalFile ? digitalFile.size : null,
         // Caractéristiques du logement — uniquement pour "Maison à louer"
         bedrooms: (isHousingCategory && formData.bedrooms && !isNaN(parseInt(formData.bedrooms, 10))) ? parseInt(formData.bedrooms, 10) : null,
         is_furnished: isHousingCategory ? !!formData.is_furnished : null,
@@ -293,6 +323,7 @@ const PostAdPage = () => {
 
       const newListing = await addListing(listingData);
       localStorage.removeItem(DRAFT_KEY);
+      setDigitalFile(null);
 
       // Run moderation in background — non-blocking
       if (newListing?.id) {
@@ -319,9 +350,9 @@ const PostAdPage = () => {
   
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} handleImageUpload={handleImageUpload} removeImage={removeImage} onNativeImages={processImageFiles} />;
+      case 1: return <Step1BasicInfo formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} onAIDescription={(text) => setFormData(prev => ({ ...prev, description: text }))} handleImageUpload={handleImageUpload} removeImage={removeImage} onNativeImages={processImageFiles} digitalFile={digitalFile} onDigitalFileChange={handleDigitalFileChange} />;
       case 2: return <Step2Details formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange} onAIPrice={(price) => setFormData(prev => ({ ...prev, price }))} />;
-      case 3: return <Step4Review formData={formData} onBack={prevStep} onSubmit={handleSubmit} isSubmitting={loading} />;
+      case 3: return <Step4Review formData={formData} onBack={prevStep} onSubmit={handleSubmit} isSubmitting={loading} digitalFile={digitalFile} />;
       default: return null;
     }
   };
@@ -342,6 +373,7 @@ const PostAdPage = () => {
               onClick={() => {
                 localStorage.removeItem(DRAFT_KEY);
                 setFormData({ title: '', description: '', price: '', currency: 'FCFA', category: '', subcategory: '', categoryName: '', categoryType: '', condition: '', location: '', negotiable: false, images: [], delivery_method: 'zando_delivery', delivery_fee: '', is_urgent: false, phone: user?.phone || '', quantity: '', accepts_cash_on_delivery: false, national_delivery: false, national_delivery_fee: '', offers_seller_delivery: false, offers_pickup: false, bedrooms: '', is_furnished: false, has_separate_living_room: false, bathroom_location: '', has_running_water: false, has_electricity: false, has_annex: false, advance_months: '', caution_amount: '' });
+                setDigitalFile(null);
                 setDraftRestored(false);
               }}
             >
