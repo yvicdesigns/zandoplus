@@ -16,18 +16,26 @@ const SEGMENTS = [
   { id: 'no_listing',   label: 'Sans annonce',          icon: ShoppingBag, description: 'Inscrits mais n\'ont jamais publie' },
 ];
 
+// Templates Marketing (1 variable = prénom, langue fr). Le nom doit
+// correspondre EXACTEMENT à un template approuvé dans WhatsApp Manager.
 const SUGGESTED_TEMPLATES = [
   {
     name: 'zandoplus_rappel',
-    label: 'Re-engagement',
-    example: 'Bonjour {{1}} ! Des nouvelles annonces vous attendent sur Zando+ Congo. Visitez zandopluscg.com',
-    status: 'soumettre à Meta',
+    label: 'Relance inactifs',
+    example: 'Bonjour {{1}} 👋 De nouvelles annonces viennent d\'arriver sur Zando+ : téléphones, mode, électroménager et bien plus, partout au Congo.',
+    status: 'à créer dans Meta',
   },
   {
-    name: 'zandoplus_vendeur',
-    label: 'Appel vendeurs',
-    example: 'Bonjour {{1}} ! Vendez vos articles sur Zando+ Congo gratuitement. Publication illimitée, aucun abonnement. zandopluscg.com/post-ad',
-    status: 'soumettre à Meta',
+    name: 'zandoplus_bienvenue',
+    label: 'Bienvenue (nouveaux comptes)',
+    example: 'Bonjour {{1}} 👋 Bienvenue sur Zando+ ! Achetez et vendez en toute confiance partout au Congo. Paiement sécurisé, livraison locale.',
+    status: 'à créer dans Meta',
+  },
+  {
+    name: 'zandoplus_bienvenue_vendeur',
+    label: 'Bienvenue vendeur',
+    example: 'Bonjour {{1}} 🎉 Félicitations ! Votre compte vendeur est activé sur Zando+.',
+    status: 'approuvé',
   },
 ];
 
