@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useShopFollow } from '@/hooks/useShopFollow';
 import ListingItem from '@/components/listings/ListingItem';
 import ReviewItem from '@/components/reviews/ReviewItem';
 import SendMessageDialog from '@/components/listing/SendMessageDialog';
@@ -46,6 +47,8 @@ const SellerShopPage = () => {
   const [showAllCats, setShowAllCats] = useState(false);
   const [sortBy, setSortBy]           = useState('recent');
   const [showContactDialog, setShowContactDialog] = useState(false);
+
+  const { isFollowing, followerCount, busy: followBusy, toggle: toggleFollow } = useShopFollow(seller?.id);
 
   useEffect(() => {
     const load = async () => {
@@ -230,6 +233,12 @@ const SellerShopPage = () => {
                       <span><strong>{ratingInfo.average.toFixed(1)}/5</strong> ({ratingInfo.count} avis)</span>
                     </div>
                   )}
+                  {followerCount > 0 && (
+                    <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                      <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span><strong>{followerCount.toLocaleString('fr-FR')}</strong> abonné{followerCount > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
                   {seller.location && (
                     <div className="flex items-center gap-2 text-[12px] text-gray-600">
                       <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -244,10 +253,16 @@ const SellerShopPage = () => {
 
                 <div className="space-y-2">
                   <button
-                    className="w-full h-11 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
-                    onClick={() => toast({ title: 'Bientôt disponible !' })}
+                    disabled={followBusy}
+                    onClick={toggleFollow}
+                    className={`w-full h-11 rounded-xl text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60 ${
+                      isFollowing
+                        ? 'bg-custom-green-500 text-white hover:bg-custom-green-700'
+                        : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
-                    <Heart className="w-4 h-4" /> Suivre la boutique
+                    <Heart className={`w-4 h-4 ${isFollowing ? 'fill-white' : ''}`} />
+                    {isFollowing ? 'Boutique suivie' : 'Suivre la boutique'}
                   </button>
                   <button
                     onClick={handleContact}

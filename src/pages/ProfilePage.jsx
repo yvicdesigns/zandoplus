@@ -17,6 +17,7 @@ import AddressesTab from '@/components/profile/AddressesTab';
 import MessagesInline from '@/components/messages/MessagesInline';
 import CommandesInline from '@/components/profile/CommandesInline';
 import FavorisInline from '@/components/profile/FavorisInline';
+import BoutiquesSuiviesInline from '@/components/profile/BoutiquesSuiviesInline';
 import NotificationsInline from '@/components/profile/NotificationsInline';
 import AvisInline from '@/components/profile/AvisInline';
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog';
@@ -148,6 +149,7 @@ const ProfilePage = () => {
     { id: 'dashboard',     label: 'Tableau de bord',         icon: LayoutDashboard },
     { id: 'commandes',     label: 'Mes commandes',            icon: Package        },
     { id: 'favoris',       label: 'Mes favoris',              icon: Heart          },
+    { id: 'boutiques',     label: 'Boutiques suivies',        icon: Store          },
     { id: 'adresses',      label: 'Mes adresses',             icon: MapPin         },
     { id: 'paiement',      label: 'Mes moyens de paiement',   icon: CreditCard,    disabled: true },
     { id: 'messages',      label: 'Messages',                 icon: MessageSquare  },
@@ -180,6 +182,12 @@ const ProfilePage = () => {
     if (activeSection === 'favoris') return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <FavorisInline />
+      </div>
+    );
+
+    if (activeSection === 'boutiques') return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <BoutiquesSuiviesInline />
       </div>
     );
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Bell, Check } from 'lucide-react';
@@ -27,16 +28,16 @@ const NotificationsInline = () => {
   }, [user]);
 
   const markAllRead = async () => {
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
-    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    setNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
   };
 
   const markRead = async (id) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id);
-    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
   };
 
-  const unreadCount = notifs.filter(n => !n.read).length;
+  const unreadCount = notifs.filter(n => !n.is_read).length;
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-custom-green-500" /></div>;
 
@@ -60,21 +61,25 @@ const NotificationsInline = () => {
         </div>
       ) : (
         <div className="space-y-1">
-          {notifs.map(n => (
-            <div
-              key={n.id}
-              onClick={() => !n.read && markRead(n.id)}
-              className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors ${n.read ? 'bg-transparent hover:bg-gray-50' : 'bg-emerald-50 hover:bg-emerald-50/70'}`}
-            >
-              <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${n.read ? 'bg-gray-200' : 'bg-custom-green-500'}`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-[13px] leading-snug ${n.read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>{n.message || n.title || 'Notification'}</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
-                </p>
-              </div>
-            </div>
-          ))}
+          {notifs.map(n => {
+            const body = (
+              <>
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${n.is_read ? 'bg-gray-200' : 'bg-custom-green-500'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] leading-snug ${n.is_read ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>{n.content?.message || 'Notification'}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
+                  </p>
+                </div>
+              </>
+            );
+            const cls = `flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors ${n.is_read ? 'bg-transparent hover:bg-gray-50' : 'bg-emerald-50 hover:bg-emerald-50/70'}`;
+            return n.link ? (
+              <Link key={n.id} to={n.link} onClick={() => !n.is_read && markRead(n.id)} className={cls}>{body}</Link>
+            ) : (
+              <div key={n.id} onClick={() => !n.is_read && markRead(n.id)} className={cls}>{body}</div>
+            );
+          })}
         </div>
       )}
     </div>
