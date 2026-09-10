@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/sitemap.xml",    "destination": "/api/sitemap" },
+    { "source": "/.well-known/apple-app-site-association", "destination": "/api/aasa" },
+    { "source": "/.well-known/assetlinks.json",           "destination": "/api/assetlinks" },
     { "source": "/seller/:id",     "destination": "/api/seller-og?id=:id" },
     { "source": "/listings/:id",   "destination": "/api/listing-og?id=:id" },
     { "source": "/(.*)",           "destination": "/index.html" }
@@ -10,12 +12,6 @@
       "source": "/((?!assets/).*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/.well-known/apple-app-site-association",
-      "headers": [
-        { "key": "Content-Type", "value": "application/json" }
       ]
     }
   ]

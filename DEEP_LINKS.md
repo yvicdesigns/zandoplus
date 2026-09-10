@@ -7,12 +7,16 @@ navigateur) ouvre **l'app** si elle est installée, et le **site** sinon.
 
 | Élément | Fichier |
 |---|---|
-| AASA iOS | `public/.well-known/apple-app-site-association` |
-| assetlinks Android | `public/.well-known/assetlinks.json` |
-| Content-Type de l'AASA | `vercel.json` (header `application/json`) |
+| AASA iOS (servie en JSON) | `api/aasa.js` — rewrite `/.well-known/apple-app-site-association` |
+| assetlinks Android (servie en JSON) | `api/assetlinks.js` — rewrite `/.well-known/assetlinks.json` |
 | Routage dans l'app | `src/hooks/useDeepLinks.js` (monté dans `App.jsx`) |
 | Entitlement iOS | `ios/App/App/App.entitlements` (`applinks:...`) |
 | Intent-filter Android | `android/app/src/main/AndroidManifest.xml` (MainActivity, `autoVerify`) |
+
+> Les 2 fichiers `.well-known` sont servis par des **fonctions serverless**
+> (comme `api/sitemap.js`) : Vercel ne sert pas de façon fiable un dossier
+> commençant par un point derrière le rewrite SPA. Le contenu à éditer est
+> donc dans `api/aasa.js` et `api/assetlinks.js`.
 
 Identifiants : Team ID `LJ73XSDBTK`, bundle iOS `com.zandoplus.app`,
 package Android `com.zando.app`.
