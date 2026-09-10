@@ -18,12 +18,15 @@ const ReviewsSection = ({ listingId, sellerId, reviews, averageRating, onReviewS
   useEffect(() => {
     if (!user || isSeller || !listingId) return;
 
+    // Avis réservés aux acheteurs vérifiés : l'article doit avoir été
+    // livré (paiement sécurisé OU cash à la livraison) ou mieux.
+    // 'livre' / 'cod_livre' = livré ; le reste = étapes post-livraison.
     supabase
       .from('transactions_escrow')
       .select('id')
       .eq('acheteur_id', user.id)
       .eq('annonce_id', listingId)
-      .in('statut', ['confirme', 'complete', 'retrait_demande', 'withdrawal_sent'])
+      .in('statut', ['livre', 'cod_livre', 'confirme', 'retrait_demande', 'complete'])
       .limit(1)
       .then(({ data }) => setHasVerifiedPurchase(!!data?.length));
   }, [user, listingId, isSeller]);
