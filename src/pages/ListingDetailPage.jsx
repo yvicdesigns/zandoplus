@@ -614,7 +614,7 @@ const ListingDetailPage = () => {
                 <div className="bg-white rounded-xl p-6 border border-gray-100">
                   <div
                     className="prose prose-sm max-w-none text-gray-700 leading-relaxed text-[14px]"
-                    dangerouslySetInnerHTML={{ __html: listing.description }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(listing.description || '') }}
                   />
                 </div>
               )}
