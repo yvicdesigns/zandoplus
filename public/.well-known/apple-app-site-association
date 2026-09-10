@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "LJ73XSDBTK.com.zandoplus.app",
+        "appIDs": ["LJ73XSDBTK.com.zandoplus.app"],
+        "paths": ["NOT /api/*", "*"],
+        "components": [
+          { "/": "/api/*", "exclude": true },
+          { "/": "*" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["LJ73XSDBTK.com.zandoplus.app"]
+  }
+}

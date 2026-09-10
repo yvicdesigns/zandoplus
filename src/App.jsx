@@ -17,6 +17,7 @@ import DynamicFavicon from '@/components/common/DynamicFavicon';
 import { isMobile } from 'react-device-detect';
 import { useVisitor } from '@/hooks/useVisitor';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useDeepLinks } from '@/hooks/useDeepLinks';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { PaymentProvider } from '@/contexts/PaymentContext';
 import { CartProvider } from '@/hooks/useCart';
@@ -243,6 +244,7 @@ const AppLayout = memo(() => {
 
 const AppContent = () => {
     usePushNotifications();
+    useDeepLinks();
     return (
         <>
             <Suspense fallback={null}><AppGatewayInterstitial /></Suspense>

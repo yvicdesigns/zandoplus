@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.zando.app",
+      "sha256_cert_fingerprints": [
+        "06:25:4E:C7:04:D5:AB:B3:E3:30:DE:A7:1A:54:51:01:B5:D3:5D:9F:02:A7:7B:26:52:C6:D7:4C:D1:CE:EB:33"
+      ]
+    }
+  }
+]
