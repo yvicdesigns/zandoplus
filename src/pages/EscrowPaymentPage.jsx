@@ -176,12 +176,19 @@ const EscrowPaymentPage = () => {
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('payment_proofs').getPublicUrl(path);
-      const { error: proofError } = await supabase.rpc('buyer_submit_payment_proof', {
-        p_transaction_id: txId,
-        p_proof_url: publicUrl,
-        p_momo_code: cleanCode,
+
+      // La vérification IA + la soumission passent par cette fonction
+      // (au lieu d'appeler la RPC directement) — voir submit-payment-proof.
+      const { data: submitData, error: submitError } = await supabase.functions.invoke('submit-payment-proof', {
+        body: { transaction_id: txId, proof_url: publicUrl, proof_path: path, momo_code: cleanCode },
       });
-      if (proofError) throw proofError;
+      if (submitError) throw submitError;
+      if (submitData?.rejected) {
+        toast({ title: 'Preuve non reconnue', description: submitData.reason, variant: 'destructive' });
+        setIsSubmitting(false);
+        return;
+      }
+      if (!submitData?.success) throw new Error(submitData?.error || 'Échec de la soumission');
 
       notifyPurchase(txId);
       setSubmitted(true);

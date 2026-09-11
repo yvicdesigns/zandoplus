@@ -107,7 +107,7 @@ const AdminEscrowTab = memo(() => {
     const { data, error } = await supabase
       .from('transactions_escrow')
       .select(`
-        id, statut, montant, created_at, preuve_paiement_url, momo_transaction_code, notes_litige,
+        id, statut, montant, created_at, preuve_paiement_url, momo_transaction_code, ai_proof_verdict, ai_proof_reason, notes_litige,
         date_livraison_declaree, date_confirmation, paiement_valide_at,
         withdrawal_requested_at, vendeur_momo_number, delivery_choice,
         payout_status, payout_provider, payout_attempts, payout_failure_reason,
@@ -546,6 +546,12 @@ const AdminEscrowTab = memo(() => {
                         <div className="text-xs text-gray-500">
                           Code saisi par l'acheteur : <span className="font-mono font-semibold text-gray-800">{tx.momo_transaction_code}</span>
                           <span className="text-gray-400"> — à comparer avec le SMS/screenshot</span>
+                        </div>
+                      )}
+                      {tx.ai_proof_verdict && (
+                        <div className={`text-xs rounded-lg px-2 py-1 w-fit ${tx.ai_proof_verdict === 'ok' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                          {tx.ai_proof_verdict === 'ok' ? '✓ IA : cohérent' : '⚠ IA : incertain, à vérifier'}
+                          {tx.ai_proof_reason && <span className="text-gray-400"> — {tx.ai_proof_reason}</span>}
                         </div>
                       )}
                       {tx.preuve_paiement_url && (
