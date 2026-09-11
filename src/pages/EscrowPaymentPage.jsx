@@ -163,7 +163,7 @@ const EscrowPaymentPage = () => {
     if (!proofFile) { toast({ title: 'Capture requise', variant: 'destructive' }); return; }
     const cleanCode = momoCode.replace(/\s/g, '');
     if (!MOMO_CODE_REGEX.test(cleanCode)) {
-      toast({ title: 'Code de transaction invalide', description: "Entrez uniquement les chiffres de l'ID de transaction reçu par SMS après le paiement.", variant: 'destructive' });
+      toast({ title: 'Code de transaction invalide', description: "Recopiez le numéro à côté de « ID » dans le SMS de confirmation reçu après le paiement.", variant: 'destructive' });
       return;
     }
     setIsSubmitting(true);
@@ -510,14 +510,17 @@ const EscrowPaymentPage = () => {
                         <span className="font-mono font-bold text-blue-900 flex-1">{paymentNumber || 'Chargement...'}</span>
                         <Button size="sm" variant="ghost" onClick={copyNumber}><Copy className="w-4 h-4" /></Button>
                       </div>
-                      <li>Notez votre <strong>ID de transaction</strong> (dans le SMS)</li>
-                      <li>Saisissez ce code et uploadez la capture d'écran ci-dessous</li>
+                      <li>Le SMS de confirmation contient un numéro à côté du mot <strong>« ID »</strong></li>
+                      <li>Recopiez ce numéro ci-dessous et uploadez la capture d'écran</li>
                     </ol>
                   </div>
 
                   {/* Code de transaction */}
                   <div>
-                    <p className="font-semibold text-gray-700 mb-2">ID de transaction (reçu par SMS)</p>
+                    <p className="font-semibold text-gray-700 mb-2">Code « ID » du SMS de confirmation</p>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Dans le SMS, cherchez <strong>« ID : »</strong> ou <strong>« ID de la transaction : »</strong> — c'est ce numéro-là, pas votre numéro de téléphone ni le montant.
+                    </p>
                     <Input
                       inputMode="numeric"
                       placeholder="Ex : 8223029615"
@@ -526,7 +529,7 @@ const EscrowPaymentPage = () => {
                       className="font-mono text-base"
                     />
                     {momoCode && !MOMO_CODE_REGEX.test(momoCode.replace(/\s/g, '')) && (
-                      <p className="text-xs text-red-600 mt-1">Uniquement des chiffres, 8 à 12 caractères — copiez exactement l'ID du SMS de confirmation.</p>
+                      <p className="text-xs text-red-600 mt-1">Uniquement des chiffres, 8 à 12 caractères — copiez exactement le numéro à côté de « ID » dans le SMS.</p>
                     )}
                   </div>
 
