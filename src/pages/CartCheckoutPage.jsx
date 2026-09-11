@@ -76,7 +76,7 @@ const LogoCOD = () => (
 const PAYMENT_METHODS = [
   { id: 'visa',   label: 'Carte bancaire',          sub: 'Visa, MasterCard et autres',     Logo: LogoVisa,   disabled: true  },
   { id: 'mtn',    label: 'Mobile Money (MTN)',       sub: 'Payez avec votre compte MTN',    Logo: LogoMTN,    disabled: false },
-  { id: 'airtel', label: 'Mobile Money (Airtel)',    sub: 'Payez avec votre compte Airtel', Logo: LogoAirtel, disabled: false },
+  { id: 'airtel', label: 'Mobile Money (Airtel)',    sub: 'Payez avec votre compte Airtel', Logo: LogoAirtel, disabled: true  },
   { id: 'cod',    label: 'Paiement à la livraison', sub: 'Payez en espèces à la réception', Logo: LogoCOD,   disabled: false },
 ];
 

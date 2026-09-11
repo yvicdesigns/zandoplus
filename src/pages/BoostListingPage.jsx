@@ -352,7 +352,7 @@ const BoostListingPage = () => {
 
           <div className="flex items-center justify-center text-[11px] text-gray-400 gap-1 mt-3">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Paiement via Airtel Money ou MTN Money
+            Paiement via MTN Money
           </div>
 
         </div>

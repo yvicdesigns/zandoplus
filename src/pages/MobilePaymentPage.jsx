@@ -126,14 +126,14 @@ const MobilePaymentPage = () => {
                 <p className="text-sm font-semibold text-gray-600 mb-2">Opérateurs acceptés :</p>
                 <div className="flex gap-2 flex-wrap">
                   <Badge className="bg-yellow-400 text-yellow-900 text-sm px-3 py-1">MTN Money</Badge>
-                  <Badge className="bg-red-500 text-white text-sm px-3 py-1">Airtel Money</Badge>
+                  <Badge className="bg-gray-200 text-gray-500 text-sm px-3 py-1">Airtel Money — bientôt disponible</Badge>
                 </div>
               </div>
 
               <Alert>
                 <AlertTitle className="font-bold text-lg">1. Envoyez le paiement</AlertTitle>
                 <AlertDescription className="space-y-3 mt-2">
-                  <p>Envoyez le montant exact au numéro ci-dessous via <strong>MTN Money</strong> ou <strong>Airtel Money</strong>.</p>
+                  <p>Envoyez le montant exact au numéro ci-dessous via <strong>MTN Money</strong>.</p>
                   {siteSettings?.whatsapp_number ? (
                     <>
                       <div className="flex items-center justify-between p-3 bg-gray-100 rounded-md">

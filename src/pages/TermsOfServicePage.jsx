@@ -109,7 +109,7 @@ const TermsOfServicePage = () => {
                 <li><strong>Boost Simple :</strong> 150 FCFA par jour. L'annonce est mise en avant dans sa catégorie avec un badge jaune.</li>
                 <li><strong>Boost Urgent :</strong> 300 FCFA par jour. L'annonce apparaît en tête de page d'accueil et dans le popup prioritaire avec un badge rouge.</li>
               </ul>
-              <p>La durée du boost est libre, de 1 à 365 jours. Le paiement se fait uniquement via Airtel Money ou MTN Money.</p>
+              <p>La durée du boost est libre, de 1 à 365 jours. Le paiement se fait uniquement via MTN Money (Airtel Money bientôt disponible).</p>
             </Section>
 
             <Section icon={UserCheck} title="5. Vérification des vendeurs">

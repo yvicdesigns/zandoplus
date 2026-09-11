@@ -79,7 +79,7 @@ const HelpCenterPage = () => {
           <>
             L'Achat Sécurisé Zando est notre système de fonds protégés intégré. Voici comment ça fonctionne :
             <ol className="list-decimal list-inside mt-2 space-y-1">
-              <li>Vous envoyez le paiement (Airtel Money ou MTN Money) au numéro Zando+.</li>
+              <li>Vous envoyez le paiement (MTN Money) au numéro Zando+.</li>
               <li>Vous uploadez la capture d'écran de votre paiement sur la plateforme.</li>
               <li>Zando+ bloque les fonds et notifie le vendeur pour préparer la livraison.</li>
               <li>Vous avez 48h après la déclaration de livraison par le vendeur pour confirmer la réception ou ouvrir un litige.</li>
@@ -128,7 +128,7 @@ const HelpCenterPage = () => {
               <li><strong>Boost Simple</strong> — 150 FCFA/jour : badge jaune "Boosté", mis en avant dans la section dédiée de la page d'accueil.</li>
               <li><strong>Boost Urgent</strong> — 300 FCFA/jour : badge rouge "URGENT", apparaît dans le popup prioritaire et tout en haut de la page d'accueil.</li>
             </ul>
-            <p className="mt-2">Vous sélectionnez le nombre de jours souhaité (de 1 à 365 jours). Le total est calculé en temps réel avant paiement. Le paiement se fait via Airtel Money ou MTN Money.</p>
+            <p className="mt-2">Vous sélectionnez le nombre de jours souhaité (de 1 à 365 jours). Le total est calculé en temps réel avant paiement. Le paiement se fait via MTN Money (Airtel Money bientôt disponible).</p>
           </>
         )
       },

@@ -109,7 +109,7 @@ const BoostPaymentConfirmationPage = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
                 <p className="font-semibold text-blue-800">Instructions de paiement</p>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-blue-700">
-                  <li>Ouvrez <strong>Airtel Money</strong> ou <strong>MTN Money</strong></li>
+                  <li>Ouvrez <strong>MTN Money</strong></li>
                   <li>Envoyez exactement <strong>{amount?.toLocaleString()} FCFA</strong> au :</li>
                   <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
                     <span className="font-mono font-bold text-blue-900 flex-1">{paymentNumber || 'Chargement...'}</span>
