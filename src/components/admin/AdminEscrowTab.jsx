@@ -107,7 +107,7 @@ const AdminEscrowTab = memo(() => {
     const { data, error } = await supabase
       .from('transactions_escrow')
       .select(`
-        id, statut, montant, created_at, preuve_paiement_url, notes_litige,
+        id, statut, montant, created_at, preuve_paiement_url, momo_transaction_code, notes_litige,
         date_livraison_declaree, date_confirmation, paiement_valide_at,
         withdrawal_requested_at, vendeur_momo_number, delivery_choice,
         payout_status, payout_provider, payout_attempts, payout_failure_reason,
@@ -542,6 +542,12 @@ const AdminEscrowTab = memo(() => {
                       </div>
 
                       {/* Preuve paiement */}
+                      {tx.momo_transaction_code && (
+                        <div className="text-xs text-gray-500">
+                          Code saisi par l'acheteur : <span className="font-mono font-semibold text-gray-800">{tx.momo_transaction_code}</span>
+                          <span className="text-gray-400"> — à comparer avec le SMS/screenshot</span>
+                        </div>
+                      )}
                       {tx.preuve_paiement_url && (
                         <button
                           onClick={async () => {

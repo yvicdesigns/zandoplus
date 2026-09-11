@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -14,6 +15,10 @@ const ZANDO_DELIVERY_FEE = 1000; // FCFA
 const AUTOPAY_ENABLED = import.meta.env.VITE_MOMO_AUTOPAY_ENABLED === 'true';
 const AUTOPAY_POLL_MS = 4000;
 const AUTOPAY_TIMEOUT_MS = 120000;
+// ID de transaction MTN/Airtel Money : uniquement des chiffres (ex: 8223029615).
+// Sert à filtrer les preuves "au hasard" (photo hors-sujet, test sans intention
+// réelle d'acheter) — ne prouve pas l'authenticité, juste le format.
+const MOMO_CODE_REGEX = /^[0-9]{8,12}$/;
 
 const DELIVERY_OPTIONS = [
   { value: 'zando', label: 'Zando Delivery', description: 'Zando envoie un livreur chez vous', icon: Truck, fee: ZANDO_DELIVERY_FEE },
@@ -31,6 +36,7 @@ const EscrowPaymentPage = () => {
   const [cityConfig, setCityConfig] = useState(null);
   const [paymentNumber, setPaymentNumber] = useState('');
   const [proofFile, setProofFile] = useState(null);
+  const [momoCode, setMomoCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -155,6 +161,11 @@ const EscrowPaymentPage = () => {
 
   const handleSubmit = async () => {
     if (!proofFile) { toast({ title: 'Capture requise', variant: 'destructive' }); return; }
+    const cleanCode = momoCode.replace(/\s/g, '');
+    if (!MOMO_CODE_REGEX.test(cleanCode)) {
+      toast({ title: 'Code de transaction invalide', description: "Entrez uniquement les chiffres de l'ID de transaction reçu par SMS après le paiement.", variant: 'destructive' });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const txId = await ensureTransaction();
@@ -168,6 +179,7 @@ const EscrowPaymentPage = () => {
       const { error: proofError } = await supabase.rpc('buyer_submit_payment_proof', {
         p_transaction_id: txId,
         p_proof_url: publicUrl,
+        p_momo_code: cleanCode,
       });
       if (proofError) throw proofError;
 
@@ -492,8 +504,23 @@ const EscrowPaymentPage = () => {
                         <Button size="sm" variant="ghost" onClick={copyNumber}><Copy className="w-4 h-4" /></Button>
                       </div>
                       <li>Notez votre <strong>ID de transaction</strong> (dans le SMS)</li>
-                      <li>Uploadez la capture d'écran ci-dessous</li>
+                      <li>Saisissez ce code et uploadez la capture d'écran ci-dessous</li>
                     </ol>
+                  </div>
+
+                  {/* Code de transaction */}
+                  <div>
+                    <p className="font-semibold text-gray-700 mb-2">ID de transaction (reçu par SMS)</p>
+                    <Input
+                      inputMode="numeric"
+                      placeholder="Ex : 8223029615"
+                      value={momoCode}
+                      onChange={(e) => setMomoCode(e.target.value.replace(/[^0-9\s]/g, ''))}
+                      className="font-mono text-base"
+                    />
+                    {momoCode && !MOMO_CODE_REGEX.test(momoCode.replace(/\s/g, '')) && (
+                      <p className="text-xs text-red-600 mt-1">Uniquement des chiffres, 8 à 12 caractères — copiez exactement l'ID du SMS de confirmation.</p>
+                    )}
                   </div>
 
                   {/* Upload */}
@@ -518,7 +545,7 @@ const EscrowPaymentPage = () => {
                     <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFilePick} />
                   </div>
 
-                  <Button onClick={handleSubmit} disabled={isSubmitting || !proofFile} size="lg" className="w-full gradient-bg">
+                  <Button onClick={handleSubmit} disabled={isSubmitting || !proofFile || !MOMO_CODE_REGEX.test(momoCode.replace(/\s/g, ''))} size="lg" className="w-full gradient-bg">
                     {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     <ShieldCheck className="w-4 h-4 mr-2" />
                     Confirmer mon paiement — {totalAmount.toLocaleString()} FCFA
