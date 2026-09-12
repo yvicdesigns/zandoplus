@@ -13,7 +13,7 @@ function welcomeHtml(name: string, email: string): string {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.10);">
-        ${emailHeader(greeting, 'Votre compte est prêt — achetez et vendez au Congo')}
+        ${emailHeader(greeting, 'Votre compte est prêt, achetez et vendez au Congo')}
         <tr>
           <td style="padding:36px 40px;">
             <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
@@ -30,7 +30,7 @@ function welcomeHtml(name: string, email: string): string {
                   </tr>
                   <tr>
                     <td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;font-weight:900;">&#10003;</td>
-                    <td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Publier une annonce — aucun frais, aucun abonnement</td>
+                    <td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Publier une annonce sans aucun frais ni abonnement</td>
                   </tr>
                   <tr>
                     <td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;font-weight:900;">&#10003;</td>

@@ -52,7 +52,7 @@ export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: 
               <tr><td style="padding:20px 24px;">
                 <p style="color:${Z_DARK};font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 14px;">Pourquoi revenir</p>
                 <table cellpadding="0" cellspacing="0" width="100%">
-                  <tr><td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;">&#10003;</td><td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Achat securise — vos fonds proteges jusqu'a reception</td></tr>
+                  <tr><td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;">&#10003;</td><td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Achat securise, vos fonds proteges jusqu'a reception</td></tr>
                   <tr><td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;">&#10003;</td><td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Publication gratuite et illimitee pour les vendeurs</td></tr>
                   <tr><td width="28" valign="top" style="padding:5px 0;color:${Z_BRIGHT};font-size:18px;">&#10003;</td><td style="padding:5px 0 5px 10px;color:${Z_DARKER};font-size:14px;font-weight:600;line-height:1.5;">Livraison a domicile disponible a Brazzaville</td></tr>
                 </table>
@@ -73,7 +73,7 @@ export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: 
   },
 
   new_seller: {
-    subject: 'Vendez sur Zando+ — inscription et publication sans frais',
+    subject: 'Vendez sur Zando+ sans frais d\'inscription ni publication',
     html: (name, email, logoUrl) => `
 <!DOCTYPE html>
 <html lang="fr">
