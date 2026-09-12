@@ -6,17 +6,17 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Loader2 } from 'lucide-react';
 import FileUpload from '@/components/verification/FileUpload';
 
+// Ne gère plus que la photo du fondateur : la section "mission" de la page
+// À propos n'utilise plus d'image (elle utilisait par erreur le logo Zando+
+// comme photo -> retiré lors de la refonte du 12/09/2026).
 const EditAboutImagesDialog = ({ open, onOpenChange, initialData, onSave }) => {
-  const [missionImageFile, setMissionImageFile] = useState(null);
   const [creatorImageFile, setCreatorImageFile] = useState(null);
-  const [missionImageUrl, setMissionImageUrl] = useState(initialData?.mission_image_url);
   const [creatorImageUrl, setCreatorImageUrl] = useState(initialData?.creator_image_url);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (initialData) {
-      setMissionImageUrl(initialData.mission_image_url);
       setCreatorImageUrl(initialData.creator_image_url);
     }
   }, [initialData]);
@@ -36,19 +36,13 @@ const EditAboutImagesDialog = ({ open, onOpenChange, initialData, onSave }) => {
     const { data: urlData } = supabase.storage
       .from('site_assets')
       .getPublicUrl(uploadData.path);
-    
+
     return urlData.publicUrl;
   };
 
   const handleSaveChanges = async () => {
     setIsUploading(true);
     try {
-      let finalMissionUrl = missionImageUrl;
-      if (missionImageFile) {
-        const filePath = `about/mission_image_${Date.now()}_${missionImageFile.name}`;
-        finalMissionUrl = await uploadFile(missionImageFile, filePath);
-      }
-
       let finalCreatorUrl = creatorImageUrl;
       if (creatorImageFile) {
         const filePath = `about/creator_image_${Date.now()}_${creatorImageFile.name}`;
@@ -58,22 +52,21 @@ const EditAboutImagesDialog = ({ open, onOpenChange, initialData, onSave }) => {
       const { data, error } = await supabase
         .from('about_page_content')
         .update({
-          mission_image_url: finalMissionUrl,
           creator_image_url: finalCreatorUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', 1)
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       onSave(data);
-      toast({ title: "Succès", description: "Les images ont été mises à jour." });
+      toast({ title: 'Succès', description: 'La photo a été mise à jour.' });
       onOpenChange(false);
     } catch (error) {
-      console.error("Error updating about page images:", error);
-      toast({ title: "Erreur", description: "Impossible de mettre à jour les images.", variant: "destructive" });
+      console.error('Error updating about page image:', error);
+      toast({ title: 'Erreur', description: 'Impossible de mettre à jour la photo.', variant: 'destructive' });
     } finally {
       setIsUploading(false);
     }
@@ -83,23 +76,14 @@ const EditAboutImagesDialog = ({ open, onOpenChange, initialData, onSave }) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Modifier les images de la page "À Propos"</DialogTitle>
+          <DialogTitle>Modifier la photo du fondateur</DialogTitle>
           <DialogDescription>
-            Téléversez de nouvelles images pour les sections de la page.
+            Téléversez une nouvelle photo pour la section « Le fondateur ».
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 py-4">
+        <div className="py-4">
           <FileUpload
-            label="Image de la mission"
-            onFileSelect={setMissionImageFile}
-            onFileRemove={() => setMissionImageFile(null)}
-            acceptedFileTypes="image/jpeg,image/png,image/webp,image/svg+xml"
-            previouslyUploadedUrl={missionImageUrl}
-            loading={isUploading}
-            disabled={isUploading}
-          />
-          <FileUpload
-            label="Image du créateur"
+            label="Photo du fondateur"
             onFileSelect={setCreatorImageFile}
             onFileRemove={() => setCreatorImageFile(null)}
             acceptedFileTypes="image/jpeg,image/png,image/webp,image/svg+xml"
