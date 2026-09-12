@@ -34,7 +34,7 @@ export const emailHeader = (title: string, subtitle: string, logoUrl?: string) =
 
 export const CAMPAIGN_TEMPLATES: Record<string, { subject: string; html: (name: string, email: string, logoUrl?: string) => string }> = {
   reengagement: {
-    subject: 'Zando+ — des nouvelles annonces vous attendent',
+    subject: 'De nouvelles annonces vous attendent sur Zando+',
     html: (name, email, logoUrl) => `
 <!DOCTYPE html>
 <html lang="fr">
