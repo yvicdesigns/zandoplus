@@ -140,7 +140,7 @@ const AboutPage = () => {
                 { "@type": "EducationalOrganization", "name": "IPMC College of Technology", "address": { "@type": "PostalAddress", "addressCountry": "GH", "addressLocality": "Accra" } }
               ],
               "knowsAbout": ["Développement web", "Design graphique", "Photographie", "Vidéo", "Intelligence artificielle", "Électricité", "Entrepreneuriat numérique"],
-              "description": "Tchissambou Van Yvic est développeur web, entrepreneur numérique et designer, originaire de Dolisie (République du Congo). Fondateur de Creative Art Afrik et de Zando+CG (zandopluscg.com), la première marketplace congolaise de petites annonces. Il travaille également sur Zando Food, une marketplace de restaurants au Congo, et contribue au projet OLEM Consulting. Sa vision : un Congo pleinement numérisé grâce à la technologie et l'intelligence artificielle.",
+              "description": "Tchissambou Van Yvic est développeur web, entrepreneur numérique et designer, originaire de Dolisie (République du Congo). Fondateur de Creative Art Afrik et de Zando+CG (zandopluscg.com), la première marketplace congolaise de petites annonces. Il travaille également sur Zando Food, une marketplace de restaurants au Congo, et contribue au projet Olympe Consulting. Sa vision : un Congo pleinement numérisé grâce à la technologie et l'intelligence artificielle.",
               "url": "https://www.zandopluscg.com/about",
               "sameAs": []
             },
@@ -292,7 +292,7 @@ const AboutPage = () => {
                     Développeur web et entrepreneur numérique congolais, originaire de Loubomo (aujourd'hui Dolisie). Autodidacte dans l'âme, il obtient son <strong className="text-gray-800">Baccalauréat en électrotechnique</strong> au Lycée Technique de Dolisie avant de se spécialiser à l'<strong className="text-gray-800">IPMC College of Technology</strong> (Accra, Ghana), où il maîtrise le développement web et le design graphique.
                   </p>
                   <p className="text-[14.5px] text-gray-600 leading-relaxed">
-                    Il fonde ensuite <strong className="text-gray-800">Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd'hui, il développe <strong className="text-gray-800">Zando+</strong>, la marketplace <em>made in Congo</em>, ainsi que <strong className="text-gray-800">Zando Food</strong>, dédiée aux restaurants, et contribue au projet <strong className="text-gray-800">OLEM Consulting</strong>.
+                    Il fonde ensuite <strong className="text-gray-800">Creative Art Afrik</strong>, une structure dédiée à la formation en design et à la production créative. Aujourd'hui, il développe <strong className="text-gray-800">Zando+</strong>, la marketplace <em>made in Congo</em>, ainsi que <strong className="text-gray-800">Zando Food</strong>, dédiée aux restaurants, et contribue au projet <strong className="text-gray-800">Olympe Consulting</strong>.
                   </p>
                 </div>
 
@@ -310,7 +310,7 @@ const AboutPage = () => {
                 </blockquote>
 
                 <div className="mt-5 flex flex-wrap justify-center md:justify-start gap-2">
-                  {['Creative Art Afrik', 'Zando Food', 'OLEM Consulting'].map((p) => (
+                  {['Creative Art Afrik', 'Zando Food', 'Olympe Consulting'].map((p) => (
                     <span key={p} className="text-[12.5px] font-semibold text-gray-500 border border-gray-200 px-3 py-1.5 rounded-full">{p}</span>
                   ))}
                 </div>
