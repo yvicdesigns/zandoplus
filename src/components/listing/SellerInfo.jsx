@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Store } from 'lucide-react';
+import { Store, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -34,7 +34,11 @@ const SellerInfo = ({ seller, averageRating = 0, reviewCount = 0 }) => {
         <div>
           <h2 className="text-xl font-bold text-gray-800">{seller.full_name}</h2>
           <div className="mt-1 space-y-1">
-            {seller.verified && <Badge className="bg-green-100 text-green-800">Vendeur Vérifié</Badge>}
+            {seller.is_business ? (
+              <Badge className="bg-amber-100 text-amber-800 flex items-center gap-1 w-fit"><Building2 className="w-3 h-3" /> Entreprise</Badge>
+            ) : seller.verified && (
+              <Badge className="bg-green-100 text-green-800">Vendeur Vérifié</Badge>
+            )}
             {lastSeen && <p className="text-xs text-gray-500">{lastSeen}</p>}
           </div>
           {reviewCount > 0 && (

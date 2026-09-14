@@ -7,7 +7,7 @@ import {
   Loader2, ChevronRight, Truck, Shield, RotateCcw,
   ShoppingCart, Lock, Banknote, MessageSquare, Minus, Plus,
   CheckCircle, Eye, Store, MapPin, BadgeCheck, Flag, Heart, Users, Share2,
-  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck, Download, PlayCircle,
+  Bed, Sofa, ShowerHead, Droplet, Zap, Warehouse, Armchair, CalendarClock, Wallet, X, ShieldCheck, Download, PlayCircle, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -386,7 +386,11 @@ const ListingDetailPage = () => {
               {/* Étoiles + Produit certifié sur la même ligne */}
               <div className="flex items-center gap-3 flex-wrap">
                 <Stars rating={averageRating} count={reviews.length} />
-                {listing.seller?.verified && (
+                {listing.seller?.is_business ? (
+                  <span className="flex items-center gap-1 text-amber-600 text-[12px] font-semibold">
+                    <Building2 className="w-4 h-4" /> Boutique Entreprise
+                  </span>
+                ) : listing.seller?.verified && (
                   <span className="flex items-center gap-1 text-custom-green-600 text-[12px] font-semibold">
                     <BadgeCheck className="w-4 h-4" /> Produit certifié
                   </span>
@@ -731,7 +735,11 @@ const ListingDetailPage = () => {
                   </Avatar>
                   <div className="min-w-0">
                     <p className="text-[15px] font-black text-gray-900 truncate">{listing.seller?.full_name}</p>
-                    {listing.seller?.verified && (
+                    {listing.seller?.is_business ? (
+                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-full border border-amber-200 mt-0.5">
+                        <Building2 className="w-3 h-3" /> Entreprise
+                      </span>
+                    ) : listing.seller?.verified && (
                       <span className="inline-flex items-center gap-1 bg-green-50 text-custom-green-600 text-[11px] font-bold px-2 py-0.5 rounded-full border border-custom-green-200 mt-0.5">
                         <BadgeCheck className="w-3 h-3" /> Boutique officielle
                       </span>

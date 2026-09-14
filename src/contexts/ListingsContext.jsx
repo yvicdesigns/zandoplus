@@ -42,7 +42,7 @@ export const ListingsProvider = ({ children }) => {
       const queryFn = () => {
         let query = supabase
           .from('listings')
-          .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
+          .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business, phone, created_at, last_seen, shop_slug)')
           .eq('status', 'active');
 
         if (filters.category) query = query.eq('category', filters.category);
@@ -73,6 +73,7 @@ export const ListingsProvider = ({ children }) => {
         ...l,
         seller: l.seller || null,
         seller_verified: l.seller?.verified === true,
+        seller_is_business: l.seller?.is_business === true,
       }));
 
       // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
@@ -87,11 +88,13 @@ export const ListingsProvider = ({ children }) => {
         sorted = [...local, ...rest];
       }
 
-      // Vendeurs vérifiés flottent en haut sur tri par défaut
+      // Vendeurs vérifiés flottent en haut sur tri par défaut — Entreprise
+      // d'abord, puis Vérifié simple, puis le reste.
       if (filters.sortBy === 'newest' || filters.sortBy === 'popularity') {
-        const verified = sorted.filter(l => l.seller_verified);
-        const others   = sorted.filter(l => !l.seller_verified);
-        sorted = [...verified, ...others];
+        const business = sorted.filter(l => l.seller_is_business);
+        const verified = sorted.filter(l => l.seller_verified && !l.seller_is_business);
+        const others   = sorted.filter(l => !l.seller_verified && !l.seller_is_business);
+        sorted = [...business, ...verified, ...others];
       }
 
       // Mélange par vendeur quand pas de recherche ni de filtre spécifique
@@ -214,7 +217,7 @@ export const ListingsProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('listings')
         .insert({ ...listingData, user_id: user.id, status: 'active' })
-        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
+        .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business, phone, created_at, last_seen, shop_slug)')
         .single();
       
       if (error) throw error;
@@ -233,7 +236,7 @@ export const ListingsProvider = ({ children }) => {
         .from('listings')
         .update(updatedData)
         .eq('id', id)
-        .select('*, seller:profiles(id, full_name, avatar_url, verified, phone, created_at, last_seen, shop_slug)')
+        .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business, phone, created_at, last_seen, shop_slug)')
         .single();
       
       if (error) throw error;

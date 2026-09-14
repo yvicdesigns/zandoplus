@@ -69,15 +69,16 @@ export const useAuthService = (user, toast) => {
     return data;
   }, [user, toast]);
 
-  const getVerificationStatus = useCallback(async () => {
+  const getVerificationStatus = useCallback(async (requestType = 'individual') => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('verification_requests')
       .select('*')
       .eq('user_id', user.id)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
+      .eq('request_type', requestType)
+      .maybeSingle();
+
+    if (error) {
       console.error('Erreur lors de la récupération du statut de vérification:', error);
       return null;
     }

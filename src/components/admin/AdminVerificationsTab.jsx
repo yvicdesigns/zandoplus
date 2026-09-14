@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, Clock, FileText, Camera, Home, Loader2, ExternalLink, ShieldCheck, Search, UserCheck, ShieldOff } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, FileText, Camera, Home, Loader2, ExternalLink, ShieldCheck, Search, UserCheck, ShieldOff, Building2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchVerificationRequestsAdmin } from '@/lib/adminQueryHelpers';
 import { translateAdminError } from '@/lib/adminErrorHandler';
@@ -283,7 +283,7 @@ const AdminVerificationsTab = () => {
     fetchRequests();
   }, [fetchRequests]);
 
-  const handleAction = async (requestId, userId, newStatus, reason = null) => {
+  const handleAction = async (requestId, userId, newStatus, reason = null, request = null) => {
     setIsActionLoading(true);
     try {
       // 1. Mettre à jour le statut de la demande
@@ -293,13 +293,22 @@ const AdminVerificationsTab = () => {
         .eq('id', requestId);
       if (reqError) throw reqError;
 
-      // 2. Si approuvé, marquer le profil comme vérifié via RPC (bypasse RLS)
+      // 2. Si approuvé, marquer le profil comme vérifié / Entreprise via RPC (bypasse RLS)
       if (newStatus === 'approved' && userId) {
-        const { error: profileError } = await supabase.rpc('admin_set_verified', {
-          target_user_id: userId,
-          is_verified: true,
-        });
-        if (profileError) throw profileError;
+        if (request?.request_type === 'business') {
+          const { error: profileError } = await supabase.rpc('admin_set_business', {
+            target_user_id: userId,
+            is_business_enabled: true,
+            p_business_name: request?.business_name || null,
+          });
+          if (profileError) throw profileError;
+        } else {
+          const { error: profileError } = await supabase.rpc('admin_set_verified', {
+            target_user_id: userId,
+            is_verified: true,
+          });
+          if (profileError) throw profileError;
+        }
       }
 
       toast({ title: 'Succès', description: `La demande a été ${newStatus === 'approved' ? 'approuvée' : 'rejetée'}.`, className: 'bg-green-100 text-green-800' });
@@ -314,12 +323,15 @@ const AdminVerificationsTab = () => {
     }
   };
 
-  const handleSync = async (userId, userName) => {
-    const { error } = await supabase.rpc('admin_set_verified', { target_user_id: userId, is_verified: true });
+  const handleSync = async (userId, userName, request) => {
+    const isBusiness = request?.request_type === 'business';
+    const { error } = isBusiness
+      ? await supabase.rpc('admin_set_business', { target_user_id: userId, is_business_enabled: true, p_business_name: request?.business_name || null })
+      : await supabase.rpc('admin_set_verified', { target_user_id: userId, is_verified: true });
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Badge synchronisé ✅', description: `${userName} est maintenant Vendeur Certifié.`, className: 'bg-green-100 text-green-800' });
+      toast({ title: 'Badge synchronisé ✅', description: `${userName} est maintenant ${isBusiness ? 'Entreprise' : 'Vendeur Certifié'}.`, className: 'bg-green-100 text-green-800' });
     }
   };
 
@@ -373,7 +385,7 @@ const AdminVerificationsTab = () => {
                   index={index}
                   formatDate={formatDate}
                   DocumentLink={DocumentLink}
-                  onApprove={() => handleAction(request.id, request.user?.id || request.user_id, 'approved')}
+                  onApprove={() => handleAction(request.id, request.user?.id || request.user_id, 'approved', null, request)}
                   onReject={() => openRejectionModal(request)}
                   isActionLoading={isActionLoading}
                   selectedRequest={selectedRequest}
@@ -398,7 +410,7 @@ const AdminVerificationsTab = () => {
                     index={index}
                     formatDate={formatDate}
                     DocumentLink={DocumentLink}
-                    onSync={() => handleSync(request.user?.id || request.user_id, request.user?.full_name)}
+                    onSync={() => handleSync(request.user?.id || request.user_id, request.user?.full_name, request)}
                     readonly
                   />
                 ))}
@@ -463,9 +475,17 @@ const RequestCard = ({ request, index, formatDate, DocumentLink, onApprove, onRe
       <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1 space-y-2">
           <h3 className="font-semibold text-lg">{request.user?.full_name || 'Utilisateur inconnu'}</h3>
+          {request.request_type === 'business' && (
+            <p className="text-sm font-medium text-amber-700">{request.business_name}</p>
+          )}
           <p className="text-sm text-gray-600">{request.user?.email}</p>
           <p className="text-xs text-gray-400">Demandé le {formatDate(request.created_at)}</p>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {request.request_type === 'business' && (
+              <Badge className="bg-amber-100 text-amber-800 border-none">
+                <Building2 className="w-3.5 h-3.5 mr-1" /> Entreprise
+              </Badge>
+            )}
             <Badge className={statusConfig[request.status]?.color}>
               {statusConfig[request.status]?.icon}
               <span className="ml-1">{statusConfig[request.status]?.label}</span>

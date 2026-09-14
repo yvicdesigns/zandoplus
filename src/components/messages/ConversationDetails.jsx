@@ -4,7 +4,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, Clock, MessageCircle, ShoppingBag, BadgeCheck, Package, Eye, Flag, Ban } from 'lucide-react';
+import { Calendar, Clock, MessageCircle, ShoppingBag, BadgeCheck, Package, Eye, Flag, Ban, Building2 } from 'lucide-react';
 
 const ConversationDetails = ({ conversation }) => {
   const { participant, listing } = conversation;
@@ -17,9 +17,9 @@ const ConversationDetails = ({ conversation }) => {
       const [{ count: orders }, { count: products }, { data: prof }] = await Promise.all([
         supabase.from('transactions_escrow').select('id', { count: 'exact', head: true }).eq('vendeur_id', participant.id).eq('statut', 'fonds_liberes'),
         supabase.from('listings').select('id', { count: 'exact', head: true }).eq('user_id', participant.id).eq('status', 'active'),
-        supabase.from('profiles').select('created_at, verified').eq('id', participant.id).single(),
+        supabase.from('profiles').select('created_at, verified, is_business').eq('id', participant.id).single(),
       ]);
-      setSellerStats({ orders: orders || 0, products: products || 0, memberSince: prof?.created_at, verified: prof?.verified });
+      setSellerStats({ orders: orders || 0, products: products || 0, memberSince: prof?.created_at, verified: prof?.verified, isBusiness: prof?.is_business });
     };
     load();
   }, [participant?.id]);
@@ -48,9 +48,11 @@ const ConversationDetails = ({ conversation }) => {
         </div>
         <div className="flex items-center gap-1.5 mb-0.5">
           <p className="text-[14px] font-black text-gray-900">{participant?.full_name}</p>
-          {sellerStats?.verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+          {sellerStats?.isBusiness ? (
+            <Building2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          ) : sellerStats?.verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
         </div>
-        <p className="text-[11px] text-gray-400 mb-4">{sellerStats?.verified ? 'Boutique officielle' : 'Vendeur particulier'}</p>
+        <p className="text-[11px] text-gray-400 mb-4">{sellerStats?.isBusiness ? 'Boutique Entreprise' : sellerStats?.verified ? 'Boutique officielle' : 'Vendeur particulier'}</p>
         <Link
           to={sellerPath}
           className="w-full h-8 border border-gray-200 rounded-xl text-[12px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Award, ShieldCheck, Sparkles, PackageX, Flame } from 'lucide-react';
+import { Award, ShieldCheck, Sparkles, PackageX, Flame, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const badgeConfig = {
@@ -30,6 +30,12 @@ const badgeConfig = {
     tooltip: 'Le vendeur a vérifié son identité auprès de Zando+.',
     customClasses: 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200 text-[0.6rem] px-1.5 py-0.5 md:text-xs md:px-2.5 md:py-0.5'
   },
+  business: {
+    label: 'Entreprise',
+    icon: <Building2 className="w-3 h-3 md:w-4 md:h-4" />,
+    tooltip: 'Boutique Entreprise vérifiée par Zando+.',
+    customClasses: 'bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 text-[0.6rem] px-1.5 py-0.5 md:text-xs md:px-2.5 md:py-0.5'
+  },
   outOfStock: {
     label: 'Épuisé',
     icon: <PackageX className="w-3 h-3 md:w-4 md:h-4" />,
@@ -47,7 +53,9 @@ const ListingBadges = ({ listing, seller, className }) => {
   if (listing.featured) badges.push('approved');
   if (listing.views_count > 100 && !listing.featured) badges.push('popular');
   if (listing.is_urgent) badges.push('urgent');
-  if (listing.seller_verified) badges.push('verified');
+  // "Entreprise" inclut Vérifié — un seul badge, pas les deux empilés.
+  if (listing.seller_is_business) badges.push('business');
+  else if (listing.seller_verified) badges.push('verified');
 
   if (badges.length === 0) return null;
 

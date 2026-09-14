@@ -21,14 +21,14 @@ import React, { useState, useRef, useEffect } from 'react';
       const fileInputRef = useRef(null);
 
       useEffect(() => {
-        if (state && state.type === 'boost') {
+        if (state?.plan?.type === 'boost') {
           navigate('/boost-payment', { state, replace: true });
         }
       }, [state, navigate]);
 
       const { amount, description, plan } = state || {};
 
-      if (state?.type === 'boost') {
+      if (state?.plan?.type === 'boost') {
         return null;
       }
       
@@ -115,7 +115,7 @@ import React, { useState, useRef, useEffect } from 'react';
                 ...verificationData,
                 payment_proof_url: publicUrl,
                 payment_transaction_id: transactionId,
-              }, { onConflict: 'user_id' });
+              }, { onConflict: 'user_id,request_type' });
 
             if (dbError) throw dbError;
             

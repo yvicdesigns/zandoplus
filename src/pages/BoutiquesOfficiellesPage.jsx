@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { ShieldCheck, Store, Search, Loader2 } from 'lucide-react';
+import { ShieldCheck, Store, Search, Loader2, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Helmet } from 'react-helmet-async';
@@ -22,8 +22,8 @@ const ShopCard = ({ seller, index }) => (
           alt={seller.full_name}
           className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-custom-green-300 transition-all"
         />
-        <span className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-          <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
+        <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${seller.is_business ? 'bg-amber-500' : 'bg-blue-600'}`}>
+          {seller.is_business ? <><Building2 className="w-2.5 h-2.5" /> Entreprise</> : <><ShieldCheck className="w-2.5 h-2.5" /> Vérifié</>}
         </span>
       </div>
       <div className="min-w-0 w-full">
@@ -49,7 +49,7 @@ const BoutiquesOfficiellesPage = () => {
   useEffect(() => {
     supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, bio, location, shop_slug, verified')
+      .select('id, full_name, avatar_url, bio, location, shop_slug, verified, is_business')
       .eq('verified', true)
       .eq('is_seller', true)
       .order('full_name', { ascending: true })

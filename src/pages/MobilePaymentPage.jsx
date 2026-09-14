@@ -65,12 +65,16 @@ const MobilePaymentPage = () => {
         return;
     }
 
-    if (paymentInfo.type === 'boost') {
+    // Le type est stocké dans paymentInfo.plan.type (ex: 'verification'),
+    // pas paymentInfo.type — bug corrigé le 14/09/2026 : le bouton
+    // "J'ai payé" ne menait nulle part avant ce correctif.
+    const paymentType = paymentInfo.plan?.type;
+    if (paymentType === 'boost') {
       navigate('/boost-payment', { state: { ...paymentInfo } });
-    } else if (paymentInfo.type === 'plan') {
+    } else if (paymentType === 'plan' || paymentType === 'verification') {
       navigate('/payment/confirmation', { state: { ...paymentInfo } });
     } else {
-        toast({ title: 'Erreur de type de paiement', description: `Type de paiement non reconnu: ${paymentInfo.type}.`, variant: 'destructive' });
+        toast({ title: 'Erreur de type de paiement', description: `Type de paiement non reconnu: ${paymentType}.`, variant: 'destructive' });
     }
   };
 

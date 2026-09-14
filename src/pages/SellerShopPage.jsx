@@ -15,7 +15,7 @@ import {
   Loader2, Star, Heart, MessageSquare, MapPin, Calendar,
   Package, Users, Clock, ThumbsUp, ChevronRight, BadgeCheck,
   Truck, Shield, Headphones, CheckCircle, SlidersHorizontal,
-  ShoppingBag, Store, LayoutDashboard, Share2,
+  ShoppingBag, Store, LayoutDashboard, Share2, Building2,
 } from 'lucide-react';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -212,19 +212,26 @@ const SellerShopPage = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="text-[15px] font-black text-gray-900 truncate">{seller.name}</p>
-                      {seller.verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+                      {seller.is_business ? (
+                        <Building2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      ) : seller.verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
                     </div>
                     <p className="text-[11px] text-gray-400">
-                      {seller.verified ? 'Boutique officielle' : 'Vendeur particulier'}
+                      {seller.is_business ? 'Boutique Entreprise' : seller.verified ? 'Boutique officielle' : 'Vendeur particulier'}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2.5 mb-5">
-                  {seller.verified && (
+                  {seller.is_business ? (
+                    <div className="flex items-center gap-2 text-[12px] text-gray-600">
+                      <Building2 className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <span className="font-medium">Entreprise vérifiée</span>
+                    </div>
+                  ) : seller.verified && (
                     <div className="flex items-center gap-2 text-[12px] text-gray-600">
                       <BadgeCheck className="w-4 h-4 text-custom-green-500 flex-shrink-0" />
-                      <span className="font-medium">Entreprise vérifiée</span>
+                      <span className="font-medium">Vendeur vérifié</span>
                     </div>
                   )}
                   {ratingInfo.count > 0 && (
@@ -360,7 +367,7 @@ const SellerShopPage = () => {
                   <div className="space-y-3 text-[12px]">
                     {[
                       { label: 'Nom de la boutique', value: seller.name },
-                      { label: 'Type de vendeur', value: seller.verified ? 'Boutique officielle' : 'Vendeur particulier' },
+                      { label: 'Type de vendeur', value: seller.is_business ? 'Boutique Entreprise' : seller.verified ? 'Boutique officielle' : 'Vendeur particulier' },
                       seller.location && { label: 'Adresse', value: seller.location },
                       satisfactionRate != null && { label: 'Taux de satisfaction', value: `${satisfactionRate}%` },
                     ].filter(Boolean).map(({ label, value }) => (

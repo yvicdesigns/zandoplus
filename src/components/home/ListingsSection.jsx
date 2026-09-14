@@ -33,7 +33,7 @@ const ListingsSection = () => {
         const to = from + itemsPerPage - 1;
         const { data, error, count } = await supabase
           .from('listings')
-          .select('*, seller:profiles(id, full_name, avatar_url, verified)', { count: 'exact' })
+          .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business)', { count: 'exact' })
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .range(from, to);
@@ -43,6 +43,7 @@ const ListingsSection = () => {
             ...item,
             createdAt: item.created_at,
             seller_verified: item.seller?.verified === true,
+            seller_is_business: item.seller?.is_business === true,
             seller: item.seller ? {
               ...item.seller,
               name: item.seller.full_name || 'Vendeur Anonyme',

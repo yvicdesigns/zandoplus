@@ -11,7 +11,7 @@ import {
   Loader2, LayoutDashboard, Package, Heart, MapPin, CreditCard,
   MessageSquare, Bell, Star, Users, Settings, ChevronRight, ChevronLeft,
   Camera, Pencil, Check, X, ShoppingBag, LogOut, Store,
-  Shield, Eye, BadgeCheck,
+  Shield, Eye, BadgeCheck, ImageIcon,
 } from 'lucide-react';
 import AddressesTab from '@/components/profile/AddressesTab';
 import MessagesInline from '@/components/messages/MessagesInline';
@@ -90,6 +90,8 @@ const ProfilePage = () => {
   const [stats, setStats] = useState({ commandes: 0, avis: 0 });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [cropFile, setCropFile] = useState(null);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const bannerInputRef = useRef(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/');
@@ -129,6 +131,27 @@ const ProfilePage = () => {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleBannerSelect = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = null;
+    if (!file) return;
+    setIsUploadingBanner(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1600 });
+      const path = `${user.id}/banner/${uuidv4()}.webp`;
+      const { error: upErr } = await supabase.storage.from('profile_assets').upload(path, compressed, { contentType: 'image/webp' });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('profile_assets').getPublicUrl(path);
+      await supabase.from('profiles').update({ banner_url: publicUrl }).eq('id', user.id);
+      if (typeof updateUser === 'function') await updateUser();
+      toast({ title: 'Bannière mise à jour', className: 'bg-custom-green-500 text-white' });
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsUploadingBanner(false);
     }
   };
 
@@ -213,6 +236,25 @@ const ProfilePage = () => {
     if (activeSection === 'parametres') return (
       <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
         <h2 className="text-[17px] font-black text-gray-900">Paramètres du compte</h2>
+
+        {user.is_seller && (
+          <div className="py-4 border-b border-gray-100">
+            <p className="text-[13px] font-semibold text-gray-900 mb-1">Bannière de la boutique</p>
+            <p className="text-[12px] text-gray-400 mb-3">Affichée en fond de votre page boutique publique.</p>
+            <div
+              onClick={() => !isUploadingBanner && bannerInputRef.current?.click()}
+              className="relative h-28 rounded-xl overflow-hidden bg-gray-100 border border-dashed border-gray-300 hover:border-custom-green-400 cursor-pointer flex items-center justify-center group"
+            >
+              {user.banner_url && <img src={user.banner_url} alt="Bannière" className="absolute inset-0 w-full h-full object-cover" />}
+              <div className={`absolute inset-0 flex items-center justify-center gap-2 text-[12px] font-semibold ${user.banner_url ? 'bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity' : 'text-gray-500'}`}>
+                {isUploadingBanner ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                {isUploadingBanner ? 'Envoi...' : user.banner_url ? 'Changer la bannière' : 'Ajouter une bannière'}
+              </div>
+            </div>
+            <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
+          </div>
+        )}
+
         <div className="divide-y divide-gray-100">
           <div className="flex items-center justify-between py-4">
             <div>
@@ -502,6 +544,20 @@ const ProfilePage = () => {
                 </button>
               )}
 
+              {user.is_seller && !user.verified && (
+                <button onClick={() => navigate('/verification')}
+                  className="mx-4 mb-4 w-[calc(100%-2rem)] flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-left">
+                  <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <BadgeCheck className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-amber-900 font-black text-[13px]">Devenir Vérifié / Entreprise</p>
+                    <p className="text-amber-700/70 text-[11px]">Rassurez vos acheteurs</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-400" />
+                </button>
+              )}
+
               {/* Navigation sections */}
               <div className="mx-4 bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4">
                 {NAV.filter(i => i.id !== 'dashboard').map((item, idx, arr) => {
@@ -618,6 +674,16 @@ const ProfilePage = () => {
                       </>
                     )}
                   </div>
+                  {user.is_seller && !user.verified && (
+                    <div className="mx-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <p className="text-[13px] font-black mb-1 text-amber-900">Devenir Vérifié / Entreprise</p>
+                      <p className="text-[11px] text-amber-700/80 mb-3">Rassurez vos acheteurs avec un badge de confiance.</p>
+                      <button onClick={() => navigate('/verification')}
+                        className="w-full h-8 bg-amber-500 text-white rounded-lg text-[12px] font-bold hover:bg-amber-600 transition-colors">
+                        Voir les options
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
