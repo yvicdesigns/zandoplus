@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/customSupabaseClient';
+import imageCompression from 'browser-image-compression';
 
 // WATERMARK_LOGO_URL will now be passed dynamically
 const WATERMARK_OPTIONS = {
@@ -16,7 +17,14 @@ const WATERMARK_OPTIONS = {
 // connexion" au lieu du vrai problème. On plafonne donc la dimension avant
 // de dessiner sur le canvas, ce qui reste largement suffisant à l'affichage
 // et réduit aussi le poids/temps d'upload sur une connexion faible.
-const MAX_DIMENSION = 1920;
+//
+// 15/09/2026 : mesuré en prod — moyenne 837 Ko/photo, jusqu'à 5 Mo, et des
+// pages qui rament sur mobile au Congo. 1920px + qualité 0.85 restait trop
+// lourd pour de simples vignettes d'annonce ; redescendu à 1280px/0.75, qui
+// reste net à l'affichage (aucune image n'est montrée en plus grand sur le
+// site) et divise le poids par 3-4 environ.
+const MAX_DIMENSION = 1280;
+const WEBP_QUALITY = 0.75;
 
 const fetchWatermarkImage = (watermarkLogoUrl) => {
   return new Promise((resolve, reject) => {
@@ -47,10 +55,24 @@ const sanitizeFileName = (fileName) => {
 };
 
 
+const compressWithoutWatermark = async (imageFile) => {
+  try {
+    return await imageCompression(imageFile, {
+      maxSizeMB: 0.6,
+      maxWidthOrHeight: MAX_DIMENSION,
+      useWebWorker: true,
+      fileType: 'image/webp',
+    });
+  } catch (compressionError) {
+    console.error('Fallback compression failed:', compressionError);
+    return imageFile;
+  }
+};
+
 export const applyWatermark = async (imageFile, watermarkLogoUrl) => {
   if (!watermarkLogoUrl) {
-    console.warn("Watermark logo URL is not provided. Skipping watermark application.");
-    return imageFile;
+    console.warn("Watermark logo URL is not provided. Compressing without watermark.");
+    return compressWithoutWatermark(imageFile);
   }
   try {
     const [mainImg, watermarkImg] = await Promise.all([
@@ -88,7 +110,7 @@ export const applyWatermark = async (imageFile, watermarkLogoUrl) => {
     ctx.drawImage(watermarkImg, x, y, watermarkWidth, watermarkHeight);
     ctx.globalAlpha = 1.0;
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.85));
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', WEBP_QUALITY));
     
     const watermarkedFile = new File([blob], `watermarked_${sanitizeFileName(imageFile.name)}`, {
       type: 'image/webp',
@@ -99,7 +121,12 @@ export const applyWatermark = async (imageFile, watermarkLogoUrl) => {
 
   } catch (error) {
     console.error('Error applying watermark:', error);
-    return imageFile; 
+    // 15/09/2026 : ce filet de secours renvoyait la photo BRUTE (jusqu'à
+    // plusieurs Mo, format d'origine du téléphone) dès que le filigrane
+    // échouait pour une raison ou une autre — mesuré en prod : 28% des
+    // photos d'annonces avaient contourné toute compression par ce chemin.
+    // On compresse quand même, juste sans filigrane, plutôt que de renoncer.
+    return compressWithoutWatermark(imageFile);
   }
 };
 
@@ -111,7 +138,12 @@ export const uploadImagesWithWatermark = async (imageFiles, userId, watermarkLog
     const uploadPromises = watermarkedFiles.map((file) => {
       const sanitizedName = sanitizeFileName(file.name);
       const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(2)}_${sanitizedName}`;
-      return supabase.storage.from('listing_images').upload(fileName, file);
+      // cacheControl : sans ça, Supabase renvoyait "no-cache" -> chaque
+      // affichage retéléchargeait la photo en entier, même pour la même
+      // personne qui revient sur la page. Le nom de fichier est unique
+      // (horodatage + aléatoire), donc la mettre en cache longtemps est sans
+      // risque : une modification crée toujours un nouveau fichier.
+      return supabase.storage.from('listing_images').upload(fileName, file, { cacheControl: '31536000' });
     });
 
     const uploadResults = await Promise.all(uploadPromises);
