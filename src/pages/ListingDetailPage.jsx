@@ -560,7 +560,7 @@ const ListingDetailPage = () => {
               {listing.views_count > 10 && (
                 <div className="flex items-center gap-2 px-4 py-3 bg-green-50 rounded-xl text-[12px] text-custom-green-700">
                   <Users className="w-4 h-4 flex-shrink-0" />
-                  <span><strong>{listing.views_count}</strong> personnes ont acheté ce produit au cours des dernières 24h</span>
+                  <span><strong>{listing.views_count}</strong> personnes ont consulté cette annonce</span>
                 </div>
               )}
 
