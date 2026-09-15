@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle } from 'lucide-react';
+import { Heart, MapPin, Calendar, Zap, ShoppingCart, CheckCircle, Eye } from 'lucide-react';
 import ListingBadges from '@/components/common/ListingBadges';
 import StarRating from '@/components/reviews/StarRating';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -50,7 +50,13 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
     
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
-  
+
+  // Format compact façon réseaux sociaux : 1200 -> "1,2k"
+  const formatViews = (n) => {
+    if (n < 1000) return `${n}`;
+    return `${(n / 1000).toFixed(1).replace('.', ',').replace(',0', '')}k`;
+  };
+
   if (viewMode === 'grid') {
     return (
       <Card className="listing-card overflow-hidden cursor-pointer border-0 shadow-lg h-full flex flex-col">
@@ -88,6 +94,11 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             )}
             <ListingBadges listing={listing} seller={listing.seller} />
           </div>
+          {listing.views_count > 0 && (
+            <span className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full">
+              <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
+            </span>
+          )}
         </div>
         <CardContent className="p-1.5 sm:p-4 flex-grow flex-col justify-between">
           <div>
@@ -186,6 +197,11 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
           <div className="absolute top-2 left-2 z-10">
              <ListingBadges listing={listing} seller={listing.seller} />
           </div>
+          {listing.views_count > 0 && (
+            <span className="absolute bottom-2 left-2 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-full">
+              <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
+            </span>
+          )}
         </div>
         <div className="flex-1 p-4 flex flex-col justify-between">
           <div>
