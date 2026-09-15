@@ -155,7 +155,9 @@ const AdminUsersTab = memo(() => {
     }
   };
 
-  const STAFF_ROLES = ['admin', 'monetisation', 'gestion', 'editor', 'viewer'];
+  // 'viewer' est le rôle par défaut donné à tout nouvel inscrit (pas un rôle
+  // d'équipe) -> exclu d'ici, sinon tout le monde comptait comme "Staff".
+  const STAFF_ROLES = ['admin', 'monetisation', 'gestion', 'editor'];
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
@@ -252,7 +254,7 @@ const AdminUsersTab = memo(() => {
                           {userItem.role === 'monetisation' && <Badge className="bg-amber-100 text-amber-800 border-none">Monétisation</Badge>}
                           {userItem.role === 'gestion' && <Badge className="bg-indigo-100 text-indigo-800 border-none">Gestion</Badge>}
                           {userItem.role === 'editor' && <Badge className="bg-blue-100 text-blue-800 border-none">Éditeur</Badge>}
-                          {userItem.role === 'viewer' && <Badge variant="outline" className="text-gray-600">Lecteur</Badge>}
+                          {/* 'viewer' = rôle par défaut de tout inscrit, pas un rôle d'équipe -> pas de badge (bruit sur 866/868 utilisateurs) */}
                           {userItem.verified && <Badge className="bg-green-100 text-green-800 border-none ml-1">Vérifié</Badge>}
                           {userItem.is_seller && <Badge className="bg-amber-100 text-amber-800 border-none ml-1">Vendeur</Badge>}
                         </div>
