@@ -9,6 +9,7 @@ import PostAdStepper from '@/components/post-ad/PostAdStepper';
 import Step1BasicInfo from '@/components/post-ad/Step1BasicInfo';
 import Step2Details from '@/components/post-ad/Step2Details';
 import Step4Review from '@/components/post-ad/Step4Review';
+import PublishSuccessScreen from '@/components/post-ad/PublishSuccessScreen';
 import FormControls from '@/components/post-ad/FormControls';
 import { Loader2 } from 'lucide-react';
 import {
@@ -38,6 +39,7 @@ const PostAdPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [publishedListing, setPublishedListing] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
 
   const DRAFT_KEY = 'postAdDraft';
@@ -345,8 +347,7 @@ const PostAdPage = () => {
         });
       }
 
-      toast({ title: "Annonce publiée avec succès !", description: "Votre annonce est visible sur la page d'accueil dans « Annonces récentes ».", className: "bg-custom-green-500 text-white", duration: 6000 });
-      navigate('/profile');
+      setPublishedListing(newListing);
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
       toast({ title: "Erreur lors de la publication", description: error.message || "Une erreur s'est produite.", variant: "destructive" });
@@ -363,6 +364,20 @@ const PostAdPage = () => {
       default: return null;
     }
   };
+
+  if (publishedListing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-4 sm:p-8">
+              <PublishSuccessScreen listing={publishedListing} onDone={() => navigate('/profile')} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-8">
