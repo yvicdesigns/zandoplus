@@ -9,6 +9,10 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
 
+// Sous ce seuil, on n'affiche rien plutôt qu'un petit chiffre décourageant
+// ("2 vues") — l'absence de pastille ne dit rien de négatif.
+const VIEWS_DISPLAY_THRESHOLD = 15;
+
 const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -94,7 +98,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             )}
             <ListingBadges listing={listing} seller={listing.seller} />
           </div>
-          {listing.views_count > 0 && (
+          {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
             <span className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full">
               <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
             </span>
@@ -197,7 +201,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
           <div className="absolute top-2 left-2 z-10">
              <ListingBadges listing={listing} seller={listing.seller} />
           </div>
-          {listing.views_count > 0 && (
+          {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
             <span className="absolute bottom-2 left-2 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-full">
               <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
             </span>
