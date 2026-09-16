@@ -99,9 +99,38 @@ const ChatWindow = ({ conversation, onMessageSent, onBack }) => {
           supabase.from('messages').update({ is_read: true }).eq('id', msg.id).then(() => {});
         }
       })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${convId}`,
+      }, (payload) => {
+        // Propage en direct une modification/suppression faite par l'autre
+        // participant (ou par soi-meme sur un autre onglet).
+        const msg = payload.new;
+        setMessages(prev => prev.map(m => (m.id === msg.id ? { ...m, ...msg } : m)));
+      })
       .subscribe();
     return () => supabase.removeChannel(ch);
   }, [user?.id, conversation?.id]);
+
+  const handleEditMessage = async (messageId, newContent) => {
+    const { error } = await supabase.rpc('edit_message', { p_message_id: messageId, p_new_content: newContent });
+    if (error) {
+      toast({ title: 'Erreur', description: "Impossible de modifier ce message.", variant: 'destructive' });
+      return;
+    }
+    setMessages(prev => prev.map(m => (m.id === messageId ? { ...m, content: newContent, edited_at: new Date().toISOString() } : m)));
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    const { error } = await supabase.rpc('delete_message', { p_message_id: messageId });
+    if (error) {
+      toast({ title: 'Erreur', description: "Impossible de supprimer ce message.", variant: 'destructive' });
+      return;
+    }
+    setMessages(prev => prev.map(m => (m.id === messageId ? { ...m, deleted_at: new Date().toISOString() } : m)));
+  };
 
   /* Grouper les messages par jour */
   const grouped = messages.reduce((acc, msg) => {
@@ -131,7 +160,13 @@ const ChatWindow = ({ conversation, onMessageSent, onBack }) => {
               <DateSeparator date={new Date(day)} />
               <div className="space-y-1.5">
                 {msgs.map(m => (
-                  <Message key={m.id} message={m} isOwnMessage={m.sender_id === user.id} />
+                  <Message
+                    key={m.id}
+                    message={m}
+                    isOwnMessage={m.sender_id === user.id}
+                    onEdit={handleEditMessage}
+                    onDelete={handleDeleteMessage}
+                  />
                 ))}
               </div>
             </div>
