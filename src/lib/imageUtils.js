@@ -111,7 +111,24 @@ export const applyWatermark = async (imageFile, watermarkLogoUrl) => {
     ctx.globalAlpha = 1.0;
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', WEBP_QUALITY));
-    
+
+    // 16/09/2026 : sur Safari/WebKit (iPhone), canvas.toBlob('image/webp', ...)
+    // ne sait pas encoder en WebP et retombe silencieusement sur un PNG sans
+    // compression, tout en gardant nos dimensions plafonnées — mesuré en
+    // prod : des photos de 3-4 Mo malgré le "fix" du 15/09, renommées .webp
+    // alors que ce sont de vrais PNG (vérifié aux octets magiques). Le type
+    // réel du blob reflète ce que le navigateur a vraiment produit : s'il ne
+    // correspond pas à webp, on recompresse via la librairie (qui applique
+    // une vraie limite de taille) plutôt que d'uploader un PNG non compressé
+    // déguisé en .webp.
+    if (!blob || blob.type !== 'image/webp') {
+      const rawFile = new File([blob], sanitizeFileName(imageFile.name), {
+        type: blob?.type || imageFile.type,
+        lastModified: Date.now(),
+      });
+      return compressWithoutWatermark(rawFile);
+    }
+
     const watermarkedFile = new File([blob], `watermarked_${sanitizeFileName(imageFile.name)}`, {
       type: 'image/webp',
       lastModified: Date.now(),
