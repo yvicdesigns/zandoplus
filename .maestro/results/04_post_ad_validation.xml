@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <testsuites>
-  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="68.258" timestamp="2026-09-16T05:33:03">
-    <testcase id="04 - Publier une annonce : validation des champs (necessite connexion)" name="04 - Publier une annonce : validation des champs (necessite connexion)" classname="04 - Publier une annonce : validation des champs (necessite connexion)" file=".maestro/04_post_ad_validation.yaml" time="68.25" timestamp="2026-09-16T05:33:03" status="SUCCESS"/>
+  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="66.205" timestamp="2026-09-16T05:46:53">
+    <testcase id="04 - Publier une annonce : validation des champs (necessite connexion)" name="04 - Publier une annonce : validation des champs (necessite connexion)" classname="04 - Publier une annonce : validation des champs (necessite connexion)" file=".maestro/04_post_ad_validation.yaml" time="66.194" timestamp="2026-09-16T05:46:53" status="SUCCESS"/>
   </testsuite>
 </testsuites>

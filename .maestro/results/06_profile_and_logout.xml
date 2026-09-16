@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <testsuites>
-  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="63.954" timestamp="2026-09-16T05:35:41">
-    <testcase id="06 - Profil et deconnexion" name="06 - Profil et deconnexion" classname="06 - Profil et deconnexion" file=".maestro/06_profile_and_logout.yaml" time="63.946" timestamp="2026-09-16T05:35:41" status="SUCCESS"/>
+  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="65.227" timestamp="2026-09-16T05:49:28">
+    <testcase id="06 - Profil et deconnexion" name="06 - Profil et deconnexion" classname="06 - Profil et deconnexion" file=".maestro/06_profile_and_logout.yaml" time="65.219" timestamp="2026-09-16T05:49:28" status="SUCCESS"/>
   </testsuite>
 </testsuites>

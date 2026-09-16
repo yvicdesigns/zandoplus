@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <testsuites>
-  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="51.257" timestamp="2026-09-16T05:32:04">
-    <testcase id="03 - Favoris (necessite connexion)" name="03 - Favoris (necessite connexion)" classname="03 - Favoris (necessite connexion)" file=".maestro/03_favorites_toggle.yaml" time="51.25" timestamp="2026-09-16T05:32:04" status="SUCCESS"/>
+  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="52.036" timestamp="2026-09-16T05:45:53">
+    <testcase id="03 - Favoris (necessite connexion)" name="03 - Favoris (necessite connexion)" classname="03 - Favoris (necessite connexion)" file=".maestro/03_favorites_toggle.yaml" time="52.03" timestamp="2026-09-16T05:45:53" status="SUCCESS"/>
   </testsuite>
 </testsuites>
