@@ -249,7 +249,11 @@ const Header = memo(({ onLoginClick }) => {
 
         {/* ── Mobile uniquement : burger | logo centré | panier ── */}
         <div className="lg:hidden flex items-center px-4 py-3 relative">
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 z-10 shrink-0">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-1 z-10 shrink-0"
+            aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+          >
             {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
           </button>
           <Link to="/" className="absolute left-1/2 -translate-x-1/2 z-10">
@@ -448,7 +452,11 @@ const Header = memo(({ onLoginClick }) => {
             )}
 
             {/* Burger mobile */}
-            <button className="lg:hidden p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button
+              className="lg:hidden p-1"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            >
               {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
             </button>
           </div>

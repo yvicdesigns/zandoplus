@@ -36,6 +36,7 @@ const MobileNavBar = () => {
                 <Link
                   to={plusTarget}
                   className="w-14 h-14 rounded-full bg-custom-green-500 flex items-center justify-center shadow-lg shadow-custom-green-500/30 border-4 border-white"
+                  aria-label={plusTarget === '/post-ad' ? 'Publier une annonce' : 'Devenir vendeur'}
                 >
                   <Plus className="w-7 h-7 text-white stroke-[2.5]" />
                 </Link>
