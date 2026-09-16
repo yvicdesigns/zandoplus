@@ -12,6 +12,10 @@ import { useToast } from '@/components/ui/use-toast';
 // Sous ce seuil, on n'affiche rien plutôt qu'un petit chiffre décourageant
 // ("2 vues") — l'absence de pastille ne dit rien de négatif.
 const VIEWS_DISPLAY_THRESHOLD = 15;
+// Les favoris sont naturellement plus rares que les vues (action plus
+// engageante), seuil plus bas pour que la pastille ait une chance d'être
+// visible sans pour autant afficher "1 favori".
+const FAVORITES_DISPLAY_THRESHOLD = 5;
 
 const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   const navigate = useNavigate();
@@ -56,7 +60,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   };
 
   // Format compact façon réseaux sociaux : 1200 -> "1,2k"
-  const formatViews = (n) => {
+  const formatCount = (n) => {
     if (n < 1000) return `${n}`;
     return `${(n / 1000).toFixed(1).replace('.', ',').replace(',0', '')}k`;
   };
@@ -98,10 +102,19 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
             )}
             <ListingBadges listing={listing} seller={listing.seller} />
           </div>
-          {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
-            <span className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full">
-              <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
-            </span>
+          {(listing.views_count >= VIEWS_DISPLAY_THRESHOLD || listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD) && (
+            <div className="absolute bottom-1.5 left-1.5 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1">
+              {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
+                <span className="flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full">
+                  <Eye className="w-3 h-3 flex-shrink-0" /> {formatCount(listing.views_count)}
+                </span>
+              )}
+              {listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD && (
+                <span className="flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full">
+                  <Heart className="w-3 h-3 flex-shrink-0 text-red-400 fill-current" /> {formatCount(listing.favorites_count)}
+                </span>
+              )}
+            </div>
           )}
         </div>
         <CardContent className="p-1.5 sm:p-4 flex-grow flex-col justify-between">
@@ -201,10 +214,19 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
           <div className="absolute top-2 left-2 z-10">
              <ListingBadges listing={listing} seller={listing.seller} />
           </div>
-          {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
-            <span className="absolute bottom-2 left-2 z-10 flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-full">
-              <Eye className="w-3 h-3 flex-shrink-0" /> {formatViews(listing.views_count)}
-            </span>
+          {(listing.views_count >= VIEWS_DISPLAY_THRESHOLD || listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD) && (
+            <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
+              {listing.views_count >= VIEWS_DISPLAY_THRESHOLD && (
+                <span className="flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-full">
+                  <Eye className="w-3 h-3 flex-shrink-0" /> {formatCount(listing.views_count)}
+                </span>
+              )}
+              {listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD && (
+                <span className="flex items-center gap-1 bg-gray-900/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-full">
+                  <Heart className="w-3 h-3 flex-shrink-0 text-red-400 fill-current" /> {formatCount(listing.favorites_count)}
+                </span>
+              )}
+            </div>
           )}
         </div>
         <div className="flex-1 p-4 flex flex-col justify-between">

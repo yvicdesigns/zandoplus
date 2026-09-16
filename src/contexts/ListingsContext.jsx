@@ -220,9 +220,19 @@ export const ListingsProvider = ({ children }) => {
     const isCurrentlyFavorite = favorites.has(listingId);
     const newFavorites = new Set(favorites);
 
+    // Compteur public de favoris tenu par trigger côté DB (source de vérité),
+    // mais on l'ajuste ici en optimiste pour un retour visuel immédiat sur
+    // la carte, sans attendre un refetch complet.
+    const bumpFavoritesCount = (delta) => {
+      setRawListings(prev => prev.map(l => (
+        l.id === listingId ? { ...l, favorites_count: Math.max(0, (l.favorites_count || 0) + delta) } : l
+      )));
+    };
+
     if (isCurrentlyFavorite) {
       newFavorites.delete(listingId);
       setFavorites(newFavorites);
+      bumpFavoritesCount(-1);
       const { error } = await supabase
         .from('favorites')
         .delete()
@@ -230,6 +240,7 @@ export const ListingsProvider = ({ children }) => {
       if (error) {
         newFavorites.add(listingId);
         setFavorites(newFavorites);
+        bumpFavoritesCount(1);
         toast({ title: "Erreur", description: "Impossible de retirer des favoris.", variant: "destructive" });
       } else {
         toast({ title: "Retiré des favoris", description: "L'annonce a été retirée de vos favoris." });
@@ -237,12 +248,14 @@ export const ListingsProvider = ({ children }) => {
     } else {
       newFavorites.add(listingId);
       setFavorites(newFavorites);
+      bumpFavoritesCount(1);
       const { error } = await supabase
         .from('favorites')
         .insert({ user_id: user.id, listing_id: listingId });
       if (error) {
         newFavorites.delete(listingId);
         setFavorites(newFavorites);
+        bumpFavoritesCount(-1);
         toast({ title: "Erreur", description: "Impossible d'ajouter aux favoris.", variant: "destructive" });
       } else {
         toast({ title: "Ajouté aux favoris!", description: "L'annonce a été ajoutée à vos favoris.", className: "bg-custom-green-100 text-custom-green-800" });
