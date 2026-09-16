@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="74.963" timestamp="2026-09-16T05:34:18">
+    <testcase id="05 - Checkout : entree COD + Achat Securise" name="05 - Checkout : entree COD + Achat Securise" classname="05 - Checkout : entree COD + Achat Securise" file=".maestro/05_checkout_entry.yaml" time="74.955" timestamp="2026-09-16T05:34:18" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

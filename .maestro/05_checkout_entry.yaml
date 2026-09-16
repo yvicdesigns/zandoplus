@@ -1,0 +1,46 @@
+appId: com.zandoplus.app
+name: "05 - Checkout : entree COD + Achat Securise"
+---
+# Verifie que les 2 entrees de paiement s'ouvrent correctement. Ne va PAS
+# jusqu'au bout (ni "Confirmer ma commande" pour le COD, ni le paiement
+# Mobile Money pour l'Achat Securise) : pas de vraie commande creee sur
+# une vraie annonce. Le simple fait d'atteindre l'ecran COD avec le bon
+# calcul de prix aurait suffi a lui seul a reveler le bug COD casse
+# depuis toujours (corrige le 16/09/2026, voir
+# supabase_migration_fix_cod_and_commission.sql).
+#
+# IMPORTANT : le bouton COD ne s'affiche que si delivery_city_config a
+# cod_enabled=true pour la VILLE DE L'ANNONCE (pas celle de
+# l'acheteur) - seule Brazzaville l'a actuellement. D'ou l'usage d'une
+# annonce Brazzaville ici plutot que celle des autres flows (Pointe-
+# Noire, cod desactive la-bas -> comportement normal, pas un bug).
+#
+# Note technique : "back" n'est pas fiable dans cette SPA React (pas de
+# pile de navigation native geree par Capacitor) -> on re-navigue
+# explicitement plutot que d'y compter.
+- runFlow: "_login.yaml"
+- tapOn: "Rechercher un produit, une marque..."
+- inputText: "Xiaomi Redmi 13C"
+- pressKey: Enter
+- assertVisible: "résultats"
+- tapOn:
+    point: "26%, 52%"
+- scroll
+- takeScreenshot: "01-listing-detail"
+
+- tapOn: "Payer à la livraison"
+- assertVisible: "Payer à la livraison"
+- assertVisible: "Frais de livraison Zando"
+- assertVisible: "Total à payer en cash"
+- takeScreenshot: "02-cod-screen-with-price"
+
+- tapOn: "Rechercher un produit, une marque..."
+- inputText: "Xiaomi Redmi 13C"
+- pressKey: Enter
+- assertVisible: "résultats"
+- tapOn:
+    point: "26%, 52%"
+- scroll
+- tapOn: "Acheter maintenant"
+- assertVisible: "FCFA"
+- takeScreenshot: "03-escrow-screen"

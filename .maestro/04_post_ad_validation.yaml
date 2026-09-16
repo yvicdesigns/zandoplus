@@ -1,0 +1,18 @@
+appId: com.zandoplus.app
+name: "04 - Publier une annonce : validation des champs (necessite connexion)"
+---
+- runFlow: "_login.yaml"
+- tapOn: "Accueil"
+- tapOn: "Publier une Annonce Gratuite"
+- takeScreenshot: "01-post-ad-step1-empty"
+
+# Soumet l'etape 1 sans rien remplir -> doit bloquer avec des erreurs
+# precises, pas juste planter ou laisser passer.
+- scroll
+- scroll
+- scroll
+- tapOn: "Suivant"
+- assertVisible: "Champs Incomplets ou Invalides"
+- assertVisible: "La catégorie est requise."
+- assertVisible: "Au moins une photo est requise."
+- takeScreenshot: "02-step1-validation-errors"

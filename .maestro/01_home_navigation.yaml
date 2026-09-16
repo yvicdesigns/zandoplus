@@ -1,0 +1,21 @@
+appId: com.zandoplus.app
+name: "01 - Accueil et navigation principale"
+---
+- launchApp:
+    clearState: true
+- takeScreenshot: "01-home-loaded"
+- assertVisible: "Rechercher un produit, une marque..."
+
+# Barre de navigation mobile (bas d'ecran) — les 4 onglets texte
+- assertVisible: "Accueil"
+- assertVisible: "Annonce"
+- assertVisible: "Portefeuille"
+- assertVisible: "Compte"
+
+- tapOn: "Annonce"
+- takeScreenshot: "02-listings-page"
+- assertVisible: "résultats"
+
+- tapOn: "Accueil"
+- takeScreenshot: "03-back-home"
+- assertVisible: "Rechercher un produit, une marque..."

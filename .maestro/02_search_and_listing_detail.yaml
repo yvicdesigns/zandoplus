@@ -1,0 +1,17 @@
+appId: com.zandoplus.app
+name: "02 - Recherche et fiche annonce"
+---
+- launchApp:
+    clearState: true
+- tapOn: "Rechercher un produit, une marque..."
+- inputText: "Casque P9"
+- pressKey: Enter
+- assertVisible: "résultats"
+- takeScreenshot: "01-search-results"
+
+- tapOn:
+    point: "26%, 52%"
+- scroll
+- assertVisible: "Ajouter au panier"
+- assertVisible: "FCFA"
+- takeScreenshot: "02-listing-detail"

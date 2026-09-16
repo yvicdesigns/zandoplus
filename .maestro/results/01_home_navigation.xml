@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="iPhone 17 - iOS 26.5 - 84B62813-F9EC-4B43-8426-44E686563D34" tests="1" failures="0" time="25.707" timestamp="2026-09-16T05:30:49">
+    <testcase id="01 - Accueil et navigation principale" name="01 - Accueil et navigation principale" classname="01 - Accueil et navigation principale" file=".maestro/01_home_navigation.yaml" time="25.701" timestamp="2026-09-16T05:30:49" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

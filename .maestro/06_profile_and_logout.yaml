@@ -1,0 +1,16 @@
+appId: com.zandoplus.app
+name: "06 - Profil et deconnexion"
+---
+- runFlow: "_login.yaml"
+- tapOn: "Compte"
+- takeScreenshot: "01-profile-page"
+- scroll
+- scroll
+- scroll
+- assertVisible: "Se déconnecter"
+
+- tapOn: "Se déconnecter"
+- takeScreenshot: "02-logged-out"
+# ProfilePage redirige vers l'accueil quand personne n'est connecte.
+- assertVisible: "Rechercher un produit, une marque..."
+- assertNotVisible: "Se déconnecter"

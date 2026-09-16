@@ -1,0 +1,16 @@
+appId: com.zandoplus.app
+name: "03 - Favoris (necessite connexion)"
+---
+- runFlow: "_login.yaml"
+- takeScreenshot: "01-logged-in-listing-detail"
+
+- tapOn: "Ajouter aux favoris"
+- assertVisible: "Ajouté aux favoris!"
+- takeScreenshot: "02-favorited-toast"
+- assertVisible: "Favori"
+
+# Retire le favori pour laisser l'annonce dans son etat d'origine (le
+# compteur public de favoris est visible sur les cartes, on evite de le
+# fausser en laissant un favori de test).
+- tapOn: "Favori"
+- assertVisible: "Retiré des favoris"

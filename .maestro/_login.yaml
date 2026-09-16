@@ -1,0 +1,41 @@
+appId: com.zandoplus.app
+name: "[sous-flux] Connexion compte QA"
+---
+# Sous-flux reutilise par les tests qui necessitent d'etre connecte.
+# Compte QA dedie (celui deja utilise pour la revue Apple/Google, voir
+# App Review Information dans App Store Connect) - jamais un vrai compte
+# utilisateur.
+#
+# Note accessibilite : le bouton menu (hamburger, coin superieur gauche)
+# n'a ni texte ni libelle d'accessibilite, et le lien de connexion est
+# enfoui en bas d'un panneau qui demande a defiler -> repere comme
+# lacune reelle dans TEST_REPORT.md. On declenche donc la modale de
+# connexion via un bouton qui l'ouvre systematiquement quand personne
+# n'est connecte ("Ajouter au panier" sur une fiche produit), ce qui
+# verifie au passage que ce garde-fou fonctionne.
+#
+# Note deep link : "openLink" route via Safari (Universal Links), non
+# fiable sur Simulateur iOS (limitation connue d'Apple) -> on navigue
+# depuis l'app elle-meme comme un vrai utilisateur.
+- launchApp:
+    clearState: true
+- tapOn: "Rechercher un produit, une marque..."
+- inputText: "Casque P9"
+- pressKey: Enter
+- extendedWaitUntil:
+    visible: "résultats"
+    timeout: 5000
+- tapOn:
+    point: "26%, 52%"
+- scroll
+- extendedWaitUntil:
+    visible: "Ajouter au panier"
+    timeout: 5000
+- tapOn: "Ajouter au panier"
+- tapOn: "Continuer avec e-mail"
+- tapOn: "Adresse e-mail"
+- inputText: "webmaster@zandopluscg.com"
+- tapOn: "Mot de passe"
+- inputText: "@9095azer@Zando+"
+- tapOn: "Se connecter"
+- assertNotVisible: "Se connecter"
