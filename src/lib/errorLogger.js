@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/customSupabaseClient';
+import * as Sentry from '@sentry/capacitor';
 
 const LOG_LEVELS = {
   ERROR: 'error',
@@ -39,6 +40,13 @@ export const logError = async (error, context = {}) => {
   setTimeout(() => errorQueue.delete(errorKey), ERROR_DEDUPE_TIME);
 
   console.error('Logged Error:', error);
+
+  // 16/09/2026 : logError() écrivait déjà dans system_logs depuis longtemps,
+  // mais personne ne consultait cette table (aucune page admin ne la lit) —
+  // 1196 erreurs accumulées et jamais vues, dont des bugs réels (ex. prix
+  // manquant en publiant une annonce). Sentry ajoute une vraie alerte +
+  // tableau de bord, sans toucher aux dizaines d'appels existants à logError.
+  Sentry.captureException(error, { extra: redactSensitiveData(context) });
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
