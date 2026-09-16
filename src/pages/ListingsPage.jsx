@@ -11,7 +11,7 @@ import AdBanner from '@/components/shop/AdBanner';
 
 const ListingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { listings, loading, favorites, toggleFavorite, setFilters: setListingsContextFilters } = useListings();
+  const { listings, loading, favorites, toggleFavorite, setFilters: setListingsContextFilters, hasMore, loadingMore, loadMoreListings } = useListings();
   const [viewMode, setViewMode] = useState('grid');
   
   // Controls Mobile Sidebar Visibility
@@ -240,15 +240,19 @@ const ListingsPage = () => {
                       ))}
                     </div>
                   
-                  {visibleCount < listings.length && (
+                  {(visibleCount < listings.length || hasMore) && (
                     <div className="text-center mt-12 pb-8">
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         variant="outline"
-                        className="rounded-full px-8 py-6 text-lg border-2 hover:bg-custom-green-50 hover:text-custom-green-700 hover:border-custom-green-200 transition-all" 
-                        onClick={() => setVisibleCount(prev => prev + 12)}
+                        disabled={loadingMore}
+                        className="rounded-full px-8 py-6 text-lg border-2 hover:bg-custom-green-50 hover:text-custom-green-700 hover:border-custom-green-200 transition-all"
+                        onClick={() => {
+                          setVisibleCount(prev => prev + 12);
+                          if (visibleCount + 12 >= listings.length && hasMore) loadMoreListings();
+                        }}
                       >
-                        Charger plus d'annonces
+                        {loadingMore ? 'Chargement...' : "Charger plus d'annonces"}
                       </Button>
                     </div>
                   )}

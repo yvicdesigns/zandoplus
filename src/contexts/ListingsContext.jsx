@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useContext, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,12 +10,22 @@ const ListingsContext = createContext();
 
 export const useListings = () => useContext(ListingsContext);
 
+// Anciennement un .limit(100) figé : au-dela de 100 annonces actives, tout
+// le reste devenait invisible sur la page "Toutes les annonces" (pas de
+// pagination reelle), meme en cliquant "Charger plus". Maintenant : la
+// premiere page charge PAGE_SIZE lignes, et loadMoreListings() va chercher
+// la suite cote serveur au lieu de reveler un tableau deja tronque.
+const PAGE_SIZE = 100;
+
 export const ListingsProvider = ({ children }) => {
   const { user, openAuthModal } = useAuth();
   const { toast } = useToast();
-  const [listings, setListings] = useState([]);
+  const [rawListings, setRawListings] = useState([]);
   const [favorites, setFavorites] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -36,95 +46,40 @@ export const ListingsProvider = ({ children }) => {
     setFilters(newFilters);
   }, []);
 
+  const buildQuery = useCallback(() => {
+    let query = supabase
+      .from('listings')
+      .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business, phone, created_at, last_seen, shop_slug)')
+      .eq('status', 'active');
+
+    if (filters.category) query = query.eq('category', filters.category);
+    if (filters.location) query = query.ilike('location', `%${filters.location}%`);
+    if (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000)) {
+      query = query.gte('price', filters.priceRange[0]).lte('price', filters.priceRange[1]);
+    }
+    if (filters.condition) query = query.eq('condition', filters.condition);
+    if (filters.search) query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+    if (filters.daily) query = query.eq('is_daily_offer', true);
+
+    switch (filters.sortBy) {
+      case 'price-low': query = query.order('price', { ascending: true }); break;
+      case 'price-high': query = query.order('price', { ascending: false }); break;
+      case 'oldest': query = query.order('created_at', { ascending: true }); break;
+      case 'popularity': query = query.order('views_count', { ascending: false, nullsFirst: false }); break;
+      case 'newest': default: query = query.order('created_at', { ascending: false }); break;
+    }
+
+    return query;
+  }, [filters]);
+
   const fetchListings = useCallback(async () => {
     setLoading(true);
+    pageRef.current = 0;
     try {
-      const queryFn = () => {
-        let query = supabase
-          .from('listings')
-          .select('*, seller:profiles(id, full_name, avatar_url, verified, is_business, phone, created_at, last_seen, shop_slug)')
-          .eq('status', 'active');
-
-        if (filters.category) query = query.eq('category', filters.category);
-        if (filters.location) query = query.ilike('location', `%${filters.location}%`);
-        if (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000)) {
-          query = query.gte('price', filters.priceRange[0]).lte('price', filters.priceRange[1]);
-        }
-        if (filters.condition) query = query.eq('condition', filters.condition);
-        if (filters.search) query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-        if (filters.daily) query = query.eq('is_daily_offer', true);
-
-        switch (filters.sortBy) {
-          case 'price-low': query = query.order('price', { ascending: true }); break;
-          case 'price-high': query = query.order('price', { ascending: false }); break;
-          case 'oldest': query = query.order('created_at', { ascending: true }); break;
-          case 'popularity': query = query.order('views_count', { ascending: false, nullsFirst: false }); break;
-          case 'newest': default: query = query.order('created_at', { ascending: false }); break;
-        }
-
-        return query.limit(100);
-      };
-
-      const { data, error } = await robustQuery(queryFn);
-
+      const { data, error } = await robustQuery(() => buildQuery().range(0, PAGE_SIZE - 1));
       if (error) throw error;
-
-      const enriched = (data || []).map(l => ({
-        ...l,
-        seller: l.seller || null,
-        seller_verified: l.seller?.verified === true,
-        seller_is_business: l.seller?.is_business === true,
-      }));
-
-      // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
-      const userCity = user?.location?.trim().toLowerCase();
-      const shouldGeoSort = userCity && !filters.location && filters.sortBy === 'newest';
-
-      let sorted = enriched;
-
-      if (shouldGeoSort) {
-        const local = enriched.filter(l => l.location?.toLowerCase().includes(userCity));
-        const rest  = enriched.filter(l => !l.location?.toLowerCase().includes(userCity));
-        sorted = [...local, ...rest];
-      }
-
-      // Vendeurs vérifiés flottent en haut sur tri par défaut — Entreprise
-      // d'abord, puis Vérifié simple, puis le reste.
-      if (filters.sortBy === 'newest' || filters.sortBy === 'popularity') {
-        const business = sorted.filter(l => l.seller_is_business);
-        const verified = sorted.filter(l => l.seller_verified && !l.seller_is_business);
-        const others   = sorted.filter(l => !l.seller_verified && !l.seller_is_business);
-        sorted = [...business, ...verified, ...others];
-      }
-
-      // Mélange par vendeur quand pas de recherche ni de filtre spécifique
-      // → évite de voir 10 annonces du même vendeur d'affilée
-      const isDefaultBrowse = !filters.search && !filters.category && !filters.location && !filters.daily
-        && filters.sortBy === 'newest' && filters.priceRange[0] === 0 && filters.priceRange[1] >= 10000000;
-
-      if (isDefaultBrowse) {
-        // Séparer boostés (gardent la priorité) du reste
-        const boosted = sorted.filter(l => l.is_boosted);
-        const rest    = sorted.filter(l => !l.is_boosted);
-
-        // Interleave round-robin par vendeur pour le reste
-        const bySeller = {};
-        rest.forEach(l => {
-          const key = l.user_id || 'unknown';
-          if (!bySeller[key]) bySeller[key] = [];
-          bySeller[key].push(l);
-        });
-        const groups   = Object.values(bySeller);
-        const maxLen   = Math.max(0, ...groups.map(g => g.length));
-        const mixed    = [];
-        for (let i = 0; i < maxLen; i++) {
-          groups.forEach(group => { if (i < group.length) mixed.push(group[i]); });
-        }
-
-        sorted = [...boosted, ...mixed];
-      }
-
-      setListings(sorted);
+      setRawListings(data || []);
+      setHasMore((data || []).length === PAGE_SIZE);
     } catch (error) {
       console.error('Error fetching listings:', error.message);
       logError(error, { context: 'fetchListings' });
@@ -136,7 +91,90 @@ export const ListingsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [filters, toast, user]);
+  }, [buildQuery, toast]);
+
+  const loadMoreListings = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = pageRef.current + 1;
+      const from = nextPage * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { data, error } = await robustQuery(() => buildQuery().range(from, to));
+      if (error) throw error;
+      pageRef.current = nextPage;
+      setRawListings(prev => {
+        const existingIds = new Set(prev.map(l => l.id));
+        const fresh = (data || []).filter(l => !existingIds.has(l.id));
+        return [...prev, ...fresh];
+      });
+      setHasMore((data || []).length === PAGE_SIZE);
+    } catch (error) {
+      console.error('Error loading more listings:', error.message);
+      logError(error, { context: 'loadMoreListings' });
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [buildQuery, hasMore, loadingMore]);
+
+  const listings = useMemo(() => {
+    const enriched = rawListings.map(l => ({
+      ...l,
+      seller: l.seller || null,
+      seller_verified: l.seller?.verified === true,
+      seller_is_business: l.seller?.is_business === true,
+    }));
+
+    // Priorité : vendeurs vérifiés en premier, puis geo-sort pour "newest"
+    const userCity = user?.location?.trim().toLowerCase();
+    const shouldGeoSort = userCity && !filters.location && filters.sortBy === 'newest';
+
+    let sorted = enriched;
+
+    if (shouldGeoSort) {
+      const local = enriched.filter(l => l.location?.toLowerCase().includes(userCity));
+      const rest  = enriched.filter(l => !l.location?.toLowerCase().includes(userCity));
+      sorted = [...local, ...rest];
+    }
+
+    // Vendeurs vérifiés flottent en haut sur tri par défaut — Entreprise
+    // d'abord, puis Vérifié simple, puis le reste.
+    if (filters.sortBy === 'newest' || filters.sortBy === 'popularity') {
+      const business = sorted.filter(l => l.seller_is_business);
+      const verified = sorted.filter(l => l.seller_verified && !l.seller_is_business);
+      const others   = sorted.filter(l => !l.seller_verified && !l.seller_is_business);
+      sorted = [...business, ...verified, ...others];
+    }
+
+    // Mélange par vendeur quand pas de recherche ni de filtre spécifique
+    // → évite de voir 10 annonces du même vendeur d'affilée
+    const isDefaultBrowse = !filters.search && !filters.category && !filters.location && !filters.daily
+      && filters.sortBy === 'newest' && filters.priceRange[0] === 0 && filters.priceRange[1] >= 10000000;
+
+    if (isDefaultBrowse) {
+      // Séparer boostés (gardent la priorité) du reste
+      const boosted = sorted.filter(l => l.is_boosted);
+      const rest    = sorted.filter(l => !l.is_boosted);
+
+      // Interleave round-robin par vendeur pour le reste
+      const bySeller = {};
+      rest.forEach(l => {
+        const key = l.user_id || 'unknown';
+        if (!bySeller[key]) bySeller[key] = [];
+        bySeller[key].push(l);
+      });
+      const groups   = Object.values(bySeller);
+      const maxLen   = Math.max(0, ...groups.map(g => g.length));
+      const mixed    = [];
+      for (let i = 0; i < maxLen; i++) {
+        groups.forEach(group => { if (i < group.length) mixed.push(group[i]); });
+      }
+
+      sorted = [...boosted, ...mixed];
+    }
+
+    return sorted;
+  }, [rawListings, filters, user]);
 
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
@@ -221,7 +259,7 @@ export const ListingsProvider = ({ children }) => {
         .single();
       
       if (error) throw error;
-      setListings(prev => [data, ...prev]);
+      setRawListings(prev => [data, ...prev]);
       return data;
     } catch (error) {
       console.error('Error adding listing:', error);
@@ -240,7 +278,7 @@ export const ListingsProvider = ({ children }) => {
         .single();
       
       if (error) throw error;
-      setListings(prev => prev.map(l => l.id === id ? data : l));
+      setRawListings(prev => prev.map(l => l.id === id ? data : l));
       return data;
     } catch (error) {
       console.error('Error updating listing:', error);
@@ -285,7 +323,7 @@ export const ListingsProvider = ({ children }) => {
 
       if (deleteError) throw deleteError;
 
-      setListings(prev => prev.filter(l => l.id !== listingId));
+      setRawListings(prev => prev.filter(l => l.id !== listingId));
     } catch (error) {
       console.error('Error deleting listing:', error);
       logError(error, { context: 'deleteListing' });
@@ -302,6 +340,9 @@ export const ListingsProvider = ({ children }) => {
   const value = {
     listings,
     loading,
+    loadingMore,
+    hasMore,
+    loadMoreListings,
     filters,
     setFilters: setFiltersWithLoading,
     favorites,
