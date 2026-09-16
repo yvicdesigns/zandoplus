@@ -359,7 +359,7 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
           const mk = tx.created_at.slice(0, 7);
           if (monthlyMap[mk]) {
             monthlyMap[mk].ca     += tx.montant || 0;
-            const commission       = tx.commission_amount ?? Math.round((tx.montant || 0) * 0.07);
+            const commission       = tx.commission_amount ?? Math.round((tx.montant || 0) * 0.10);
             monthlyMap[mk].zando  += commission;
           }
           if (mk === thisMonthKey) {

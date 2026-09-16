@@ -22,7 +22,7 @@ const WhatsAppIconInline = () => (
   </svg>
 );
 
-const COMMISSION_RATE = 0.07;
+const COMMISSION_RATE = 0.10;
 
 const STATUS_CONFIG = {
   en_attente_paiement: { label: 'En attente paiement',           color: 'bg-yellow-100 text-yellow-800' },

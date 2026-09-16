@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const COMMISSION_RATE = 0.07;
+const COMMISSION_RATE = 0.10;
 const MIN_WITHDRAW = 1000;
 
 const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');

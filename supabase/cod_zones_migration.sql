@@ -2,6 +2,11 @@
 -- COD : frais livraison par zone (Brazzaville)
 -- À exécuter dans Supabase SQL Editor
 -- ═══════════════════════════════════════════════════════════════
+--
+-- ⚠️ HISTORIQUE : cette version de create_cod_transaction() écrivait dans
+-- des colonnes qui n'existent plus et n'a jamais fonctionné en prod.
+-- Corrigé le 16/09/2026, voir supabase_migration_fix_cod_and_commission.sql
+-- pour la version réellement en ligne (commission COD 0%).
 
 -- Mise à jour du RPC create_cod_transaction
 -- Nouveau paramètre : p_zone (zone de livraison)

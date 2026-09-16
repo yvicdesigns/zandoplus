@@ -2,6 +2,12 @@
 -- Cash on Delivery (Paiement à la livraison) — Zando+
 -- À exécuter dans Supabase SQL Editor
 -- ═══════════════════════════════════════════════════════════════
+--
+-- ⚠️ HISTORIQUE : create_cod_transaction() ci-dessous écrivait dans des
+-- colonnes qui n'existent plus (commission, montant_vendeur, frais_livraison)
+-- et n'a donc jamais fonctionné en prod. Corrigé le 16/09/2026, voir
+-- supabase_migration_fix_cod_and_commission.sql pour la version réellement
+-- en ligne (colonnes commission_amount/delivery_fee_paid, commission COD 0%).
 
 -- 1. Colonne sur listings
 ALTER TABLE listings

@@ -313,7 +313,7 @@ BEGIN
       te.statut,
       te.date_confirmation,
       te.withdrawal_available_at,
-      (te.montant - COALESCE(te.commission_amount, ROUND(te.montant * 0.07, 2))) AS net
+      (te.montant - COALESCE(te.commission_amount, ROUND(te.montant * 0.10, 2))) AS net
     FROM transactions_escrow te
     WHERE te.vendeur_id = p_vendor_id
       AND te.statut IN ('confirme', 'complete')
