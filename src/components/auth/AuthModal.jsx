@@ -286,7 +286,10 @@ const AuthModal = ({ isOpen, onClose }) => {
                 <TabsContent value="register">
                   <motion.form key="register" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={(e) => handleSubmit(e, onRegister, 'register')} className="space-y-3">
                     <AuthFormInput type="text"  name="name"     placeholder="Nom complet"           value={formData.name}     onChange={handleInputChange} icon={User}   required />
-                    <AuthFormInput type="tel"   name="phone"    placeholder="Numéro de téléphone"   value={formData.phone}    onChange={handleInputChange} icon={Phone}  required />
+                    <div>
+                      <AuthFormInput type="tel"   name="phone"    placeholder="Numéro WhatsApp"   value={formData.phone}    onChange={handleInputChange} icon={Phone}  required />
+                      <p className="text-[11px] text-gray-400 px-1 mt-1">Vos commandes, le suivi de vos colis et nos messages passent par WhatsApp, pas par appel</p>
+                    </div>
                     <AuthFormInput type="text"  name="location" placeholder="Ville / Quartier"      value={formData.location} onChange={handleInputChange} icon={MapPin} required />
                     <AuthFormInput type="email" name="email"    placeholder="Adresse e-mail"        value={formData.email}    onChange={handleInputChange} icon={Mail}   required />
                     <div>

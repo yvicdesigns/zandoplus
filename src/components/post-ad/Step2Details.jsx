@@ -177,7 +177,7 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
           </div>
         </div>
         <div>
-          <Label htmlFor="phone">Numéro de téléphone</Label>
+          <Label htmlFor="phone">Numéro WhatsApp</Label>
           <Input
             id="phone"
             name="phone"
@@ -187,7 +187,7 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
             onChange={handleInputChange}
             className="mt-1"
           />
-          <p className="text-xs text-gray-500 mt-1">Optionnel. Sera sauvegardé sur votre profil.</p>
+          <p className="text-xs text-gray-500 mt-1">Optionnel. Les acheteurs vous contactent surtout par WhatsApp — sera sauvegardé sur votre profil.</p>
           <FormError message={formErrors.phone} />
         </div>
       </div>

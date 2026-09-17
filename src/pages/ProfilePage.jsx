@@ -346,7 +346,7 @@ const ProfilePage = () => {
           <div className="divide-y divide-gray-100">
             <EditableRow label="Nom complet"     value={user.full_name}  onSave={v => updateField('full_name', v)} />
             <EditableRow label="Email"           value={user.email}      onSave={() => toast({ title: 'Contactez le support pour changer votre email.' })} />
-            <EditableRow label="Téléphone"       value={user.phone}      onSave={v => updateField('phone', v)} />
+            <EditableRow label="Téléphone (WhatsApp)"       value={user.phone}      onSave={v => updateField('phone', v)} />
             <EditableRow label="Date de naissance" value={user.birthdate} type="date" onSave={v => updateField('birthdate', v)} />
             <EditableRow
               label="Genre" value={user.gender}
