@@ -8,6 +8,7 @@ const HeroSection = lazy(() => import('@/components/home/HeroSection'));
 const TrustBarSection = lazy(() => import('@/components/home/TrustBarSection'));
 const CategoriesSection = lazy(() => import('@/components/home/CategoriesSection'));
 const SellerCtaSection = lazy(() => import('@/components/home/SellerCtaSection'));
+const WhatsAppCtaSection = lazy(() => import('@/components/home/WhatsAppCtaSection'));
 const ListingsSection = lazy(() => import('@/components/home/ListingsSection'));
 const OffresSection = lazy(() => import('@/components/home/OffresSection'));
 const AppBannerSection = lazy(() => import('@/components/home/AppBannerSection'));
@@ -129,6 +130,7 @@ const HomePage = () => {
           <UrgentSection />
           <CategoriesSection categoryCounts={categoryCounts} loading={loading} />
           <SellerCtaSection />
+          <WhatsAppCtaSection />
           <BoostedSection />
           <HomepageAdBanner placement="after_categories" />
           <ListingsSection />
