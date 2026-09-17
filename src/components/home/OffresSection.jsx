@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, Heart, ShoppingCart } from 'lucide-react';
+
+const WhatsAppIcon = ({ className }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.26.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c.01-4.55 3.7-8.24 8.25-8.24M8.53 6.99c-.17 0-.45.06-.68.32-.24.25-.9.88-.9 2.15s.92 2.5 1.05 2.67c.13.17 1.8 2.87 4.45 3.91.62.27 1.1.42 1.48.54.62.2 1.19.17 1.63.1.5-.07 1.53-.62 1.75-1.23s.22-1.11.15-1.22c-.07-.11-.24-.17-.5-.3s-1.53-.75-1.77-.84-.41-.13-.59.13-.68.84-.83 1.02-.3.2-.56.07a7.1 7.1 0 0 1-2.09-1.29 7.83 7.83 0 0 1-1.45-1.8c-.15-.26-.02-.4.11-.53.12-.11.26-.3.4-.44.13-.15.17-.26.26-.43.09-.17.04-.33-.02-.46s-.59-1.43-.82-1.95c-.2-.5-.42-.44-.59-.44Z" />
+  </svg>
+);
+
+const toWhatsAppLink = (phone) => {
+  if (!phone) return null;
+  let digits = String(phone).replace(/\D/g, '');
+  if (!digits) return null;
+  if (!digits.startsWith('242')) {
+    digits = digits.replace(/^0/, '');
+    digits = `242${digits}`;
+  }
+  return `https://wa.me/${digits}`;
+};
 import { supabase } from '@/lib/customSupabaseClient';
 import { useListings } from '@/contexts/ListingsContext';
 import { useCart } from '@/hooks/useCart';
@@ -35,6 +52,7 @@ const OffreCard = ({ listing, isFavorite, toggleFavorite }) => {
   const { user } = useAuth();
   const inCart = isInCart(listing.id);
   const isRental = listing.listing_purpose === 'rent';
+  const whatsappLink = toWhatsAppLink(listing.seller?.phone);
 
   const handleCart = (e) => {
     e.preventDefault();
@@ -82,7 +100,24 @@ const OffreCard = ({ listing, isFavorite, toggleFavorite }) => {
         <p className="text-[14px] font-extrabold text-custom-green-500 font-[tabular-nums] mb-3">
           {formatPrice(listing.price)}
         </p>
-        {!isRental && (
+        {isRental ? (
+          whatsappLink ? (
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-auto w-full bg-[#25D366] hover:brightness-95 text-white font-bold text-[12px] py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5" />
+              Contacter
+            </a>
+          ) : (
+            <div className="mt-auto w-full bg-custom-green-600 text-white font-bold text-[12px] py-2 rounded-lg flex items-center justify-center gap-2">
+              À louer
+            </div>
+          )
+        ) : (
           <button
             onClick={handleCart}
             className="mt-auto w-full bg-accent-yellow text-[#1a1200] font-bold text-[12px] py-2 rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
@@ -109,7 +144,7 @@ const OffresSection = () => {
       setLoading(true);
       const { data } = await supabase
         .from('listings')
-        .select('*, seller:profiles(id, full_name, avatar_url)')
+        .select('*, seller:profiles(id, full_name, avatar_url, phone)')
         .eq('status', 'active')
         .eq('is_daily_offer', true)
         .order('created_at', { ascending: false })
