@@ -70,6 +70,7 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
   const selectedCategoryType = formData.category ? categoriesMap[formData.category]?.type : null;
   const isJobCategory = selectedCategoryType === 'job';
   const isDigitalCategory = selectedCategoryType === 'digital';
+  const isRentableCategory = ['vehicles', 'real-estate'].includes(formData.category);
   const [showCustomSub, setShowCustomSub] = useState(false);
 
   // Reset custom sub when category changes
@@ -154,6 +155,41 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
           </div>
         )}
       </div>
+
+      {isRentableCategory && (
+        <div>
+          <Label className="block text-sm font-medium mb-2">
+            Cette annonce est... <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-gray-500 mb-2">
+            Détermine les boutons proposés aux acheteurs (achat en ligne vs simple prise de contact pour une location).
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleSelectChange('listing_purpose', 'sale')}
+              className={`h-11 rounded-xl border-2 font-semibold text-sm transition-colors ${
+                (formData.listing_purpose || 'sale') === 'sale'
+                  ? 'border-custom-green-500 bg-custom-green-50 text-custom-green-700'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
+              }`}
+            >
+              À vendre
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectChange('listing_purpose', 'rent')}
+              className={`h-11 rounded-xl border-2 font-semibold text-sm transition-colors ${
+                formData.listing_purpose === 'rent'
+                  ? 'border-custom-green-500 bg-custom-green-50 text-custom-green-700'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
+              }`}
+            >
+              À louer
+            </button>
+          </div>
+        </div>
+      )}
 
       <div>
         <Label className="block text-sm font-medium mb-2">Titre <span className="text-red-500">*</span></Label>

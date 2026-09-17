@@ -78,6 +78,7 @@ const EditAdPage = () => {
         has_annex: listing.has_annex || false,
         advance_months: listing.advance_months?.toString() || '',
         caution_amount: listing.caution_amount?.toString() || '',
+        listing_purpose: listing.listing_purpose || 'sale',
       });
       setExistingImages(listing.images || []);
       setPageLoading(false);
@@ -228,6 +229,7 @@ const EditAdPage = () => {
       const isJob = formData.category && categories[formData.category]?.type === 'job';
       const isService = formData.category && categories[formData.category]?.type === 'service';
       const isHousingCategory = formData.category === 'maison-a-louer';
+      const isRentableCategory = ['vehicles', 'real-estate'].includes(formData.category);
 
       const listingData = {
         title: sanitizeInput(formData.title),
@@ -261,6 +263,7 @@ const EditAdPage = () => {
         has_annex: isHousingCategory ? !!formData.has_annex : null,
         advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
         caution_amount: (isHousingCategory && formData.caution_amount && !isNaN(parseFloat(formData.caution_amount))) ? parseFloat(formData.caution_amount) : null,
+        listing_purpose: isHousingCategory ? 'rent' : (isRentableCategory ? (formData.listing_purpose || 'sale') : 'sale'),
       };
 
       await updateListing(id, listingData);

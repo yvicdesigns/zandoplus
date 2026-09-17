@@ -186,7 +186,11 @@ const ListingDetailPage = () => {
 
   const isOwner = user && listing && user.id === listing.user_id;
   const categoryType = CATEGORY_DEFS[listing.category]?.type ?? 'product';
-  const isProduct = !['job', 'service'].includes(categoryType);
+  const isRental = listing.listing_purpose === 'rent';
+  // Une annonce "à louer" (voiture, appartement...) n'a pas de sens dans le
+  // parcours achat en ligne (panier, Achat Securise, COD) — on la traite
+  // comme un service : simple prise de contact avec le vendeur.
+  const isProduct = !['job', 'service'].includes(categoryType) && !isRental;
   const isDigital = !!listing.is_digital;
   const categoryName = categoriesMap[listing.category]?.name || listing.category || '';
 
@@ -343,6 +347,12 @@ const ListingDetailPage = () => {
                     </span>
                   )}
                 </div>
+              )}
+
+              {isRental && (
+                <span className="inline-flex items-center w-fit bg-blue-100 text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                  À louer
+                </span>
               )}
 
               {/* Titre */}

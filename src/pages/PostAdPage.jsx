@@ -65,7 +65,8 @@ const PostAdPage = () => {
       bedrooms: '', is_furnished: false, has_separate_living_room: false,
       bathroom_location: '', has_running_water: false, has_electricity: false,
       has_annex: false, advance_months: '', caution_amount: '',
-      digital_delivery_type: 'file', digital_external_url: '', preview_video_url: ''
+      digital_delivery_type: 'file', digital_external_url: '', preview_video_url: '',
+      listing_purpose: 'sale'
     };
   });
   const [imageFiles, setImageFiles] = useState([]);
@@ -283,6 +284,7 @@ const PostAdPage = () => {
       const isDigital = formData.categoryType === 'digital';
       const isDigitalLink = isDigital && formData.digital_delivery_type === 'link';
       const isHousingCategory = formData.category === 'maison-a-louer';
+      const isRentableCategory = ['vehicles', 'real-estate'].includes(formData.category);
 
       const digitalFilePath = isDigital && !isDigitalLink && digitalFile ? await uploadDigitalFile(digitalFile, user.id) : null;
 
@@ -328,6 +330,10 @@ const PostAdPage = () => {
         has_annex: isHousingCategory ? !!formData.has_annex : null,
         advance_months: (isHousingCategory && formData.advance_months && !isNaN(parseInt(formData.advance_months, 10))) ? parseInt(formData.advance_months, 10) : null,
         caution_amount: (isHousingCategory && formData.caution_amount && !isNaN(parseFloat(formData.caution_amount))) ? parseFloat(formData.caution_amount) : null,
+        // "À vendre" vs "À louer" — seules les Véhicules et l'Immobilier
+        // peuvent être l'un ou l'autre (Maison à louer est déjà toute une
+        // catégorie à part, toujours une location).
+        listing_purpose: isHousingCategory ? 'rent' : (isRentableCategory ? (formData.listing_purpose || 'sale') : 'sale'),
       };
 
       const newListing = await addListing(listingData);

@@ -100,6 +100,11 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                 </span>
               </>
             )}
+            {listing.listing_purpose === 'rent' && (
+              <span className="flex items-center bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                À louer
+              </span>
+            )}
             <ListingBadges listing={listing} seller={listing.seller} />
           </div>
           {(listing.views_count >= VIEWS_DISPLAY_THRESHOLD || listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD) && (
@@ -211,7 +216,12 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
               src={listing.images?.[0] || '/placeholder-image.png'}
               onError={e => { e.currentTarget.src = 'https://placehold.co/400x300/f3f4f6/9ca3af?text=Image+Indisponible'; }} />
           </Link>
-          <div className="absolute top-2 left-2 z-10">
+          <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+             {listing.listing_purpose === 'rent' && (
+               <span className="flex items-center w-fit bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                 À louer
+               </span>
+             )}
              <ListingBadges listing={listing} seller={listing.seller} />
           </div>
           {(listing.views_count >= VIEWS_DISPLAY_THRESHOLD || listing.favorites_count >= FAVORITES_DISPLAY_THRESHOLD) && (
