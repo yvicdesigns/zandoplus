@@ -22,7 +22,7 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   const { toast } = useToast();
   const { addItem, isInCart } = useCart();
   const [ratingInfo, setRatingInfo] = useState({ average_rating: 0, review_count: 0 });
-  const isProduct = listing.delivery_method !== 'none';
+  const isProduct = listing.delivery_method !== 'none' && listing.listing_purpose !== 'rent';
   const inCart = isInCart(listing.id);
 
   useEffect(() => {

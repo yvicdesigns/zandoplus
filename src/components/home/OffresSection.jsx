@@ -34,6 +34,7 @@ const OffreCard = ({ listing, isFavorite, toggleFavorite }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const inCart = isInCart(listing.id);
+  const isRental = listing.listing_purpose === 'rent';
 
   const handleCart = (e) => {
     e.preventDefault();
@@ -81,13 +82,15 @@ const OffreCard = ({ listing, isFavorite, toggleFavorite }) => {
         <p className="text-[14px] font-extrabold text-custom-green-500 font-[tabular-nums] mb-3">
           {formatPrice(listing.price)}
         </p>
-        <button
-          onClick={handleCart}
-          className="mt-auto w-full bg-accent-yellow text-[#1a1200] font-bold text-[12px] py-2 rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          {inCart ? 'Dans le panier' : 'Acheter maintenant'}
-        </button>
+        {!isRental && (
+          <button
+            onClick={handleCart}
+            className="mt-auto w-full bg-accent-yellow text-[#1a1200] font-bold text-[12px] py-2 rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-2"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            {inCart ? 'Dans le panier' : 'Acheter maintenant'}
+          </button>
+        )}
       </div>
     </Link>
   );
