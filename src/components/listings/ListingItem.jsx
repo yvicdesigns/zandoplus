@@ -215,14 +215,14 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:brightness-95 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-accent-yellow hover:brightness-95 text-[#1a1200] text-xs font-semibold py-2 rounded-lg transition-colors"
                   >
                     <WhatsAppIcon className="w-3.5 h-3.5" /> Contacter
                   </a>
                 ) : (
                   <button
                     onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.listing_slug || listing.id}`); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-accent-yellow hover:brightness-95 text-[#1a1200] text-xs font-semibold py-2 rounded-lg transition-colors"
                   >
                     À louer
                   </button>
@@ -248,14 +248,14 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full flex items-center justify-center py-2.5 rounded-lg bg-[#25D366] text-white transition-colors"
+                    className="w-full flex items-center justify-center py-2.5 rounded-lg bg-accent-yellow text-[#1a1200] transition-colors"
                   >
                     <WhatsAppIcon className="w-3.5 h-3.5" />
                   </a>
                 ) : (
                   <button
                     onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.listing_slug || listing.id}`); }}
-                    className="w-full flex items-center justify-center py-2.5 rounded-lg bg-custom-green-600 text-white hover:bg-custom-green-700 transition-colors"
+                    className="w-full flex items-center justify-center py-2.5 rounded-lg bg-accent-yellow text-[#1a1200] hover:brightness-95 transition-colors"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                   </button>
@@ -358,14 +358,14 @@ const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 bg-[#25D366] hover:brightness-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                      className="flex items-center gap-1.5 bg-accent-yellow hover:brightness-95 text-[#1a1200] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
                     >
                       <WhatsAppIcon className="w-3.5 h-3.5" /> Contacter
                     </a>
                   ) : (
                     <button
                       onClick={(e) => { e.preventDefault(); navigate(`/listings/${listing.listing_slug || listing.id}`); }}
-                      className="flex items-center gap-1.5 bg-custom-green-600 hover:bg-custom-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                      className="flex items-center gap-1.5 bg-accent-yellow hover:brightness-95 text-[#1a1200] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
                     >
                       <MessageSquare className="w-3.5 h-3.5" /> À louer
                     </button>

@@ -107,13 +107,13 @@ const OffreCard = ({ listing, isFavorite, toggleFavorite }) => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="mt-auto w-full bg-[#25D366] hover:brightness-95 text-white font-bold text-[12px] py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+              className="mt-auto w-full bg-accent-yellow hover:brightness-95 text-[#1a1200] font-bold text-[12px] py-2 rounded-lg transition-all flex items-center justify-center gap-2"
             >
               <WhatsAppIcon className="w-3.5 h-3.5" />
               Contacter
             </a>
           ) : (
-            <div className="mt-auto w-full bg-custom-green-600 text-white font-bold text-[12px] py-2 rounded-lg flex items-center justify-center gap-2">
+            <div className="mt-auto w-full bg-accent-yellow text-[#1a1200] font-bold text-[12px] py-2 rounded-lg flex items-center justify-center gap-2">
               À louer
             </div>
           )
