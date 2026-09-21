@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Star, CheckCircle2, Loader2, ShieldCheck, TrendingUp, Eye } from 'lucide-react';
+import { Zap, Star, CheckCircle2, Loader2, ShieldCheck, TrendingUp, Eye, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,9 +54,39 @@ const ShopBoostPage = () => {
   const [selected, setSelected] = useState('premium');
   const [loading, setLoading]   = useState(false);
   const [done, setDone]         = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState(null); // null = pas encore chargé
+  const [whatsappInput, setWhatsappInput] = useState('');
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('whatsapp_number').eq('id', user.id).single()
+      .then(({ data }) => {
+        setWhatsappNumber(data?.whatsapp_number || '');
+        setWhatsappInput(data?.whatsapp_number || '');
+      });
+  }, [user]);
+
+  const handleSaveWhatsapp = async () => {
+    const cleaned = whatsappInput.trim();
+    if (!cleaned) {
+      toast({ title: 'Numéro requis', description: 'Renseignez votre numéro WhatsApp pour continuer.', variant: 'destructive' });
+      return;
+    }
+    setSavingWhatsapp(true);
+    const { error } = await supabase.from('profiles').update({ whatsapp_number: cleaned }).eq('id', user.id);
+    setSavingWhatsapp(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setWhatsappNumber(cleaned);
+    toast({ title: 'Numéro WhatsApp enregistré ✅' });
+  };
 
   const handleSubmit = async () => {
     if (!user) { toast({ title: 'Connexion requise', variant: 'destructive' }); return; }
+    if (!whatsappNumber) { toast({ title: 'Numéro WhatsApp requis', description: 'Renseignez-le avant de soumettre votre demande.', variant: 'destructive' }); return; }
     setLoading(true);
     try {
       const { error } = await supabase.from('shop_boosts').insert({
@@ -175,6 +205,35 @@ const ShopBoostPage = () => {
           </div>
         </div>
 
+        {/* WhatsApp obligatoire avant toute demande de boost */}
+        {user && !whatsappNumber && (
+          <div className="p-4 bg-green-50 border-2 border-green-200 rounded-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+              <p className="text-[13px] font-black text-green-800">Numéro WhatsApp requis</p>
+            </div>
+            <p className="text-[11px] text-green-700 mb-3">
+              Nécessaire pour que notre équipe vous contacte pour le paiement et la confirmation.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                value={whatsappInput}
+                onChange={(e) => setWhatsappInput(e.target.value)}
+                placeholder="+242 06 000 0000"
+                className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-[14px] outline-none focus:border-green-400"
+              />
+              <button
+                onClick={handleSaveWhatsapp}
+                disabled={savingWhatsapp}
+                className="h-11 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-[13px] disabled:opacity-50 flex items-center gap-2"
+              >
+                {savingWhatsapp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* CTA */}
         <div className="bg-gray-50 rounded-2xl p-5 space-y-3 border border-gray-200">
           <p className="text-sm text-gray-600">
@@ -182,7 +241,7 @@ const ShopBoostPage = () => {
           </p>
           <Button
             onClick={handleSubmit}
-            disabled={loading || !user}
+            disabled={loading || !user || !whatsappNumber}
             className="w-full gradient-bg hover:opacity-90 text-white font-semibold py-5"
           >
             {loading

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Zap, Flame, ShieldCheck, CheckCircle, Loader2, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Zap, Flame, ShieldCheck, CheckCircle, Loader2, Plus, Minus, MessageCircle } from 'lucide-react';
 import { fbTrack } from '@/components/analytics/MetaPixel';
 import { ttqTrack } from '@/components/analytics/TikTokPixel';
 import { Helmet } from 'react-helmet-async';
@@ -72,6 +72,9 @@ const BoostListingPage = () => {
   const [days, setDays]               = useState(1);
   const [activeBoost, setActiveBoost] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState(null); // null = pas encore chargé
+  const [whatsappInput, setWhatsappInput] = useState('');
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -102,10 +105,36 @@ const BoostListingPage = () => {
         .eq('statut', 'active')
         .maybeSingle();
       setActiveBoost(boostData);
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('whatsapp_number')
+        .eq('id', user.id)
+        .single();
+      setWhatsappNumber(profileData?.whatsapp_number || '');
+      setWhatsappInput(profileData?.whatsapp_number || '');
+
       setLoading(false);
     };
     fetchData();
   }, [listingId, user, navigate, toast]);
+
+  const handleSaveWhatsapp = async () => {
+    const cleaned = whatsappInput.trim();
+    if (!cleaned) {
+      toast({ title: 'Numéro requis', description: 'Renseignez votre numéro WhatsApp pour continuer.', variant: 'destructive' });
+      return;
+    }
+    setSavingWhatsapp(true);
+    const { error } = await supabase.from('profiles').update({ whatsapp_number: cleaned }).eq('id', user.id);
+    setSavingWhatsapp(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setWhatsappNumber(cleaned);
+    toast({ title: 'Numéro WhatsApp enregistré ✅' });
+  };
 
   const type = TYPES.find(t => t.id === selectedType);
   const totalPrice = type.ratePerDay * days;
@@ -202,6 +231,38 @@ const BoostListingPage = () => {
             </div>
           </div>
 
+          {/* WhatsApp obligatoire avant tout boost — sert à confirmer le paiement */}
+          {!whatsappNumber && (
+            <div className="p-4 bg-green-50 border-2 border-green-200 rounded-2xl mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <p className="text-[13px] font-black text-green-800">Numéro WhatsApp requis</p>
+              </div>
+              <p className="text-[11px] text-green-700 mb-3">
+                Nécessaire pour vous confirmer votre boost après réception du paiement.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  value={whatsappInput}
+                  onChange={(e) => setWhatsappInput(e.target.value)}
+                  placeholder="+242 06 000 0000"
+                  className="flex-1 h-11 px-3 rounded-xl border border-gray-200 text-[14px] outline-none focus:border-green-400"
+                />
+                <button
+                  onClick={handleSaveWhatsapp}
+                  disabled={savingWhatsapp}
+                  className="h-11 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-[13px] disabled:opacity-50 flex items-center gap-2"
+                >
+                  {savingWhatsapp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Le reste du parcours de boost n'apparaît qu'une fois le WhatsApp enregistré */}
+          {whatsappNumber && (
+          <>
           {/* Boost actif */}
           {activeBoost && (
             <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-6">
@@ -355,6 +416,8 @@ const BoostListingPage = () => {
             <ShieldCheck className="w-3.5 h-3.5" />
             Paiement via MTN Money
           </div>
+          </>
+          )}
 
         </div>
       </div>
