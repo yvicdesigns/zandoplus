@@ -42,7 +42,7 @@ const AdminBoostsTab = memo(() => {
     const { data, error } = await supabase
       .from('ad_boosts')
       .select(`
-        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at, boost_type,
+        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at, boost_type, days,
         annonce:annonce_id(id, title, images),
         user:user_id(full_name, whatsapp_number)
       `)
@@ -63,7 +63,7 @@ const AdminBoostsTab = memo(() => {
     const isActivating = boost.statut !== 'active';
     const now = new Date();
     const dateFin = new Date(now);
-    dateFin.setDate(dateFin.getDate() + 7);
+    dateFin.setDate(dateFin.getDate() + (boost.days || 7)); // 7j = filet de sécurité pour les anciens boosts sans durée enregistrée
 
     const updates = isActivating
       ? { statut: 'active', date_debut: now.toISOString(), date_fin: dateFin.toISOString() }
@@ -273,7 +273,9 @@ const AdminBoostsTab = memo(() => {
                           </span>
                         )}
                       </div>
-                      <p>Montant : <span className="font-semibold text-amber-700">{boost.montant?.toLocaleString()} FCFA</span></p>
+                      <p>Montant : <span className="font-semibold text-amber-700">{boost.montant?.toLocaleString()} FCFA</span>
+                        {boost.days ? <span className="text-gray-400"> ({boost.days} jour{boost.days > 1 ? 's' : ''} payé{boost.days > 1 ? 's' : ''})</span> : null}
+                      </p>
                       {boost.date_fin && <p>Expire : {formatDate(boost.date_fin)}</p>}
                     </div>
 

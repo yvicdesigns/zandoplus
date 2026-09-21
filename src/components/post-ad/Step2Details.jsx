@@ -62,8 +62,20 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
   const handleUseLocation = async () => {
     setLocating(true);
     try {
+      // Si la liste des villes n'a pas encore fini de charger (course avec le GPS
+      // qui peut répondre plus vite via une position mise en cache), on la récupère
+      // ici directement plutôt que de risquer un tableau vide.
+      let candidateCities = cities;
+      if (candidateCities.length === 0) {
+        const { data } = await supabase
+          .from('delivery_city_config')
+          .select('city')
+          .order('city', { ascending: true });
+        candidateCities = data?.map(r => r.city) || [];
+        if (candidateCities.length) setCities(candidateCities);
+      }
       const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-      const nearest = findNearestCity(pos.coords.latitude, pos.coords.longitude, cities);
+      const nearest = findNearestCity(pos.coords.latitude, pos.coords.longitude, candidateCities);
       if (nearest) {
         handleCityChange(nearest);
       } else {
@@ -159,7 +171,12 @@ const Step2Details = ({ formData, formErrors, handleInputChange, handleSelectCha
                 <SelectValue placeholder="Sélectionnez votre ville" />
               </SelectTrigger>
               <SelectContent>
-                {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                {/* On garantit que la ville déjà enregistrée (via modification d'annonce)
+                    apparaît toujours, même si la liste des villes n'a pas encore fini de
+                    charger — sinon le menu peut paraître vide alors que la donnée existe. */}
+                {Array.from(new Set([...cities, selectedCity].filter(Boolean))).map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormError message={formErrors.location} />

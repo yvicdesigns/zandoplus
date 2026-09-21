@@ -130,6 +130,7 @@ const BoostListingPage = () => {
           montant:    totalPrice,
           statut:     'pending',
           boost_type: selectedType,
+          days,
         })
         .select('id')
         .single();
