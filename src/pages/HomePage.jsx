@@ -17,6 +17,8 @@ const GreenBarSection = lazy(() => import('@/components/home/GreenBarSection'));
 const NewsletterSection = lazy(() => import('@/components/home/NewsletterSection'));
 const CtaSection = lazy(() => import('@/components/home/CtaSection'));
 const FeaturedShopsSection = lazy(() => import('@/components/shop/FeaturedShopsSection'));
+const EntrepriseBanniereSection = lazy(() => import('@/components/home/EntrepriseBanniereSection'));
+const EntrepriseSelectionSection = lazy(() => import('@/components/home/EntrepriseSelectionSection'));
 const HomepageAdBanner = lazy(() => import('@/components/home/HomepageAdBanner'));
 const UrgentPopup = lazy(() => import('@/components/home/UrgentPopup'));
 import { UrgentSection, BoostedSection } from '@/components/home/PromoSections';
@@ -138,6 +140,8 @@ const HomePage = () => {
           <HomepageAdBanner placement="after_listings" />
           <AppBannerSection />
           <FeaturedShopsSection />
+          <EntrepriseBanniereSection />
+          <EntrepriseSelectionSection />
           <TrustBarSection />
           <GreenBarSection />
           <NewsletterSection />

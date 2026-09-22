@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Helmet } from 'react-helmet-async';
@@ -12,11 +12,14 @@ import {
   MapPin, Settings, HelpCircle, ChevronRight, ChevronLeft, BadgeCheck,
   Truck, Clock, Shield, ExternalLink, Plus, Loader2, Users,
   TrendingUp, ArrowUpRight, MessageSquare, Lock, Check, X,
+  Building2, UploadCloud, Flame,
 } from 'lucide-react';
 import AddressesTab from '@/components/profile/AddressesTab';
 import SellerOrdersInline from '@/components/seller/SellerOrdersInline';
 import SellerListingsInline from '@/components/seller/SellerListingsInline';
 import SellerReviewsInline from '@/components/seller/SellerReviewsInline';
+import { v4 as uuidv4 } from 'uuid';
+import imageCompression from 'browser-image-compression';
 
 /* ─── Statuts ──────────────────────────────────────────────── */
 const STATUS_CFG = {
@@ -101,6 +104,142 @@ const EditableRow = ({ label, value, type = 'text', options, onSave, placeholder
           </button>
         </>
       )}
+    </div>
+  );
+};
+
+/* ─── Bannière + boost inclus (palier Entreprise uniquement) ─── */
+const EntrepriseTierSection = ({ profile, user }) => {
+  const { toast } = useToast();
+  const fileInputRef = useRef(null);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerUrl, setBannerUrl] = useState(profile?.entreprise_banner_url || null);
+  const [myListings, setMyListings] = useState([]);
+  const [loadingListings, setLoadingListings] = useState(true);
+  const [selectedListingId, setSelectedListingId] = useState('');
+  const [activating, setActivating] = useState(false);
+  const [monthlyBoost, setMonthlyBoost] = useState(undefined); // undefined = chargement, null = aucun ce mois-ci
+
+  const loadListingsAndBoost = useCallback(async () => {
+    setLoadingListings(true);
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const [{ data: listings }, { data: boosts }] = await Promise.all([
+      supabase.from('listings').select('id, title').eq('user_id', user.id).eq('status', 'active').order('created_at', { ascending: false }),
+      supabase.from('ad_boosts')
+        .select('id, annonce_id, date_fin, statut, annonce:annonce_id(title)')
+        .eq('user_id', user.id).eq('boost_type', 'entreprise_inclus')
+        .gte('created_at', startOfMonth.toISOString())
+        .order('created_at', { ascending: false }).limit(1),
+    ]);
+    setMyListings(listings || []);
+    setMonthlyBoost(boosts?.[0] || null);
+    setLoadingListings(false);
+  }, [user.id]);
+
+  useEffect(() => { loadListingsAndBoost(); }, [loadListingsAndBoost]);
+
+  const handleBannerSelect = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = null;
+    if (!file) return;
+    setUploadingBanner(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1600 });
+      const path = `${user.id}/entreprise-banner/${uuidv4()}.webp`;
+      const { error: upErr } = await supabase.storage.from('profile_assets').upload(path, compressed, { contentType: 'image/webp' });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('profile_assets').getPublicUrl(path);
+      await supabase.from('profiles').update({ entreprise_banner_url: publicUrl }).eq('id', user.id);
+      setBannerUrl(publicUrl);
+      toast({ title: 'Bannière mise à jour ✅', description: "Elle apparaîtra sur l'accueil Zando+ sous quelques minutes.", className: 'bg-custom-green-500 text-white' });
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  const handleActivateBoost = async () => {
+    if (!selectedListingId) return;
+    setActivating(true);
+    const now = new Date();
+    const dateFin = new Date(now);
+    dateFin.setDate(dateFin.getDate() + 7);
+    const { error } = await supabase.from('ad_boosts').insert({
+      annonce_id: selectedListingId,
+      user_id: user.id,
+      montant: 0,
+      statut: 'active',
+      boost_type: 'entreprise_inclus',
+      date_debut: now.toISOString(),
+      date_fin: dateFin.toISOString(),
+      days: 7,
+    });
+    setActivating(false);
+    if (error) { toast({ title: 'Erreur', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Mise en avant activée pour 7 jours ✅', className: 'bg-custom-green-500 text-white' });
+    loadListingsAndBoost();
+  };
+
+  return (
+    <div className="mt-8 pt-6 border-t border-gray-100">
+      <h3 className="text-[15px] font-black text-gray-900 mb-1 flex items-center gap-2">
+        <Building2 className="w-4 h-4 text-amber-500" /> Avantages Entreprise
+      </h3>
+      <p className="text-[12px] text-gray-400 mb-4">Bannière sur l'accueil et mise en avant incluse chaque mois.</p>
+
+      {/* Bannière */}
+      <div className="mb-6">
+        <p className="text-[13px] font-semibold text-gray-700 mb-2">Bannière (accueil Zando+)</p>
+        <div
+          onClick={() => !uploadingBanner && fileInputRef.current?.click()}
+          className="relative h-28 rounded-xl border-2 border-dashed border-gray-200 hover:border-amber-400 bg-gray-50 flex items-center justify-center cursor-pointer overflow-hidden"
+        >
+          {bannerUrl && <img src={bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+          <div className={`relative z-10 flex flex-col items-center gap-1 ${bannerUrl ? 'bg-black/40 w-full h-full justify-center text-white' : 'text-gray-400'}`}>
+            {uploadingBanner ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
+            <span className="text-[11px] font-semibold">{bannerUrl ? 'Changer la bannière' : 'Ajouter une bannière'}</span>
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
+        <p className="text-[10px] text-gray-400 mt-1.5">Format recommandé : 1200 × 400 px.</p>
+      </div>
+
+      {/* Boost inclus */}
+      <div>
+        <p className="text-[13px] font-semibold text-gray-700 mb-2">Mise en avant incluse (1×/mois, 7 jours)</p>
+        {loadingListings || monthlyBoost === undefined ? (
+          <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+        ) : monthlyBoost ? (
+          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[12px] text-amber-800">
+            <Flame className="w-4 h-4 flex-shrink-0" />
+            <span><strong>{monthlyBoost.annonce?.title}</strong> est mise en avant jusqu'au {new Date(monthlyBoost.date_fin).toLocaleDateString('fr-FR')}. Prochaine disponible le mois prochain.</span>
+          </div>
+        ) : myListings.length === 0 ? (
+          <p className="text-[12px] text-gray-400">Publiez une annonce pour pouvoir la mettre en avant.</p>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              value={selectedListingId}
+              onChange={(e) => setSelectedListingId(e.target.value)}
+              className="flex-1 h-11 border border-gray-200 rounded-lg px-3 text-[13px] bg-white"
+            >
+              <option value="">Choisir une annonce…</option>
+              {myListings.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+            </select>
+            <button
+              onClick={handleActivateBoost}
+              disabled={!selectedListingId || activating}
+              className="px-4 h-11 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
+            >
+              {activating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
+              Activer
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -256,6 +395,7 @@ const SellerDashboardPage = () => {
           <EditableRow label="Bio"               value={profile?.bio}             onSave={v => updateField('bio', v)} />
           <EditableRow label="Pays / Ville"      value={profile?.location}        onSave={v => updateField('location', v)} />
         </div>
+        {profile?.is_business && <EntrepriseTierSection profile={profile} user={user} />}
       </div>
     );
     if (activeSection === 'adresses') return (

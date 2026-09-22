@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { useToast } from '@/components/ui/use-toast';
-    import { Loader2, CheckCircle2, Clock, ShieldCheck, Building2 } from 'lucide-react';
+    import { Loader2, CheckCircle2, Clock, ShieldCheck, Building2, Store } from 'lucide-react';
     import { format } from 'date-fns';
     import { fr } from 'date-fns/locale';
     import VerificationStep from '@/components/verification/VerificationStep';
@@ -15,6 +15,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
     const PLANS = {
       individual: { price: 10000, label: 'Vendeur Vérifié', description: 'Frais de vérification de compte' },
+      boutique:   { price: 12000, label: 'Boutique', description: 'Frais de vérification Boutique (1 an)' },
       business:   { price: 20000, label: 'Entreprise', description: 'Frais de vérification Entreprise (1 an)' },
     };
 
@@ -25,7 +26,8 @@ import React, { useState, useEffect, useCallback } from 'react';
       const { toast } = useToast();
       const [searchParams] = useSearchParams();
 
-      const [requestType, setRequestType] = useState(searchParams.get('type') === 'business' ? 'business' : 'individual');
+      const initialType = ['business', 'boutique'].includes(searchParams.get('type')) ? searchParams.get('type') : 'individual';
+      const [requestType, setRequestType] = useState(initialType);
       const [loading, setLoading] = useState(true);
       const [verificationStatus, setVerificationStatus] = useState(null);
 
@@ -68,7 +70,7 @@ import React, { useState, useEffect, useCallback } from 'react';
           });
           return;
         }
-        if (requestType === 'business' && !businessName.trim()) {
+        if ((requestType === 'business' || requestType === 'boutique') && !businessName.trim()) {
           toast({
             title: 'Nom manquant',
             description: "Indiquez le nom de votre entreprise ou boutique.",
@@ -87,7 +89,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
           const verificationData = {
             request_type: requestType,
-            business_name: requestType === 'business' ? businessName.trim() : null,
+            business_name: (requestType === 'business' || requestType === 'boutique') ? businessName.trim() : null,
             id_document_url,
             selfie_url,
             proof_of_address_url,
@@ -138,17 +140,51 @@ import React, { useState, useEffect, useCallback } from 'react';
         );
       }
 
-      // Déjà Vérifié (et on regarde la vue "individuel") : proposer l'upsell Entreprise.
+      // Déjà Boutique : rien à faire tant que ça n'a pas expiré (upsell vers Entreprise).
+      if (requestType === 'boutique' && user.is_boutique) {
+        return (
+          <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
+            <Store className="w-20 h-20 text-custom-green-500 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold mb-2">Votre boutique est certifiée Boutique !</h1>
+            <p className="text-gray-600 mb-6">
+              Le badge Boutique est actif{user.boutique_expires_at && (
+                <> jusqu'au <strong>{format(new Date(user.boutique_expires_at), 'dd MMMM yyyy', { locale: fr })}</strong></>
+              )}.
+            </p>
+            {!user.is_business && (
+              <div className="mb-6 p-5 bg-amber-50 border border-amber-200 rounded-xl text-left">
+                <p className="font-semibold text-amber-900 flex items-center gap-2"><Building2 className="w-5 h-5" /> Envie d'aller plus loin ?</p>
+                <p className="text-sm text-amber-800 mt-1 mb-3">Passez au badge Entreprise (20 000 FCFA/an) : bannière sur l'accueil, boost inclus chaque mois, priorité renforcée.</p>
+                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white" onClick={() => setRequestType('business')}>
+                  Devenir Entreprise
+                </Button>
+              </div>
+            )}
+            <Link to="/profile"><Button variant="outline">Retour au profil</Button></Link>
+          </div>
+        );
+      }
+
+      // Déjà Vérifié (et on regarde la vue "individuel") : proposer l'upsell Boutique/Entreprise.
       if (requestType === 'individual' && user.verified) {
         return (
           <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
             <CheckCircle2 className="w-20 h-20 text-custom-green-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-2">Vous êtes déjà un vendeur vérifié !</h1>
             <p className="text-gray-600 mb-6">Félicitations ! Le badge de confiance est affiché sur votre profil et vos annonces.</p>
+            {!user.is_boutique && !user.is_business && (
+              <div className="mb-6 p-5 bg-green-50 border border-green-200 rounded-xl text-left">
+                <p className="font-semibold text-green-900 flex items-center gap-2"><Store className="w-5 h-5" /> Vous voulez publier plus de 15 annonces ?</p>
+                <p className="text-sm text-green-800 mt-1 mb-3">Passez Boutique (12 000 FCFA/an) : jusqu'à 100 annonces, badge Boutique Vérifiée, page boutique.</p>
+                <Button size="sm" className="bg-custom-green-600 hover:bg-custom-green-700 text-white" onClick={() => setRequestType('boutique')}>
+                  Devenir Boutique
+                </Button>
+              </div>
+            )}
             {!user.is_business && (
               <div className="mb-6 p-5 bg-amber-50 border border-amber-200 rounded-xl text-left">
                 <p className="font-semibold text-amber-900 flex items-center gap-2"><Building2 className="w-5 h-5" /> Vous représentez une entreprise ?</p>
-                <p className="text-sm text-amber-800 mt-1 mb-3">Passez au badge Entreprise (20 000 FCFA/an) : priorité renforcée, bannière personnalisée, et plus.</p>
+                <p className="text-sm text-amber-800 mt-1 mb-3">Passez au badge Entreprise (20 000 FCFA/an) : jusqu'à 500 annonces, priorité renforcée, bannière personnalisée, et plus.</p>
                 <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white" onClick={() => setRequestType('business')}>
                   Devenir Entreprise
                 </Button>
@@ -184,14 +220,21 @@ import React, { useState, useEffect, useCallback } from 'react';
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <Card className="shadow-lg border-0">
             <CardHeader>
-              {/* Sélecteur Vérifié / Entreprise */}
+              {/* Sélecteur Vérifié / Boutique / Entreprise */}
               <div className="flex gap-2 mb-4">
                 <button
                   type="button"
                   onClick={() => setRequestType('individual')}
                   className={`flex-1 flex items-center gap-2 justify-center py-3 rounded-xl text-sm font-semibold border-2 transition-colors ${requestType === 'individual' ? 'border-custom-green-500 bg-custom-green-50 text-custom-green-700' : 'border-gray-200 text-gray-500'}`}
                 >
-                  <ShieldCheck className="w-4 h-4" /> Vendeur Vérifié — 10 000 FCFA
+                  <ShieldCheck className="w-4 h-4" /> Vérifié — 10 000 FCFA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRequestType('boutique')}
+                  className={`flex-1 flex items-center gap-2 justify-center py-3 rounded-xl text-sm font-semibold border-2 transition-colors ${requestType === 'boutique' ? 'border-custom-green-600 bg-green-50 text-custom-green-700' : 'border-gray-200 text-gray-500'}`}
+                >
+                  <Store className="w-4 h-4" /> Boutique — 12 000 FCFA/an
                 </button>
                 <button
                   type="button"
@@ -203,11 +246,13 @@ import React, { useState, useEffect, useCallback } from 'react';
               </div>
 
               <CardTitle className="text-3xl">
-                {requestType === 'business' ? 'Devenir une Boutique Entreprise' : 'Devenir un Vendeur Vérifié'}
+                {requestType === 'business' ? 'Devenir une Boutique Entreprise' : requestType === 'boutique' ? 'Devenir une Boutique Vérifiée' : 'Devenir un Vendeur Vérifié'}
               </CardTitle>
               <CardDescription>
                 {requestType === 'business'
                   ? "Le badge Entreprise inclut le badge Vérifié, et renforce la confiance des acheteurs. Aucun RCCM n'est exigé — votre pièce d'identité suffit."
+                  : requestType === 'boutique'
+                  ? "Le badge Boutique inclut le badge Vérifié et débloque jusqu'à 100 annonces. Aucun RCCM n'est exigé — votre pièce d'identité suffit."
                   : "Augmentez la confiance des acheteurs en faisant vérifier votre identité. C'est simple et sécurisé."}
                 {isResubmitting && (
                     <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-800">
@@ -229,9 +274,9 @@ import React, { useState, useEffect, useCallback } from 'react';
                 )}
               </VerificationStep>
 
-              {requestType === 'business' && (
+              {(requestType === 'business' || requestType === 'boutique') && (
                 <VerificationStep
-                  title="Étape 2: Votre entreprise"
+                  title="Étape 2: Votre boutique"
                   description="Le nom affiché sur votre boutique Zando+."
                   status={businessName.trim() ? 'completed' : 'action_required'}
                 >
@@ -250,7 +295,7 @@ import React, { useState, useEffect, useCallback } from 'react';
               )}
 
               <VerificationStep
-                title={`Étape ${requestType === 'business' ? '3' : '2'}: Vérification de l'Identité`}
+                title={`Étape ${(requestType === 'business' || requestType === 'boutique') ? '3' : '2'}: Vérification de l'Identité`}
                 description="Téléversez vos documents pour prouver votre identité. Vos données sont cryptées et stockées en toute sécurité."
                 status={isResubmitting ? 'rejected' : 'action_required'}
                 rejectionReason={verificationStatus?.rejection_reason}
@@ -288,9 +333,9 @@ import React, { useState, useEffect, useCallback } from 'react';
               <div className="flex justify-end pt-6 border-t">
                   <Button
                     onClick={handlePayment}
-                    disabled={paymentLoading || !idFile || !selfieFile || (requestType === 'business' && !businessName.trim())}
+                    disabled={paymentLoading || !idFile || !selfieFile || ((requestType === 'business' || requestType === 'boutique') && !businessName.trim())}
                     size="lg"
-                    className={requestType === 'business' ? 'bg-amber-500 hover:bg-amber-600' : 'gradient-bg hover:opacity-90'}
+                    className={requestType === 'business' ? 'bg-amber-500 hover:bg-amber-600' : requestType === 'boutique' ? 'bg-custom-green-600 hover:bg-custom-green-700' : 'gradient-bg hover:opacity-90'}
                   >
                     {paymentLoading ? (
                       <>

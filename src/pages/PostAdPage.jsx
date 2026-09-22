@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListings } from '@/contexts/ListingsContext';
@@ -28,6 +28,7 @@ import { uploadDigitalFile } from '@/lib/digitalFileUtils';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { sanitizeInput } from '@/lib/validationUtils';
 import { moderateListing } from '@/hooks/useModeration';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const PostAdPage = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const PostAdPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [publishedListing, setPublishedListing] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [capReached, setCapReached] = useState(null); // { cap, tier } | null
 
   const DRAFT_KEY = 'postAdDraft';
 
@@ -270,6 +272,21 @@ const PostAdPage = () => {
       return;
     }
 
+    // Vérification du plafond d'annonces avant d'uploader quoi que ce soit
+    // (évite de faire attendre l'upload d'images pour rien) — le trigger
+    // Postgres check_listing_cap reste le filet de sécurité final côté serveur.
+    const tier = user.is_business ? 'Entreprise' : user.is_boutique ? 'Boutique' : 'Libre';
+    const cap = user.is_business ? 500 : user.is_boutique ? 100 : 15;
+    const { count, error: countError } = await supabase
+      .from('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+    if (!countError && (count ?? 0) >= cap) {
+      setCapReached({ cap, tier });
+      return;
+    }
+
     setLoading(true);
     try {
       const safePhone = sanitizeInput(formData.phone);
@@ -356,7 +373,14 @@ const PostAdPage = () => {
       setPublishedListing(newListing);
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
-      toast({ title: "Erreur lors de la publication", description: error.message || "Une erreur s'est produite.", variant: "destructive" });
+      // Filet de sécurité si le pré-check a été contourné (édition concurrente, etc.)
+      const capMatch = /LISTING_CAP_REACHED:(\d+)/.exec(error.message || '');
+      if (capMatch) {
+        const tier = user.is_business ? 'Entreprise' : user.is_boutique ? 'Boutique' : 'Libre';
+        setCapReached({ cap: parseInt(capMatch[1], 10), tier });
+      } else {
+        toast({ title: "Erreur lors de la publication", description: error.message || "Une erreur s'est produite.", variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
@@ -421,6 +445,28 @@ const PostAdPage = () => {
           </Card>
         </form>
       </div>
+
+      <AlertDialog open={!!capReached} onOpenChange={(open) => !open && setCapReached(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Plafond d'annonces atteint</AlertDialogTitle>
+            <AlertDialogDescription>
+              Votre palier <strong>{capReached?.tier}</strong> est limité à <strong>{capReached?.cap} annonces actives</strong>.
+              {capReached?.tier === 'Libre' && " Passez Boutique (12 000 FCFA/an, jusqu'à 100 annonces) ou Entreprise (20 000 FCFA/an, jusqu'à 500 annonces) pour continuer à publier."}
+              {capReached?.tier === 'Boutique' && " Passez Entreprise (20 000 FCFA/an, jusqu'à 500 annonces) pour continuer à publier."}
+              {capReached?.tier === 'Entreprise' && " Contactez le support pour discuter de vos besoins."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fermer</AlertDialogCancel>
+            {capReached?.tier !== 'Entreprise' && (
+              <AlertDialogAction asChild>
+                <Link to="/verification">Voir les paliers</Link>
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

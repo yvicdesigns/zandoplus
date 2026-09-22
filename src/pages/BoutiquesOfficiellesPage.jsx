@@ -6,7 +6,17 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Helmet } from 'react-helmet-async';
 
-const ShopCard = ({ seller, index }) => (
+// Palier le plus élevé en premier — Entreprise > Boutique > Vérifié simple.
+const tierRank = (seller) => (seller.is_business ? 2 : seller.is_boutique ? 1 : 0);
+const tierBadge = (seller) => {
+  if (seller.is_business) return { className: 'bg-amber-500', icon: <Building2 className="w-2.5 h-2.5" />, label: 'Entreprise' };
+  if (seller.is_boutique) return { className: 'bg-custom-green-600', icon: <Store className="w-2.5 h-2.5" />, label: 'Boutique' };
+  return { className: 'bg-blue-600', icon: <ShieldCheck className="w-2.5 h-2.5" />, label: 'Vérifié' };
+};
+
+const ShopCard = ({ seller, index }) => {
+  const badge = tierBadge(seller);
+  return (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
@@ -22,8 +32,8 @@ const ShopCard = ({ seller, index }) => (
           alt={seller.full_name}
           className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-100 group-hover:ring-custom-green-300 transition-all"
         />
-        <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${seller.is_business ? 'bg-amber-500' : 'bg-blue-600'}`}>
-          {seller.is_business ? <><Building2 className="w-2.5 h-2.5" /> Entreprise</> : <><ShieldCheck className="w-2.5 h-2.5" /> Vérifié</>}
+        <span className={`absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${badge.className}`}>
+          {badge.icon} {badge.label}
         </span>
       </div>
       <div className="min-w-0 w-full">
@@ -39,7 +49,8 @@ const ShopCard = ({ seller, index }) => (
       </div>
     </Link>
   </motion.div>
-);
+  );
+};
 
 const BoutiquesOfficiellesPage = () => {
   const [sellers, setSellers] = useState([]);
@@ -49,12 +60,14 @@ const BoutiquesOfficiellesPage = () => {
   useEffect(() => {
     supabase
       .from('profiles')
-      .select('id, full_name, avatar_url, bio, location, shop_slug, verified, is_business')
-      .eq('verified', true)
+      .select('id, full_name, avatar_url, bio, location, shop_slug, verified, is_business, is_boutique')
+      .or('verified.eq.true,is_boutique.eq.true,is_business.eq.true')
       .eq('is_seller', true)
       .order('full_name', { ascending: true })
       .then(({ data }) => {
-        setSellers(data || []);
+        // Trié par palier (Entreprise > Boutique > Vérifié), alphabétique dans chaque groupe.
+        const sorted = [...(data || [])].sort((a, b) => tierRank(b) - tierRank(a) || (a.full_name || '').localeCompare(b.full_name || ''));
+        setSellers(sorted);
         setLoading(false);
       });
   }, []);
@@ -67,8 +80,8 @@ const BoutiquesOfficiellesPage = () => {
   return (
     <>
       <Helmet>
-        <title>Boutiques Officielles - Zando+</title>
-        <meta name="description" content="Découvrez les boutiques vérifiées sur Zando+ Congo. Achetez en toute confiance auprès de vendeurs certifiés." />
+        <title>Nos Boutiques - Zando+</title>
+        <meta name="description" content="Découvrez les boutiques et entreprises vérifiées sur Zando+ Congo. Achetez en toute confiance auprès de vendeurs certifiés." />
       </Helmet>
 
       <div className="min-h-screen bg-page-bg py-10">
@@ -81,8 +94,8 @@ const BoutiquesOfficiellesPage = () => {
                 <ShieldCheck className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-extrabold text-gray-900">Boutiques Officielles</h1>
-                <p className="text-sm text-gray-500">Vendeurs vérifiés par Zando+</p>
+                <h1 className="text-2xl font-extrabold text-gray-900">Nos Boutiques</h1>
+                <p className="text-sm text-gray-500">Vendeurs, Boutiques et Entreprises vérifiés par Zando+</p>
               </div>
             </div>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5 max-w-lg">
