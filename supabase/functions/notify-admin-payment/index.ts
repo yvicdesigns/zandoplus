@@ -92,22 +92,22 @@ serve(async (req) => {
   }
 });
 
-/* README_TEMPLATE — a soumettre dans Meta Business Manager tant que ca n'existe pas :
+/* README_TEMPLATE — soumis dans Meta Business Manager le 22/09/2026, statut "In review".
+   Conserve ici pour reference si le modele doit un jour etre recree/modifie.
 
 Nom du modele  : zandoplus_alerte_paiement
 Categorie      : UTILITY
 Langue         : Francais (fr)
 Corps du message (4 variables) :
 
-  💰 Nouveau paiement a verifier sur Zando+
+  Nouveau paiement recu sur Zando+, a verifier rapidement.
 
-  Type : {{1}}
-  Montant : {{2}}
-  Reference : {{3}}
+  Type de paiement : {{1}}
+  Montant recu : {{2}}
+  Reference commande : {{3}}
+  Lien vers la preuve : {{4}} - merci de confirmer.
 
-  Preuve de paiement : {{4}}
-
-Exemple de valeurs pour la soumission :
+Exemples de valeurs soumis pour la revue Meta :
   {{1}} = Boost
   {{2}} = 300 FCFA
   {{3}} = Boost Urgent - 7 jours
