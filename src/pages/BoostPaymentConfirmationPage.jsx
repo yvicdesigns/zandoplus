@@ -19,7 +19,7 @@ const BoostPaymentConfirmationPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const fileInputRef = useRef(null);
 
-  const { boostId, listingTitle, amount, days } = state || {};
+  const { boostId, listingTitle, amount, days, boostType } = state || {};
 
   useEffect(() => {
     supabase.from('site_settings').select('whatsapp_number').eq('id', 1).single()
@@ -57,6 +57,18 @@ const BoostPaymentConfirmationPage = () => {
         .update({ preuve_paiement_url: publicUrl })
         .eq('id', boostId);
       if (updateError) throw updateError;
+
+      // Alerte admin — non bloquante, ne doit jamais empêcher la confirmation
+      // de s'afficher côté vendeur même si l'envoi WhatsApp échoue.
+      supabase.functions.invoke('notify-admin-payment', {
+        body: {
+          type: 'boost',
+          amount,
+          reference: boostId.slice(0, 8),
+          proof_url: publicUrl,
+          detail: `Boost ${boostType === 'urgent' ? 'Urgent' : 'Simple'} — ${days} jour${days > 1 ? 's' : ''} — ${listingTitle}`,
+        },
+      }).catch((notifyErr) => console.error('notify-admin-payment (boost) échouée (non-fatal):', notifyErr));
 
       // Pixels — Purchase / CompletePayment
       fbTrack('Purchase', { value: amount, currency: 'XAF', content_name: listingTitle, num_items: 1 });

@@ -154,6 +154,22 @@ serve(async (req) => {
     });
     if (proofError) throw proofError;
 
+    // Alerte admin — non bloquante : un echec ici ne doit jamais faire
+    // echouer la soumission de preuve pour l'acheteur.
+    try {
+      await admin.functions.invoke('notify-admin-payment', {
+        body: {
+          type: 'escrow',
+          amount: tx.montant,
+          reference: transaction_id.slice(0, 8),
+          proof_url,
+          detail: `Transaction ${transaction_id.slice(0, 8)}`,
+        },
+      });
+    } catch (notifyErr) {
+      console.error('submit-payment-proof: alerte admin echouee (non-fatal):', notifyErr);
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
