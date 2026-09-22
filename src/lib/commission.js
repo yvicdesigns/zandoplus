@@ -1,7 +1,11 @@
-// Commission Zando Sécurisé : 5% du montant, plafonnée à 10 000 FCFA, à la
-// charge du vendeur (déduite de son paiement, jamais ajoutée au prix acheteur).
-export const COMMISSION_RATE = 0.05;
-export const COMMISSION_CAP = 10000;
-
-export const computeCommission = (montant) =>
-  Math.min(Math.round((montant || 0) * COMMISSION_RATE), COMMISSION_CAP);
+// Commission Zando Sécurisé, à la charge du vendeur (déduite de son
+// paiement, jamais ajoutée au prix acheteur) — barème à paliers :
+//   - moins de 10 000 FCFA : 8%
+//   - de 10 000 à 200 000 FCFA : 5%
+//   - au-delà de 200 000 FCFA : plafonnée à 10 000 FCFA
+export const computeCommission = (montant) => {
+  const m = montant || 0;
+  if (m < 10000) return Math.round(m * 0.08);
+  if (m <= 200000) return Math.round(m * 0.05);
+  return 10000;
+};
