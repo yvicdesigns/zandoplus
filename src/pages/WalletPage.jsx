@@ -14,8 +14,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { computeCommission } from '@/lib/commission';
 
-const COMMISSION_RATE = 0.10;
 const MIN_WITHDRAW = 1000;
 
 const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');
@@ -111,7 +111,7 @@ const WalletPage = () => {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthlySales = sales.filter(s => new Date(s.created_at) >= startOfMonth);
   const monthlyRevenu = monthlySales.reduce((s, t) => s + (t.montant || 0), 0);
-  const monthlyCommission = monthlySales.reduce((s, t) => s + (t.commission_amount ?? Math.round((t.montant || 0) * COMMISSION_RATE)), 0);
+  const monthlyCommission = monthlySales.reduce((s, t) => s + (t.commission_amount ?? computeCommission(t.montant)), 0);
   const totalRetire = withdrawals.filter(w => w.statut === 'paid').reduce((s, w) => s + (w.montant || 0), 0);
 
   const hasPendingWithdrawal = withdrawals.some(w => w.statut === 'pending' || w.statut === 'processing');
@@ -346,7 +346,7 @@ const WalletPage = () => {
                     <p className="text-[13px]">Aucune vente encaissée pour l'instant</p>
                   </div>
                 ) : sales.map(sale => {
-                  const commission = sale.commission_amount ?? Math.round((sale.montant || 0) * COMMISSION_RATE);
+                  const commission = sale.commission_amount ?? computeCommission(sale.montant);
                   const net = (sale.montant || 0) - commission;
                   const img = sale.annonce?.images?.[0];
                   return (

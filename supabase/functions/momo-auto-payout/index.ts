@@ -83,7 +83,7 @@ serve(async (req) => {
     if (claimError) throw claimError;
 
     for (const tx of batch || []) {
-      const net = tx.montant - (tx.commission_amount ?? Math.round(tx.montant * 0.10));
+      const net = tx.montant - (tx.commission_amount ?? Math.min(Math.round(tx.montant * 0.05), 10000));
 
       if (!tx.payout_provider || !tx.vendeur_momo_number) {
         await admin.rpc('finalize_payout', {

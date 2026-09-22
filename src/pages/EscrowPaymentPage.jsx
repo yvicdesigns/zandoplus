@@ -9,8 +9,8 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { ShieldCheck, UploadCloud, CheckCircle, ArrowLeft, Loader2, Copy, AlertTriangle, Truck, Store, Package, Banknote, Smartphone, XCircle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { extractCity, fetchCityDeliveryConfig } from '@/lib/deliveryUtils';
+import { computeCommission } from '@/lib/commission';
 
-const COMMISSION_RATE = 0.10;
 const ZANDO_DELIVERY_FEE = 1000; // FCFA
 const AUTOPAY_ENABLED = import.meta.env.VITE_MOMO_AUTOPAY_ENABLED === 'true';
 const AUTOPAY_POLL_MS = 4000;
@@ -95,7 +95,7 @@ const EscrowPaymentPage = () => {
 
   const deliveryFee = listing ? getDeliveryFee() : 0;
   const totalAmount = listing ? listing.price + deliveryFee : 0;
-  const commission = listing ? Math.round(listing.price * COMMISSION_RATE) : 0;
+  const commission = listing ? computeCommission(listing.price) : 0;
 
   // Options de livraison disponibles selon le vendeur et la config ville
   const availableOptions = () => {

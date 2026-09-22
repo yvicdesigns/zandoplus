@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { computeCommission } from '@/lib/commission';
 
 const STATUS_CONFIG = {
   en_attente_paiement: { label: 'En attente de paiement',          color: 'bg-yellow-100 text-yellow-800', icon: Clock         },
@@ -30,8 +31,6 @@ const STATUS_CONFIG = {
   cod_livre:           { label: '✅ Livré — cash collecté',         color: 'bg-green-100 text-green-800',  icon: CheckCircle    },
   cod_annule:          { label: 'Annulé',                          color: 'bg-gray-100 text-gray-700',    icon: XCircle        },
 };
-
-const COMMISSION_RATE = 0.10;
 
 const StatusBadge = ({ statut }) => {
   const cfg = STATUS_CONFIG[statut] || { label: statut, color: 'bg-gray-100 text-gray-700', icon: Clock };
@@ -227,7 +226,7 @@ const TransactionsPage = () => {
           ) : (
             <div className="space-y-4">
               {transactions.map(tx => {
-                const commission = Math.round(tx.montant * COMMISSION_RATE);
+                const commission = tx.commission_amount ?? computeCommission(tx.montant);
                 const netVendeur = tx.montant - commission;
                 const isAchats = tab === 'achats';
                 const otherParty = isAchats ? tx.vendeur?.full_name : tx.acheteur?.full_name;

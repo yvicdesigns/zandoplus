@@ -7,13 +7,13 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { fetchCityDeliveryConfig, extractCity } from '@/lib/deliveryUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { Helmet } from 'react-helmet-async';
+import { computeCommission } from '@/lib/commission';
 import {
   ShieldCheck, CheckCircle, Loader2, Truck,
   Copy, UploadCloud, Headphones, RotateCcw, Lock,
   Plus, MapPin, Pencil, Home, Building2, Package, Globe,
 } from 'lucide-react';
 
-const COMMISSION_RATE = 0.10;
 const fmt = (n) => (n ?? 0).toLocaleString('fr-FR');
 
 const ALL_DELIVERY_MODES = [
@@ -405,7 +405,7 @@ const CartCheckoutPage = () => {
           acheteur_id: user.id,
           vendeur_id: group.seller_id,
           montant: sellerTotal,
-          commission_amount: Math.round(itemsTotal * COMMISSION_RATE),
+          commission_amount: computeCommission(itemsTotal),
           delivery_choice: deliveryMode,
           delivery_fee_paid: deliveryMode === 'zando' ? ZANDO_DELIVERY_FEE : 0,
           statut: paymentMethod === 'cod' ? 'cod_pending' : 'fonds_bloques',

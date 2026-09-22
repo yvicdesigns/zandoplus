@@ -41,6 +41,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, startOfMonth, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { computeCommission } from '@/lib/commission';
 
 /* ─── Role permissions ─────────────────────────────────────── */
 const ROLE_TABS = {
@@ -359,7 +360,7 @@ const OverviewTab = ({ counts, loading, setActiveTab }) => {
           const mk = tx.created_at.slice(0, 7);
           if (monthlyMap[mk]) {
             monthlyMap[mk].ca     += tx.montant || 0;
-            const commission       = tx.commission_amount ?? Math.round((tx.montant || 0) * 0.10);
+            const commission       = tx.commission_amount ?? computeCommission(tx.montant);
             monthlyMap[mk].zando  += commission;
           }
           if (mk === thisMonthKey) {
