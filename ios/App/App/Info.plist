@@ -24,6 +24,8 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<key>GIDClientID</key>
+	<string>790757801602-234mberi65b3niae9frl3r2jqkp8amnb.apps.googleusercontent.com</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -84,6 +86,12 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.zando.app</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.790757801602-234mberi65b3niae9frl3r2jqkp8amnb</string>
 			</array>
 		</dict>
 	</array>

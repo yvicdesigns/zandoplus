@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
+import { AppleSignIn, SignInScope } from '@capawesome/capacitor-apple-sign-in';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -286,6 +288,13 @@ export const AuthProvider = ({ children }) => {
     // so exchangeCodeForSession can complete the flow using just the auth code.
     let appUrlOpenHandle = null;
     if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+      // Doit etre appele une fois avant le premier GoogleSignIn.signIn() natif — configure
+      // le SDK Google natif avec le client web (audience de l'ID token qu'on envoie a
+      // Supabase). Le client iOS lui-meme vient de la cle GIDClientID dans Info.plist.
+      GoogleSignIn.initialize({
+        clientId: '790757801602-gjlm7r27gu0ueq6nvblu4tg52qn2hf53.apps.googleusercontent.com',
+      }).catch(err => logError(err, { context: 'GoogleSignIn.initialize' }));
+
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
         if (!url.startsWith('com.zando.app://') || !mounted) return;
         const code = new URL(url).searchParams.get('code');
@@ -397,52 +406,74 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signInWithProvider = async (provider) => {
-    // iOS native Capacitor: on a confirme par diagnostic (23/09/2026, Sentry event
-    // CAPACITOR-15) que redirectTo='com.zando.app://login' est bien calcule et
-    // envoye a Supabase a chaque tentative — mais le retour vers l'app echoue quand
-    // meme en silence (aucune session creee cote serveur, le navigateur atterrit sur
-    // le site web au lieu de fermer et rendre la main a l'app). Le probleme se situe
-    // donc apres Supabase, dans la fiabilite de la redirection vers un schema
-    // personnalise depuis une chaine de redirections serveur (Google -> Supabase ->
-    // com.zando.app://). Contournement : on ne redirige jamais Supabase vers le
-    // schema personnalise. On le fait atterrir sur une vraie page https (le
-    // /auth/callback du site, deja fiable), et c'est CETTE page qui bascule vers
-    // com.zando.app:// via window.location — une navigation JS depuis une page
-    // chargee, que iOS gere de maniere fiable (contrairement a une redirection
-    // serveur), exactement comme le fait deja un lien tape normalement.
-    // Le chemin dedie (plutot qu'un ?native=ios en query string) est deliberé : teste
-    // le 23/09/2026, ajouter un parametre de requete au redirectTo faisait echouer la
-    // correspondance avec la liste blanche de Supabase (qui semble comparer l'URL de
-    // redirection de maniere stricte plutot que d'ignorer la query), et Supabase
-    // repartait silencieusement sur le SITE_URL nu sans code — meme symptome que le
-    // bug du schema personnalise. Un chemin distinct passe par contre par l'entree
-    // generique https://www.zandopluscg.com/** deja presente dans la liste blanche.
-    const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
-    const redirectTo = isIOSNative
-      ? `${window.location.origin}/auth/callback-native`
-      : `${window.location.origin}/auth/callback`;
-    try {
-        // Sur iOS natif, laisser Supabase faire une navigation plein écran fait sortir
-        // l'utilisateur vers l'app Safari externe (rejeté par Apple, guideline 4 — mauvaise
-        // UX). On récupère l'URL OAuth sans naviguer (skipBrowserRedirect) et on l'ouvre
-        // nous-mêmes dans une vue Safari intégrée à l'app (SFSafariViewController) via
-        // @capacitor/browser, qui se referme automatiquement au retour du appUrlOpen.
-        if (isIOSNative) {
-          const { data, error } = await supabase.auth.signInWithOAuth({
-              provider,
-              options: { redirectTo, skipBrowserRedirect: true },
-          });
-          if (error) throw new Error(translateSupabaseError(error));
-          // presentationStyle 'popover' est reserve a l'iPad et necessite une
-          // ancre (width/height/x/y) qu'on ne fournit pas — sur iPhone ca ouvre
-          // une feuille vide/cassee (ecran blanc signale par les clients le
-          // 23/09/2026). 'fullscreen' est le comportement correct pour tous les
-          // iPhone.
-          if (data?.url) await Browser.open({ url: data.url, presentationStyle: 'fullscreen' });
-          return;
-        }
+  // iOS natif uniquement : SHA-256 hex, utilise pour le nonce Sign in with Apple
+  // (Apple exige le nonce HACHE dans la requete native, puis le nonce BRUT cote
+  // verification serveur — meme convention que l'implementation Firebase de reference).
+  const sha256Hex = async (input) => {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+  const randomNonce = () => {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
 
+  const signInWithProvider = async (provider) => {
+    // iOS natif : le flux OAuth par redirection (Google/Apple -> Supabase ->
+    // com.zando.app://) echouait en silence au retour vers l'app malgre 4 correctifs
+    // testes le 23/09/2026 (popover->fullscreen, redirect direct, callback web +
+    // handoff JS automatique, puis bouton avec vrai geste utilisateur — session creee
+    // cote serveur a chaque fois selon auth.audit_log_entries, mais l'app ne recoit
+    // jamais rien). Plutot que de continuer a deviner le mecanisme exact du blocage
+    // WebKit, on contourne entierement la redirection navigateur : SDK natif Google/Apple
+    // directement dans l'app -> ID token -> supabase.auth.signInWithIdToken(). Plus de
+    // Browser.open, plus de callback, plus de schema personnalise a intercepter.
+    // Web/PWA/Android gardent le flux par redirection classique, deja confirme
+    // fonctionnel ("j'ai essayé sur le ordinateur j'ai le login marche").
+    const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+
+    if (isIOSNative && provider === 'google') {
+      try {
+        const result = await GoogleSignIn.signIn();
+        const idToken = result?.idToken;
+        if (!idToken) throw new Error('Connexion Google annulée.');
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken });
+        if (error) throw new Error(translateSupabaseError(error));
+      } catch (err) {
+        if (err?.code === 'SIGN_IN_CANCELED') return; // L'utilisateur a fermé la fenêtre — pas une erreur
+        logError(err, { context: 'signInWithProvider', provider });
+        throw err;
+      }
+      return;
+    }
+
+    if (isIOSNative && provider === 'apple') {
+      try {
+        const rawNonce = randomNonce();
+        const hashedNonce = await sha256Hex(rawNonce);
+        const result = await AppleSignIn.signIn({
+          scopes: [SignInScope.Email, SignInScope.FullName],
+          nonce: hashedNonce,
+        });
+        const identityToken = result?.idToken;
+        if (!identityToken) throw new Error('Connexion Apple annulée.');
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: identityToken,
+          nonce: rawNonce,
+        });
+        if (error) throw new Error(translateSupabaseError(error));
+      } catch (err) {
+        if (err?.code === 'SIGN_IN_CANCELED') return;
+        logError(err, { context: 'signInWithProvider', provider });
+        throw err;
+      }
+      return;
+    }
+
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    try {
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: { redirectTo },
