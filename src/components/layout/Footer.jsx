@@ -33,6 +33,7 @@ const Footer = () => {
   const about = [
     { label: 'Qui sommes-nous ?', href: '/about' },
     { label: 'Devenir vendeur',   href: '/become-seller' },
+    { label: 'Tarifs',            href: '/pricing' },
     { label: 'Contact',           href: '/contact' },
   ];
 

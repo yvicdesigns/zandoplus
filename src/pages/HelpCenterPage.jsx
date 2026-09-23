@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon, ShieldCheck, MessageCircle, Phone, Clock, ChevronRight } from 'lucide-react';
+import { LifeBuoy, ShoppingCart, Tag, UserCircle, Zap, Lightbulb, Settings as SettingsIcon, ShieldCheck, MessageCircle, Phone, Clock, ChevronRight, BadgePercent } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -45,7 +45,13 @@ const HelpCenterPage = () => {
       },
       {
         q: "Est-ce que l'utilisation de Zando+ est gratuite ?",
-        a: "Oui, l'inscription et la publication d'annonces sont entièrement gratuites et illimitées pour tous. Aucun abonnement n'est requis pour vendre sur Zando+. Les seuls frais optionnels sont le boost d'annonces (150 FCFA/jour pour le Boost Simple, 300 FCFA/jour pour le Boost Urgent) et la vérification vendeur (10 000 FCFA, paiement unique)."
+        a: (
+          <>
+            Oui, l'inscription est gratuite et vous pouvez publier jusqu'à <strong>15 annonces actives</strong> sans rien payer. Si vous vendez davantage, vous pouvez passer{' '}
+            <Link to="/pricing" className="text-custom-green-600 hover:underline font-semibold">Boutique ou Entreprise</Link>{' '}
+            pour publier jusqu'à 100 ou 500 annonces. Les autres frais restent optionnels : boost d'annonces (150 FCFA/jour pour le Boost Simple, 300 FCFA/jour pour le Boost Urgent) et vérification vendeur.
+          </>
+        )
       },
       {
         q: "Comment puis-je réinitialiser mon mot de passe ?",
@@ -102,6 +108,10 @@ const HelpCenterPage = () => {
         a: "Si une annonce vous semble suspecte, veuillez la signaler immédiatement en utilisant le bouton 'Signaler cette annonce' sur la page du produit. Notre équipe examinera le signalement dans les plus brefs délais."
       },
       {
+        q: "Puis-je payer en espèces à la livraison (COD) ?",
+        a: "Oui, dans les villes où l'option est activée par Zando+. Au moment de payer votre panier, si le paiement à la livraison est disponible pour votre ville, vous pouvez le choisir : vous payez en espèces au livreur à la réception, sans avancer d'argent en ligne. Si l'option n'apparaît pas, c'est qu'elle n'est pas encore activée dans votre ville — utilisez alors l'Achat Sécurisé Zando (MTN/Airtel Money)."
+      },
+      {
         q: "Comment suivre mes transactions ?",
         a: (
           <>
@@ -129,12 +139,23 @@ const HelpCenterPage = () => {
               <li><strong>Boost Urgent</strong> — 300 FCFA/jour : badge rouge "URGENT", apparaît dans le popup prioritaire et tout en haut de la page d'accueil.</li>
             </ul>
             <p className="mt-2">Vous sélectionnez le nombre de jours souhaité (de 1 à 365 jours). Le total est calculé en temps réel avant paiement. Le paiement se fait via MTN Money (Airtel Money bientôt disponible).</p>
+            <p className="mt-2">Un numéro WhatsApp valide doit être enregistré sur votre compte avant de pouvoir acheter un boost — c'est ce numéro qui nous permet de vous notifier et de vous recontacter si besoin.</p>
           </>
         )
       },
       {
         q: "Comment fonctionne l'Achat Sécurisé pour le vendeur ?",
-        a: "Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page Mes Commandes. Une commission de 10% est déduite du montant qui vous est reversé. L'acheteur paie le prix affiché sans surcoût. Les fonds vous sont libérés après confirmation de réception par l'acheteur, ou automatiquement 48h après la déclaration de livraison."
+        a: (
+          <>
+            Quand un acheteur utilise l'Achat Sécurisé Zando, vous recevez une notification. Une fois le paiement sécurisé, vous préparez et livrez l'article, puis déclarez la livraison depuis la page Mes Commandes. Une commission est déduite du montant qui vous est reversé, selon le prix de l'article :
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Moins de 10 000 FCFA : <strong>8%</strong></li>
+              <li>De 10 000 à 200 000 FCFA : <strong>5%</strong></li>
+              <li>Au-delà de 200 000 FCFA : plafonnée à <strong>10 000 FCFA</strong></li>
+            </ul>
+            <p className="mt-2">L'acheteur paie toujours le prix affiché, sans surcoût. Les fonds vous sont libérés après confirmation de réception par l'acheteur, ou automatiquement 48h après la déclaration de livraison.</p>
+          </>
+        )
       },
       {
         q: "Comment fonctionne la gestion des stocks ?",
@@ -145,8 +166,27 @@ const HelpCenterPage = () => {
         a: "Pour attirer plus d'acheteurs, utilisez des photos claires et de haute qualité, rédigez une description détaillée et honnête, et fixez un prix compétitif. Répondre rapidement aux questions des acheteurs est également un plus."
       },
       {
-        q: "Qu'est-ce que le statut de Vendeur Vérifié ?",
-        a: "Le statut de Vendeur Vérifié est un badge de confiance affiché sur votre profil et vos annonces. Pour l'obtenir, vous devez soumettre une Carte Nationale d'Identité valide ainsi qu'un selfie tenant cette pièce en main. Des frais uniques de 10 000 FCFA sont requis pour traiter la demande. Le délai de traitement est de 1 à 2 jours ouvrables. Ce badge rassure les acheteurs et peut significativement augmenter vos ventes."
+        q: "Quels sont les paliers vendeur (Libre, Boutique, Entreprise) ?",
+        a: (
+          <>
+            Tout compte vendeur démarre en <strong>Zando Libre</strong> (gratuit, jusqu'à 15 annonces actives). Deux paliers payants permettent de vendre davantage et de renforcer la confiance des acheteurs :
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li><strong>Boutique</strong> — 12 000 FCFA/an : jusqu'à 100 annonces, badge "Boutique Vérifiée", page boutique dans l'annuaire.</li>
+              <li><strong>Entreprise</strong> — 20 000 FCFA/an : jusqu'à 500 annonces, badge "Entreprise Vérifiée", bannière sur la page d'accueil, 1 boost de 7 jours inclus chaque mois.</li>
+            </ul>
+            <p className="mt-2">
+              Les deux nécessitent une vérification d'identité (Carte Nationale d'Identité + selfie), traitée sous 1 à 2 jours ouvrables. Si vous voulez simplement le badge de confiance sans changer de palier, la <strong>vérification simple</strong> reste disponible à 10 000 FCFA (paiement unique, badge à vie).
+            </p>
+            <div className="mt-4">
+              <Button asChild>
+                <Link to="/pricing" className="flex items-center gap-2">
+                  <BadgePercent className="w-4 h-4" />
+                  Voir tous les tarifs
+                </Link>
+              </Button>
+            </div>
+          </>
+        )
       }
     ],
     tips: [
