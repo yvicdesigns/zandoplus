@@ -52,6 +52,7 @@ const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
 const HelpCenterPage = lazy(() => import('@/pages/HelpCenterPage'));
+const HelpCategoryPage = lazy(() => import('@/pages/HelpCategoryPage'));
 const PricingPage = lazy(() => import('@/pages/PricingPage'));
 const BoostListingPage = lazy(() => import('@/pages/BoostListingPage'));
 const BoostPaymentConfirmationPage = lazy(() => import('@/pages/BoostPaymentConfirmationPage'));
@@ -301,6 +302,7 @@ const AppContent = () => {
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />
                     <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="/help" element={<HelpCenterPage />} />
+                    <Route path="/help/:topic" element={<HelpCategoryPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/promotions" element={<PromotionsPage />} />
                     <Route path="/confirm-email" element={<EmailConfirmationPage />} />

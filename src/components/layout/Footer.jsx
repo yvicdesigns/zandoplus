@@ -39,9 +39,9 @@ const Footer = () => {
 
   const support = [
     { label: 'Centre d\'aide',          href: '/help' },
-    { label: 'Livraison & Retours',     href: '/help' },
-    { label: 'Paiement',                href: '/help' },
-    { label: 'FAQ',                     href: '/help' },
+    { label: 'Livraison & Retours',     href: '/help/livraison' },
+    { label: 'Paiement',                href: '/help/paiement' },
+    { label: 'Vendre sur Zando+',       href: '/help/vendre' },
     { label: 'Contactez-nous',          href: '/contact' },
   ];
 
