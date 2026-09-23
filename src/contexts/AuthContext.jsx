@@ -417,7 +417,12 @@ export const AuthProvider = ({ children }) => {
               options: { redirectTo, skipBrowserRedirect: true },
           });
           if (error) throw new Error(translateSupabaseError(error));
-          if (data?.url) await Browser.open({ url: data.url, presentationStyle: 'popover' });
+          // presentationStyle 'popover' est reserve a l'iPad et necessite une
+          // ancre (width/height/x/y) qu'on ne fournit pas — sur iPhone ca ouvre
+          // une feuille vide/cassee (ecran blanc signale par les clients le
+          // 23/09/2026). 'fullscreen' est le comportement correct pour tous les
+          // iPhone.
+          if (data?.url) await Browser.open({ url: data.url, presentationStyle: 'fullscreen' });
           return;
         }
 
