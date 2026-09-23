@@ -30,7 +30,7 @@ const AuthCallbackPage = () => {
   // interaction utilisateur. On tente quand meme l'auto-redirect (inoffensif si
   // bloque), et on affiche IMMEDIATEMENT un bouton comme filet de secours fiable.
   const params = new URLSearchParams(window.location.search);
-  const isNativeHandoff = params.get('native') === 'ios' && params.get('code');
+  const isNativeHandoff = window.location.pathname === '/auth/callback-native' && params.get('code');
   const nativeAppUrl = `com.zando.app://login${window.location.search}`;
 
   useEffect(() => {

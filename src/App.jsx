@@ -307,6 +307,7 @@ const AppContent = () => {
                     <Route path="/confirmation-required" element={<ConfirmationRequiredPage />} />
                     <Route path="/installer-app" element={<PwaInstallPage />} />
                     <Route path="/auth/callback" element={<AuthCallbackPage />} />
+                    <Route path="/auth/callback-native" element={<AuthCallbackPage />} />
                     <Route path="/store" element={<StorePage />} />
                     <Route path="/product/:id" element={<ProductDetailPage />} />
                     <Route path="/testeurs" element={<TestersLandingPage />} />

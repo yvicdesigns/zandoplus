@@ -411,9 +411,16 @@ export const AuthProvider = ({ children }) => {
     // com.zando.app:// via window.location — une navigation JS depuis une page
     // chargee, que iOS gere de maniere fiable (contrairement a une redirection
     // serveur), exactement comme le fait deja un lien tape normalement.
+    // Le chemin dedie (plutot qu'un ?native=ios en query string) est deliberé : teste
+    // le 23/09/2026, ajouter un parametre de requete au redirectTo faisait echouer la
+    // correspondance avec la liste blanche de Supabase (qui semble comparer l'URL de
+    // redirection de maniere stricte plutot que d'ignorer la query), et Supabase
+    // repartait silencieusement sur le SITE_URL nu sans code — meme symptome que le
+    // bug du schema personnalise. Un chemin distinct passe par contre par l'entree
+    // generique https://www.zandopluscg.com/** deja presente dans la liste blanche.
     const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
     const redirectTo = isIOSNative
-      ? `${window.location.origin}/auth/callback?native=ios`
+      ? `${window.location.origin}/auth/callback-native`
       : `${window.location.origin}/auth/callback`;
     try {
         // Sur iOS natif, laisser Supabase faire une navigation plein écran fait sortir
