@@ -435,6 +435,14 @@ export const AuthProvider = ({ children }) => {
 
     if (isIOSNative && provider === 'google') {
       try {
+        // Pas de nonce ici : sur iOS, le plugin ignore l'option nonce de signIn() (Android/Web
+        // seulement d'apres sa propre doc), mais GIDSignIn en embarque quand meme un dans le JWT.
+        // Supabase exige que nonce transmis et nonce du JWT soient soit tous les deux presents,
+        // soit tous les deux absents ("erreur de communication" trompeuse en prod, vraie erreur
+        // = "Passed nonce and nonce in id_token should either both exist or not.", trouve le
+        // 23/09/2026 via un diagnostic temporaire). Corrige cote Supabase avec
+        // external_google_skip_nonce_check=true plutot que cote client (impossible d'obtenir le
+        // nonce genere par GIDSignIn via ce plugin).
         const result = await GoogleSignIn.signIn();
         const idToken = result?.idToken;
         if (!idToken) throw new Error('Connexion Google annulée.');
