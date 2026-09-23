@@ -398,12 +398,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithProvider = async (provider) => {
-    // iOS native Capacitor: redirect to custom URL scheme so iOS routes it back to the app.
-    // Web/PWA: dedicated /auth/callback page handles the PKCE code exchange explicitly,
-    //   which is more reliable than relying on Supabase's auto-detection on mobile browsers.
+    // iOS native Capacitor: on a confirme par diagnostic (23/09/2026, Sentry event
+    // CAPACITOR-15) que redirectTo='com.zando.app://login' est bien calcule et
+    // envoye a Supabase a chaque tentative — mais le retour vers l'app echoue quand
+    // meme en silence (aucune session creee cote serveur, le navigateur atterrit sur
+    // le site web au lieu de fermer et rendre la main a l'app). Le probleme se situe
+    // donc apres Supabase, dans la fiabilite de la redirection vers un schema
+    // personnalise depuis une chaine de redirections serveur (Google -> Supabase ->
+    // com.zando.app://). Contournement : on ne redirige jamais Supabase vers le
+    // schema personnalise. On le fait atterrir sur une vraie page https (le
+    // /auth/callback du site, deja fiable), et c'est CETTE page qui bascule vers
+    // com.zando.app:// via window.location — une navigation JS depuis une page
+    // chargee, que iOS gere de maniere fiable (contrairement a une redirection
+    // serveur), exactement comme le fait deja un lien tape normalement.
     const isIOSNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
     const redirectTo = isIOSNative
-      ? 'com.zando.app://login'
+      ? `${window.location.origin}/auth/callback?native=ios`
       : `${window.location.origin}/auth/callback`;
     try {
         // Sur iOS natif, laisser Supabase faire une navigation plein écran fait sortir

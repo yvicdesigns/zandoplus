@@ -18,6 +18,21 @@ const AuthCallbackPage = () => {
   const { isLoading, isOAuthPending, user } = useAuth();
   const [stage, setStage] = useState('waiting'); // 'waiting' | 'slow' | 'failed'
 
+  // iOS natif : cette page tourne dans la feuille Safari intégrée (SFSafariViewController),
+  // un contexte séparé de la WKWebView de l'app — pas de pont Capacitor, pas d'accès au
+  // code_verifier PKCE stocké côté app. On ne tente donc PAS d'échanger le code ici.
+  // On bascule immédiatement vers le schéma personnalisé : cette navigation JS depuis une
+  // page https déjà chargée est fiable (contrairement à une redirection serveur directe
+  // vers le schéma, qui échoue en silence — voir commentaire dans AuthContext.jsx). iOS
+  // intercepte com.zando.app://, ferme la feuille et déclenche appUrlOpen dans l'app, qui
+  // a lui accès au code_verifier et termine l'échange normalement.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('native') === 'ios' && params.get('code')) {
+      window.location.href = `com.zando.app://login${window.location.search}`;
+    }
+  }, []);
+
   // Navigate once AuthProvider signals it's done AND user is set.
   // Waiting for user prevents navigating to home with user=null when the
   // safety timer fires before fetchUserProfile completes.
