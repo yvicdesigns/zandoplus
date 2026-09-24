@@ -126,7 +126,7 @@ const TermsOfServicePage = () => {
             <Section icon={FileText} title="6. Achat sécurisé et commission">
               <p>Zando+ Congo propose un service d'achat sécurisé par fonds protégés. L'acheteur envoie le paiement à Zando+, qui bloque les fonds jusqu'à confirmation de réception du bien. Ce service fonctionne comme suit :</p>
               <ul>
-                <li>Une commission de <strong>10%</strong> du montant de la transaction est prélevée sur la part reversée au vendeur. L'acheteur paie le prix affiché sans surcoût.</li>
+                <li>Une commission est prélevée sur la part reversée au vendeur, selon le montant de la transaction : <strong>8%</strong> en dessous de 10 000 FCFA, <strong>5%</strong> entre 10 000 et 200 000 FCFA, et plafonnée à <strong>10 000 FCFA</strong> au-delà. L'acheteur paie toujours le prix affiché sans surcoût.</li>
                 <li>Une fois le paiement sécurisé, le vendeur prépare et livre l'article, puis déclare la livraison depuis la page Mes Commandes.</li>
                 <li>L'acheteur dispose de <strong>48 heures</strong> après la déclaration de livraison pour confirmer la réception ou ouvrir un litige.</li>
                 <li>Passé ce délai de 48 heures sans action de l'acheteur, les fonds sont automatiquement libérés au vendeur. Aucun remboursement ne peut être accordé après ce délai.</li>
@@ -143,13 +143,8 @@ const TermsOfServicePage = () => {
                 <li><strong>Livraison du vendeur :</strong> le vendeur assure lui-même la livraison selon ses propres tarifs.</li>
                 <li><strong>Retrait en boutique :</strong> l'acheteur vient récupérer l'article directement chez le vendeur, sans frais.</li>
               </ul>
-              <p>Pour le paiement à la livraison (COD), les frais de livraison varient selon la zone :</p>
-              <ul>
-                <li>Zone 1 (Proche : Poto-Poto, Moungali, Centre-ville, Plateau des 15 ans) : <strong>1 500 FCFA</strong></li>
-                <li>Zone 2 (Moyen : Bacongo, Makélékélé, Ouenzé, Mikalou) : <strong>2 000 FCFA</strong></li>
-                <li>Zone 3 (Éloigné : Talangaï, Mfilou, Madibou, Djiri) : <strong>3 500 FCFA</strong></li>
-              </ul>
-              <p>La disponibilité des modes de livraison dépend de la ville et des paramètres définis par le vendeur.</p>
+              <p>Pour la Livraison Zando et le paiement à la livraison (COD), un frais de livraison fixe s'applique, affiché avant validation de la commande. Ce montant peut être ajusté par Zando+ à tout moment.</p>
+              <p>La disponibilité des modes de livraison dépend de la ville et des paramètres définis par le vendeur : la Livraison Zando et le COD ne sont activés que dans les villes où notre réseau logistique est présent.</p>
             </Section>
 
             <Section icon={Gavel} title="8. Limitation de responsabilité">
