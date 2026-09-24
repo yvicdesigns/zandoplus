@@ -51,6 +51,7 @@ const AboutPage = lazy(() => import('@/pages/AboutPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
+const LegalNoticePage = lazy(() => import('@/pages/LegalNoticePage'));
 const HelpCenterPage = lazy(() => import('@/pages/HelpCenterPage'));
 const HelpCategoryPage = lazy(() => import('@/pages/HelpCategoryPage'));
 const PricingPage = lazy(() => import('@/pages/PricingPage'));
@@ -301,6 +302,7 @@ const AppContent = () => {
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />
                     <Route path="/terms" element={<TermsOfServicePage />} />
+                    <Route path="/legal-notice" element={<LegalNoticePage />} />
                     <Route path="/help" element={<HelpCenterPage />} />
                     <Route path="/help/:topic" element={<HelpCategoryPage />} />
                     <Route path="/pricing" element={<PricingPage />} />

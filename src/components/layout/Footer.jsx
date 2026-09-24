@@ -48,7 +48,7 @@ const Footer = () => {
   const legal = [
     { label: 'Conditions générales',          href: '/terms' },
     { label: 'Politique de confidentialité',  href: '/privacy' },
-    { label: 'Mentions légales',              href: '/terms' },
+    { label: 'Mentions légales',              href: '/legal-notice' },
   ];
 
   const socials = [
