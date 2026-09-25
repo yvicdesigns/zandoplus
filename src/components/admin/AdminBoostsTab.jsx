@@ -2,7 +2,7 @@ import React, { memo, useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Search, Link as LinkIcon, Loader2, Trash2, MessageCircle, AlertCircle } from 'lucide-react';
+import { Zap, Search, Link as LinkIcon, Loader2, Trash2, MessageCircle, AlertCircle, Bell } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,7 +50,7 @@ const AdminBoostsTab = memo(() => {
     const { data, error } = await supabase
       .from('ad_boosts')
       .select(`
-        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at, boost_type, days,
+        id, statut, montant, date_debut, date_fin, preuve_paiement_url, created_at, boost_type, days, user_id,
         annonce:annonce_id(id, title, images),
         user:user_id(full_name, whatsapp_number)
       `)
@@ -116,10 +116,45 @@ const AdminBoostsTab = memo(() => {
     }
   };
 
+  // Vendeur sans numéro WhatsApp : on le prévient dans l'app (notification +
+  // push). Le lien mène à /boost/:annonce, qui affiche directement le champ
+  // "Numéro WhatsApp requis" : il l'ajoute en quelques secondes.
+  const sendInAppNotice = async (boost, type) => {
+    if (!boost.user_id) {
+      toast({ title: 'Impossible de contacter ce vendeur', description: 'Compte vendeur introuvable.', variant: 'destructive' });
+      return;
+    }
+    const name    = boost.user?.full_name || '';
+    const titre   = boost.annonce?.title || 'votre annonce';
+    const montant = boost.montant?.toLocaleString('fr-FR') || '';
+    const debut   = `Bonjour${name ? ` ${name}` : ''}, nous avons bien reçu votre demande de boost pour l'annonce "${titre}"${montant ? ` (${montant} FCFA)` : ''}. `;
+    const suite = type === 'confirm'
+      ? "Nous n'avons pas votre numéro WhatsApp pour vous confirmer l'activation. Ajoutez-le en cliquant ici, cela prend quelques secondes."
+      : "Nous n'avons pas encore reçu le paiement correspondant et nous n'avons pas votre numéro WhatsApp pour vous joindre. Ajoutez-le en cliquant ici, cela prend quelques secondes.";
+
+    setLoadingAction({ id: boost.id, type: 'notice' });
+    const { error } = await supabase.from('notifications').insert({
+      user_id: boost.user_id,
+      type: 'boost_whatsapp_needed',
+      content: { message: debut + suite },
+      link: boost.annonce?.id ? `/boost/${boost.annonce.id}` : '/profile',
+    });
+    setLoadingAction(null);
+
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({
+      title: 'Notification envoyée',
+      description: `${name || 'Le vendeur'} n'a pas de WhatsApp : message envoyé dans l'app avec le lien pour ajouter son numéro.`,
+    });
+  };
+
   const openWhatsApp = (boost, type) => {
     const phone = toWhatsAppDigits(boost.user?.whatsapp_number);
     if (!phone) {
-      toast({ title: 'Pas de numéro WhatsApp', description: `${boost.user?.full_name || 'Ce vendeur'} n'a pas encore enregistré son numéro WhatsApp.`, variant: 'destructive' });
+      sendInAppNotice(boost, type);
       return;
     }
     const name    = boost.user?.full_name || 'Vendeur';
@@ -326,7 +361,7 @@ const AdminBoostsTab = memo(() => {
                         </p>
                       ) : (
                         <p className="text-xs text-orange-400 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> Pas de WhatsApp
+                          <AlertCircle className="w-3 h-3" /> Pas de WhatsApp (notif. dans l'app)
                         </p>
                       )}
                     </div>
@@ -336,15 +371,17 @@ const AdminBoostsTab = memo(() => {
                       {/* WhatsApp buttons */}
                       <button
                         onClick={() => openWhatsApp(boost, 'confirm')}
-                        title="Confirmer le paiement par WhatsApp"
-                        className="flex items-center gap-1.5 px-3 h-8 bg-[#25D366] hover:bg-[#1ebe5a] text-white text-[11px] font-bold rounded-lg transition-colors"
+                        title={boost.user?.whatsapp_number ? 'Confirmer le paiement par WhatsApp' : "Pas de WhatsApp : envoie une notification dans l'app"}
+                        disabled={loadingAction?.id === boost.id && loadingAction?.type === 'notice'}
+                        className="flex items-center gap-1.5 px-3 h-8 bg-[#25D366] hover:bg-[#1ebe5a] text-white text-[11px] font-bold rounded-lg transition-colors disabled:opacity-50"
                       >
-                        <MessageCircle className="w-3.5 h-3.5" /> Confirmer
+                        {boost.user?.whatsapp_number ? <MessageCircle className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />} Confirmer
                       </button>
                       <button
                         onClick={() => openWhatsApp(boost, 'dispute')}
-                        title="Signaler un problème de paiement par WhatsApp"
-                        className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold rounded-lg border border-orange-200 transition-colors"
+                        title={boost.user?.whatsapp_number ? 'Signaler un problème de paiement par WhatsApp' : "Pas de WhatsApp : envoie une notification dans l'app"}
+                        disabled={loadingAction?.id === boost.id && loadingAction?.type === 'notice'}
+                        className="flex items-center gap-1.5 px-3 h-8 bg-orange-50 hover:bg-orange-100 text-orange-600 text-[11px] font-bold rounded-lg border border-orange-200 transition-colors disabled:opacity-50"
                       >
                         <AlertCircle className="w-3.5 h-3.5" /> Dispute
                       </button>

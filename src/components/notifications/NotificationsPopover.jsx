@@ -26,6 +26,8 @@ const NotificationItem = ({ notification, onRead }) => {
         return <CheckCheck className="w-5 h-5 text-custom-green-500" />;
       case 'verification_rejected':
         return <AlertTriangle className="w-5 h-5 text-red-500" />;
+      case 'boost_whatsapp_needed':
+        return <MessageSquare className="w-5 h-5 text-green-600" />;
       case 'listing_pending_review':
         return <AlertTriangle className="w-5 h-5 text-orange-500" />;
       case 'new_order':
