@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { toWhatsAppDigits } from '@/lib/phone';
 
 const STATUS_COLORS = {
   pending:  'bg-yellow-100 text-yellow-800',
@@ -94,18 +95,31 @@ const AdminBoostsTab = memo(() => {
     fetchBoosts();
   };
 
+  // Le bucket payment_proofs est privé : l'URL enregistrée en base ne s'ouvre
+  // pas telle quelle, il faut une URL signée de courte durée.
+  const openProof = async (proofUrl) => {
+    try {
+      const filePath = new URL(proofUrl).pathname.split('/payment_proofs/')[1];
+      if (!filePath) throw new Error('Chemin introuvable');
+      const { data, error } = await supabase.storage.from('payment_proofs').createSignedUrl(filePath, 120);
+      if (error) throw error;
+      window.open(data.signedUrl, '_blank');
+    } catch {
+      toast({ title: 'Erreur', description: "Impossible d'ouvrir la preuve.", variant: 'destructive' });
+    }
+  };
+
   const openWhatsApp = (boost, type) => {
-    const raw = boost.user?.whatsapp_number || '';
-    const phone = raw.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+    const phone = toWhatsAppDigits(boost.user?.whatsapp_number);
     if (!phone) {
       toast({ title: 'Pas de numéro WhatsApp', description: `${boost.user?.full_name || 'Ce vendeur'} n'a pas encore enregistré son numéro WhatsApp.`, variant: 'destructive' });
       return;
     }
     const name    = boost.user?.full_name || 'Vendeur';
     const titre   = boost.annonce?.title  || 'votre annonce';
-    const montant = boost.montant?.toLocaleString('fr-FR') || '—';
+    const montant = boost.montant?.toLocaleString('fr-FR') || 'N/A';
     const debut   = boost.date_debut ? new Date(boost.date_debut).toLocaleDateString('fr-FR') : 'aujourd\'hui';
-    const fin     = boost.date_fin   ? new Date(boost.date_fin).toLocaleDateString('fr-FR')   : '—';
+    const fin     = boost.date_fin   ? new Date(boost.date_fin).toLocaleDateString('fr-FR')   : 'à confirmer';
 
     const msgConfirm =
       `Bonjour ${name} ! 👋\n\n` +
@@ -114,14 +128,14 @@ const AdminBoostsTab = memo(() => {
       `📅 Début : ${debut}\n` +
       `📅 Fin estimée : ${fin}\n\n` +
       `Votre annonce est maintenant mise en avant sur Zando+ ! Merci de votre confiance. 🙏\n\n` +
-      `— L'équipe Zando+`;
+      `L'équipe Zando+`;
 
     const msgDispute =
       `Bonjour ${name} ! 👋\n\n` +
       `⚠️ Nous avons bien reçu votre demande de boost pour l'annonce *${titre}* (montant : ${montant} FCFA).\n\n` +
       `Cependant, nous n'avons pas encore reçu le paiement correspondant.\n\n` +
       `Merci de nous envoyer votre preuve de paiement ou de nous contacter pour régulariser la situation.\n\n` +
-      `— L'équipe Zando+`;
+      `L'équipe Zando+`;
 
     const text = encodeURIComponent(type === 'confirm' ? msgConfirm : msgDispute);
     window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
@@ -284,15 +298,17 @@ const AdminBoostsTab = memo(() => {
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[boost.statut] || 'bg-gray-100 text-gray-600'}`}>
                         {STATUS_LABELS[boost.statut] || boost.statut}
                       </span>
-                      {boost.preuve_paiement_url && (
-                        <a
-                          href={boost.preuve_paiement_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {boost.preuve_paiement_url ? (
+                        <button
+                          onClick={() => openProof(boost.preuve_paiement_url)}
                           className="flex items-center gap-1 text-custom-green-600 hover:underline text-xs"
                         >
-                          <LinkIcon className="w-3 h-3" /> Preuve de paiement
-                        </a>
+                          <LinkIcon className="w-3 h-3" /> Voir la preuve de paiement
+                        </button>
+                      ) : (
+                        <p className="text-xs text-orange-400 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Aucune preuve reçue
+                        </p>
                       )}
                       {boost.user?.whatsapp_number ? (
                         <p className="text-xs text-gray-400 flex items-center gap-1">

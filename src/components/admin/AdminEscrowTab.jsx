@@ -16,6 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { computeCommission } from '@/lib/commission';
+import { toWhatsAppDigits } from '@/lib/phone';
 
 const WhatsAppIconInline = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4 mr-1.5 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -211,8 +212,7 @@ const AdminEscrowTab = memo(() => {
 
   const handleSendWhatsApp = async () => {
     if (!messageTarget) return;
-    const raw = messageTarget.acheteur?.phone || '';
-    const phone = raw.replace(/[\s\-()]/g, '').replace(/^\+/, '');
+    const phone = toWhatsAppDigits(messageTarget.acheteur?.phone);
     if (!phone) {
       toast({ title: 'Pas de numéro', description: `${messageTarget.acheteur?.full_name || "Cet acheteur"} n'a pas de numéro de téléphone enregistré.`, variant: 'destructive' });
       return;

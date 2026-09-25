@@ -52,10 +52,13 @@ const BoostPaymentConfirmationPage = () => {
 
       const { data: { publicUrl } } = supabase.storage.from('payment_proofs').getPublicUrl(path);
 
-      const { error: updateError } = await supabase
-        .from('ad_boosts')
-        .update({ preuve_paiement_url: publicUrl })
-        .eq('id', boostId);
+      // RPC plutôt qu'un UPDATE direct : ad_boosts n'a pas de politique UPDATE
+      // pour le vendeur, l'UPDATE échouait silencieusement (0 ligne) et la
+      // preuve n'était jamais rattachée au boost.
+      const { error: updateError } = await supabase.rpc('submit_boost_proof', {
+        p_boost_id: boostId,
+        p_proof_url: publicUrl,
+      });
       if (updateError) throw updateError;
 
       // Alerte admin — non bloquante, ne doit jamais empêcher la confirmation
@@ -66,7 +69,7 @@ const BoostPaymentConfirmationPage = () => {
           amount,
           reference: boostId.slice(0, 8),
           proof_url: publicUrl,
-          detail: `Boost ${boostType === 'urgent' ? 'Urgent' : 'Simple'} — ${days} jour${days > 1 ? 's' : ''} — ${listingTitle}`,
+          detail: `Boost ${boostType === 'urgent' ? 'Urgent' : 'Simple'}, ${days} jour${days > 1 ? 's' : ''}, ${listingTitle}`,
         },
       }).catch((notifyErr) => console.error('notify-admin-payment (boost) échouée (non-fatal):', notifyErr));
 
