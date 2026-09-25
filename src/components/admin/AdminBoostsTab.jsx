@@ -18,11 +18,18 @@ const STATUS_COLORS = {
   active:   'bg-green-100 text-green-800',
   expired:  'bg-gray-100 text-gray-600',
   rejected: 'bg-red-100 text-red-800',
+  unpaid:   'bg-gray-100 text-gray-600',
 };
 
 const STATUS_LABELS = {
-  pending: 'En attente', active: 'Actif', expired: 'Expiré', rejected: 'Rejeté',
+  pending: 'À vérifier', active: 'Actif', expired: 'Expiré', rejected: 'Rejeté',
+  unpaid: 'Paiement non confirmé',
 };
+
+// Un boost "pending" sans capture = le vendeur a cliqué sur Continuer mais n'a
+// pas (encore) envoyé de preuve. Rien n'est activé, on l'affiche à part pour ne
+// pas le confondre avec un vrai paiement à vérifier.
+const displayStatus = (b) => (b.statut === 'pending' && !b.preuve_paiement_url ? 'unpaid' : b.statut);
 
 const formatDate = (d) => d
   ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -154,7 +161,8 @@ const AdminBoostsTab = memo(() => {
 
   const boostCounts = useMemo(() => ({
     all:      boosts.length,
-    pending:  boosts.filter(b => b.statut === 'pending').length,
+    pending:  boosts.filter(b => displayStatus(b) === 'pending').length,
+    unpaid:   boosts.filter(b => displayStatus(b) === 'unpaid').length,
     active:   boosts.filter(b => b.statut === 'active').length,
     expired:  boosts.filter(b => b.statut === 'expired').length,
     rejected: boosts.filter(b => b.statut === 'rejected').length,
@@ -166,7 +174,7 @@ const AdminBoostsTab = memo(() => {
       const matchSearch =
         b.annonce?.title?.toLowerCase().includes(q) ||
         b.user?.full_name?.toLowerCase().includes(q);
-      const matchStatus = statusFilter === 'all' || b.statut === statusFilter;
+      const matchStatus = statusFilter === 'all' || displayStatus(b) === statusFilter;
       const matchType =
         typeFilter === 'all' ||
         (typeFilter === 'urgent' && b.boost_type === 'urgent') ||
@@ -224,7 +232,8 @@ const AdminBoostsTab = memo(() => {
         <div className="flex gap-2 flex-wrap mb-5">
           {[
             { value: 'all',      label: `Tous (${boostCounts.all})` },
-            { value: 'pending',  label: `En attente (${boostCounts.pending})` },
+            { value: 'pending',  label: `À vérifier (${boostCounts.pending})` },
+            { value: 'unpaid',   label: `Sans preuve (${boostCounts.unpaid})` },
             { value: 'active',   label: `Actifs (${boostCounts.active})` },
             { value: 'expired',  label: `Expirés (${boostCounts.expired})` },
             { value: 'rejected', label: `Rejetés (${boostCounts.rejected})` },
@@ -295,8 +304,8 @@ const AdminBoostsTab = memo(() => {
 
                     {/* Status + proof */}
                     <div className="text-sm space-y-1">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[boost.statut] || 'bg-gray-100 text-gray-600'}`}>
-                        {STATUS_LABELS[boost.statut] || boost.statut}
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[displayStatus(boost)] || 'bg-gray-100 text-gray-600'}`}>
+                        {STATUS_LABELS[displayStatus(boost)] || boost.statut}
                       </span>
                       {boost.preuve_paiement_url ? (
                         <button
