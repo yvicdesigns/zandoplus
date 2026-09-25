@@ -31,7 +31,7 @@ const PwaInstallBanner = () => {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 bg-custom-green-600 text-white p-3 shadow-lg z-50 flex items-center justify-between pb-[env(safe-area-inset-bottom)]"
+          className="fixed bottom-0 left-0 right-0 bg-custom-green-600 text-white p-3 shadow-lg z-50 flex items-center justify-between pb-[var(--sa-bottom)]"
         >
           <div className="flex items-center">
             <img className="w-10 h-10 mr-3 rounded-lg" alt="Zando+ App Icon" src="https://images.unsplash.com/photo-1683029240907-1b195812422c" />

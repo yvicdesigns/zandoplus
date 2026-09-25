@@ -192,7 +192,7 @@ const ListingsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar / Filters */}
             <aside className={`
-              fixed inset-0 z-50 bg-white p-4 pt-[calc(1rem+env(safe-area-inset-top))] overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 lg:bg-transparent lg:p-0 lg:overflow-visible lg:block lg:col-span-1
+              fixed inset-0 z-50 bg-white p-4 pt-[calc(1rem+var(--sa-top))] overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-0 lg:bg-transparent lg:p-0 lg:overflow-visible lg:block lg:col-span-1
               ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
               <ListingsFilters

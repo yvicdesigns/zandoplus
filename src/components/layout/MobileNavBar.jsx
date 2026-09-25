@@ -26,7 +26,7 @@ const MobileNavBar = () => {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 md:hidden pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 md:hidden pb-[var(--sa-bottom)]"
     >
       <div className="flex items-end justify-around h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {

@@ -105,7 +105,7 @@ const UrgentPopup = () => {
 
           {/* Close */}
           <button onClick={close}
-            className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 z-30 w-11 h-11 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center transition-colors">
+            className="absolute top-[calc(1rem+var(--sa-top))] right-4 z-30 w-11 h-11 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center transition-colors">
             <X className="w-5 h-5" />
           </button>
 

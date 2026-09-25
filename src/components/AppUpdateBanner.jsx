@@ -69,7 +69,7 @@ const AppUpdateBanner = () => {
   };
 
   return (
-    <div className={`fixed inset-x-0 z-[60] px-4 ${status === 'hard' ? 'inset-0 flex items-center justify-center bg-black/60' : 'top-0 pt-[env(safe-area-inset-top)]'}`}>
+    <div className={`fixed inset-x-0 z-[60] px-4 ${status === 'hard' ? 'inset-0 flex items-center justify-center bg-black/60' : 'top-0 pt-[var(--sa-top)]'}`}>
       <div className={`bg-white rounded-2xl shadow-xl border border-gray-100 p-4 flex items-start gap-3 ${status === 'hard' ? 'max-w-sm' : 'w-full mt-2 max-w-xl mx-auto'}`}>
         <div className="w-10 h-10 rounded-xl bg-custom-green-50 flex items-center justify-center shrink-0">
           <Download className="w-5 h-5 text-custom-green-600" />

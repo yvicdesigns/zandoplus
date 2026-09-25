@@ -121,7 +121,7 @@ const ImageGallery = ({ listing, isFavorite, toggleFavorite }) => {
           )}
           <button
             onClick={() => setZoomOpen(false)}
-            className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="absolute top-[calc(1rem+var(--sa-top))] right-4 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
           >
             <X className="w-7 h-7 text-white" />
           </button>

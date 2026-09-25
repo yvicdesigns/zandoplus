@@ -106,7 +106,7 @@ const AppGatewayInterstitial = () => {
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.32, ease: 'easeOut' }}
           className="fixed inset-0 z-[9999] flex flex-col bg-white"
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ paddingTop: 'var(--sa-top)', paddingBottom: 'var(--sa-bottom)' }}
           role="dialog"
           aria-modal="true"
           aria-label="Télécharger l'application Zando+"

@@ -83,7 +83,7 @@ const MessagesPage = () => {
       <div
         className="md:hidden bg-white flex flex-col overflow-hidden"
         style={{
-          height: 'calc(100dvh - 102px - 64px - env(safe-area-inset-bottom))',
+          height: 'calc(100dvh - 102px - 64px - var(--sa-bottom))',
           marginBottom: '-96px',
         }}
       >
