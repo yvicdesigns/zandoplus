@@ -229,7 +229,8 @@ const AdminListingsTab = memo(() => {
   }, [listings, searchQuery, statusFilter, priceThreshold]);
 
   const suspectCount = useMemo(() => listings.filter(l => isSuspectPrice(l, priceThreshold)).length, [listings, priceThreshold]);
-  const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review' || l.status === 'needs_changes').length, [listings]);
+  const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review').length, [listings]);
+  const needsChangesCount = useMemo(() => listings.filter(l => l.status === 'needs_changes').length, [listings]);
   const zeroStockCount = useMemo(() => listings.filter(l => l.quantity === 0 || l.status === 'inactive').length, [listings]);
   const dailyOfferCount = useMemo(() => listings.filter(l => l.is_daily_offer === true).length, [listings]);
   const featuredCount = useMemo(() => listings.filter(l => l.featured === true).length, [listings]);
@@ -291,7 +292,7 @@ const AdminListingsTab = memo(() => {
               { value: 'all', label: 'Toutes' },
               { value: 'active', label: 'Actives' },
               { value: 'pending_review', label: `En attente${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
-              { value: 'needs_changes', label: 'Modif. requises' },
+              { value: 'needs_changes', label: `Modif. requises${needsChangesCount > 0 ? ` (${needsChangesCount})` : ''}` },
               { value: 'inactive', label: 'Inactives' },
               { value: 'zero_stock', label: `Stock = 0${zeroStockCount > 0 ? ` (${zeroStockCount})` : ''}` },
               { value: 'daily_offer', label: `🔥 Offres du jour${dailyOfferCount > 0 ? ` (${dailyOfferCount})` : ''}` },
@@ -356,10 +357,15 @@ const AdminListingsTab = memo(() => {
                         <p className="text-xs font-semibold text-red-600">⚠ Stock mis à 0 par le vendeur</p>
                       )}
                       <p className="flex items-center gap-1 flex-wrap">
-                        Statut: <Badge variant={listing.status === 'active' ? 'default' : 'outline'} className={listing.status === 'active' ? 'bg-green-100 text-green-800' : listing.status === 'pending_review' ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>{listing.status}</Badge>
-                        {listing.moderation_flags?.length > 0 && (
+                        Statut: <Badge variant={listing.status === 'active' ? 'default' : 'outline'} className={listing.status === 'active' ? 'bg-green-100 text-green-800' : listing.status === 'pending_review' ? 'bg-amber-100 text-amber-800 border-amber-300' : listing.status === 'needs_changes' ? 'bg-orange-100 text-orange-800 border-orange-300' : ''}>{listing.status === 'needs_changes' ? 'Modif. demandées' : listing.status === 'pending_review' ? 'En attente' : listing.status}</Badge>
+                        {listing.moderation_flags?.includes('prix_confirme') && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-[10px]">
+                            ✅ Prix vérifié
+                          </Badge>
+                        )}
+                        {listing.moderation_flags?.filter(f => f !== 'prix_confirme').length > 0 && (
                           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300 text-[10px]" title={listing.moderation_reason}>
-                            🚨 IA: {listing.moderation_flags[0]}
+                            🚨 IA: {listing.moderation_flags.filter(f => f !== 'prix_confirme')[0]}
                           </Badge>
                         )}
                         {listing.featured && (
@@ -373,6 +379,11 @@ const AdminListingsTab = memo(() => {
                           </Badge>
                         )}
                       </p>
+                      {listing.status === 'needs_changes' && listing.moderation_reason && (
+                        <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded px-2 py-1 my-1">
+                          Message envoyé au vendeur : {listing.moderation_reason}
+                        </p>
+                      )}
                       <p>Posté le: {formatDate(listing.created_at)}</p>
                     </div>
                     <div className="flex items-center gap-2 justify-self-start md:justify-self-end flex-wrap">
