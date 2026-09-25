@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Search, Eye, Trash2, Star, StarOff, CheckCircle, MessageSquare, Flame } from 'lucide-react';
+import { ShoppingBag, Search, Eye, Trash2, Star, StarOff, CheckCircle, MessageSquare, Flame, BadgeCheck } from 'lucide-react';
 
 const WhatsAppIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -22,7 +22,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { fetchListingsAdmin } from '@/lib/adminQueryHelpers';
 import { translateAdminError } from '@/lib/adminErrorHandler';
 
+// Une annonce "prix suspect" = active, en FCFA, avec un prix positif sous le seuil
+// choisi par l'admin, et que l'admin n'a pas déjà validée ("prix_confirme").
+// Les prix en USD sont ignorés : le seuil est en FCFA.
+const isSuspectPrice = (l, threshold) =>
+  l.status === 'active' &&
+  (!l.currency || ['FCFA', 'XAF'].includes(l.currency.toUpperCase())) &&
+  Number(l.price) > 0 && Number(l.price) < threshold &&
+  !(l.moderation_flags || []).includes('prix_confirme');
+
 const AdminListingsTab = memo(() => {
+  const [priceThreshold, setPriceThreshold] = useState(1000);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,13 +112,53 @@ const AdminListingsTab = memo(() => {
     }
   };
 
+  // Prix vérifié par l'admin (ex: vraiment vendu à ce prix) : on l'enlève de la
+  // liste des prix suspects pour ne pas le revoir à chaque fois.
+  const handleConfirmPrice = async (listingId) => {
+    setLoadingAction(listingId);
+    try {
+      const { error } = await supabase.rpc('admin_confirm_price', { p_listing_id: listingId });
+      if (error) throw error;
+      setListings(prev => prev.map(l => l.id === listingId ? { ...l, moderation_flags: [...(l.moderation_flags || []), 'prix_confirme'] } : l));
+      toast({ title: 'Prix confirmé', description: 'Cette annonce n\'apparaît plus dans les prix suspects.', className: 'bg-green-100 text-green-800' });
+    } catch (error) {
+      toast({ title: 'Erreur', description: translateAdminError(error), variant: 'destructive' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  // Message WhatsApp pré-rempli pour demander au vendeur de vérifier son prix.
+  const priceCheckMessage = (l) =>
+    `Bonjour ${l.seller_full_name || ''}, ici l'équipe Zando+. Votre annonce "${l.title}" est affichée à ${Number(l.price).toLocaleString('fr-FR')} FCFA. ` +
+    `Est-ce bien le bon prix ? Si c'est une erreur, vous pouvez le corriger ici : https://zandopluscg.com/edit-ad/${l.id}\n\nMerci !`;
+
+  const openPriceCorrection = (l) => setRejectDialog({
+    isOpen: true,
+    listingId: l.id,
+    reason: `Le prix affiché (${Number(l.price).toLocaleString('fr-FR')} FCFA) semble incorrect pour cet article. Merci de le corriger.`,
+  });
+
   const handleRequestChanges = async () => {
     if (!rejectDialog.listingId) return;
     setLoadingAction(rejectDialog.listingId);
     try {
       const { error } = await supabase.rpc('admin_request_changes', { p_listing_id: rejectDialog.listingId, p_reason: rejectDialog.reason });
       if (error) throw error;
-      toast({ title: 'Demande envoyée', description: 'Le vendeur sera informé des modifications à apporter.', className: 'bg-amber-100 text-amber-800' });
+
+      // Le RPC ne prévient pas le vendeur : sans ça il ne saurait pas pourquoi son
+      // annonce a disparu. Notification dans l'app (+ push) avec lien vers l'édition.
+      const target = listings.find(l => l.id === rejectDialog.listingId);
+      if (target?.seller_id) {
+        await supabase.from('notifications').insert({
+          user_id: target.seller_id,
+          type: 'listing_pending_review',
+          content: { message: `Votre annonce "${target.title}" est masquée pour le moment : ${rejectDialog.reason.trim()} Modifiez-la pour qu'elle soit de nouveau visible.` },
+          link: `/edit-ad/${target.id}`,
+        });
+      }
+
+      toast({ title: 'Demande envoyée', description: 'Le vendeur est prévenu dans l\'app et l\'annonce est masquée en attendant.', className: 'bg-amber-100 text-amber-800' });
       setRejectDialog({ isOpen: false, listingId: null, reason: '' });
       fetchListings();
     } catch (error) {
@@ -162,7 +212,7 @@ const AdminListingsTab = memo(() => {
   
   const filteredListings = useMemo(() => {
     if (!listings) return [];
-    return listings.filter(l => {
+    const filtered = listings.filter(l => {
       const matchesSearch = l.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         l.seller_full_name?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus =
@@ -170,11 +220,15 @@ const AdminListingsTab = memo(() => {
         statusFilter === 'zero_stock' ? (l.quantity === 0 || l.status === 'inactive') :
         statusFilter === 'daily_offer' ? l.is_daily_offer === true :
         statusFilter === 'featured' ? l.featured === true :
+        statusFilter === 'suspect_price' ? isSuspectPrice(l, priceThreshold) :
         l.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [listings, searchQuery, statusFilter]);
+    // Prix suspects : les plus bas d'abord (les cas les plus flagrants en haut).
+    return statusFilter === 'suspect_price' ? filtered.sort((a, b) => Number(a.price) - Number(b.price)) : filtered;
+  }, [listings, searchQuery, statusFilter, priceThreshold]);
 
+  const suspectCount = useMemo(() => listings.filter(l => isSuspectPrice(l, priceThreshold)).length, [listings, priceThreshold]);
   const pendingCount = useMemo(() => listings.filter(l => l.status === 'pending_review' || l.status === 'needs_changes').length, [listings]);
   const zeroStockCount = useMemo(() => listings.filter(l => l.quantity === 0 || l.status === 'inactive').length, [listings]);
   const dailyOfferCount = useMemo(() => listings.filter(l => l.is_daily_offer === true).length, [listings]);
@@ -242,6 +296,7 @@ const AdminListingsTab = memo(() => {
               { value: 'zero_stock', label: `Stock = 0${zeroStockCount > 0 ? ` (${zeroStockCount})` : ''}` },
               { value: 'daily_offer', label: `🔥 Offres du jour${dailyOfferCount > 0 ? ` (${dailyOfferCount})` : ''}` },
               { value: 'featured', label: `⭐ Vedette${featuredCount > 0 ? ` (${featuredCount})` : ''}` },
+              { value: 'suspect_price', label: `💰 Prix suspects${suspectCount > 0 ? ` (${suspectCount})` : ''}` },
             ].map(f => (
               <Button
                 key={f.value}
@@ -254,6 +309,26 @@ const AdminListingsTab = memo(() => {
               </Button>
             ))}
         </div>
+
+        {statusFilter === 'suspect_price' && (
+          <div className="mb-5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>Annonces actives à moins de</span>
+              <Input
+                type="number"
+                min={1}
+                value={priceThreshold}
+                onChange={(e) => setPriceThreshold(Math.max(1, Number(e.target.value) || 1))}
+                className="w-28 h-8 bg-white"
+              />
+              <span>FCFA (les plus basses d'abord)</span>
+            </div>
+            <p className="mt-2 text-xs text-amber-800">
+              « Contacter » ouvre WhatsApp avec un message prêt. « Demander correction » masque l'annonce et prévient le vendeur dans l'app.
+              « Prix correct » la retire de cette liste (par exemple un article vraiment vendu à ce prix).
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4">
           <AnimatePresence>
@@ -310,6 +385,25 @@ const AdminListingsTab = memo(() => {
                         <Button size="sm" variant="outline" onClick={() => setRejectDialog({ isOpen: true, listingId: listing.id, reason: '' })} disabled={loadingAction === listing.id} className="border-amber-400 text-amber-700 hover:bg-amber-50 h-8 px-3 text-xs gap-1">
                           <MessageSquare className="w-3.5 h-3.5" /> Modif.
                         </Button>
+                      )}
+                      {statusFilter === 'suspect_price' && (
+                        <>
+                          {toWhatsAppLink(listing.seller_phone) ? (
+                            <Button asChild size="sm" className="bg-[#25D366] hover:bg-[#1ebe5a] text-white h-8 px-3 text-xs gap-1">
+                              <a href={toWhatsAppLink(listing.seller_phone, priceCheckMessage(listing))} target="_blank" rel="noopener noreferrer">
+                                <WhatsAppIcon /> Contacter
+                              </a>
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-orange-500">Pas de numéro</span>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => openPriceCorrection(listing)} disabled={loadingAction === listing.id} className="border-amber-400 text-amber-700 hover:bg-amber-50 h-8 px-3 text-xs gap-1">
+                            <MessageSquare className="w-3.5 h-3.5" /> Demander correction
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleConfirmPrice(listing.id)} disabled={loadingAction === listing.id} className="border-green-400 text-green-700 hover:bg-green-50 h-8 px-3 text-xs gap-1">
+                            <BadgeCheck className="w-3.5 h-3.5" /> Prix correct
+                          </Button>
+                        </>
                       )}
                       {toWhatsAppLink(listing.seller_phone) && (
                         <Button asChild size="icon" variant="ghost" title={`Contacter ${listing.seller_full_name || 'le vendeur'} sur WhatsApp`} className="text-[#25D366] hover:bg-green-50">

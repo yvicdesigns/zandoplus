@@ -15,7 +15,9 @@ export const toWhatsAppDigits = (phone) => {
   return `242${national}`;
 };
 
-export const toWhatsAppLink = (phone) => {
+// `text` (optionnel) pré-remplit le message dans WhatsApp.
+export const toWhatsAppLink = (phone, text) => {
   const digits = toWhatsAppDigits(phone);
-  return digits ? `https://wa.me/${digits}` : null;
+  if (!digits) return null;
+  return text ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://wa.me/${digits}`;
 };
