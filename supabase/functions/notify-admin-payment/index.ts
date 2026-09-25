@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../cors.ts';
 import { normalizePhone } from '../_shared/normalizePhone.ts';
 
@@ -46,6 +47,21 @@ serve(async (req) => {
       throw new Error('type, amount, reference et proof_url sont requis');
     }
 
+    // Le bucket payment_proofs est privé : l'URL publique enregistrée en base
+    // renvoie "Bucket not found". On envoie donc un lien signé (7 jours) pour
+    // que l'admin puisse ouvrir la capture directement depuis WhatsApp.
+    let proofLink = proof_url;
+    try {
+      const filePath = new URL(proof_url).pathname.split('/payment_proofs/')[1];
+      if (filePath) {
+        const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+        const { data } = await admin.storage.from('payment_proofs').createSignedUrl(decodeURIComponent(filePath), 7 * 24 * 3600);
+        if (data?.signedUrl) proofLink = data.signedUrl;
+      }
+    } catch (signErr) {
+      console.error('notify-admin-payment: lien signé impossible, URL brute envoyée:', signErr);
+    }
+
     const label = type === 'boost' ? 'Boost' : 'Paiement Escrow';
     const amountStr = `${Number(amount).toLocaleString('fr-FR')} FCFA`;
 
@@ -65,7 +81,7 @@ serve(async (req) => {
               { type: 'text', text: label },
               { type: 'text', text: amountStr },
               { type: 'text', text: detail || reference },
-              { type: 'text', text: proof_url },
+              { type: 'text', text: proofLink },
             ],
           }],
         },
