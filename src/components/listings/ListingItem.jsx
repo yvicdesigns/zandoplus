@@ -14,6 +14,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
+import { toWhatsAppLink } from '@/lib/phone';
 
 // Sous ce seuil, on n'affiche rien plutôt qu'un petit chiffre décourageant
 // ("2 vues") — l'absence de pastille ne dit rien de négatif.
@@ -22,17 +23,6 @@ const VIEWS_DISPLAY_THRESHOLD = 15;
 // engageante), seuil plus bas pour que la pastille ait une chance d'être
 // visible sans pour autant afficher "1 favori".
 const FAVORITES_DISPLAY_THRESHOLD = 5;
-
-const toWhatsAppLink = (phone) => {
-  if (!phone) return null;
-  let digits = String(phone).replace(/\D/g, '');
-  if (!digits) return null;
-  if (!digits.startsWith('242')) {
-    digits = digits.replace(/^0/, '');
-    digits = `242${digits}`;
-  }
-  return `https://wa.me/${digits}`;
-};
 
 const ListingItem = ({ listing, viewMode, isFavorite, toggleFavorite }) => {
   const navigate = useNavigate();

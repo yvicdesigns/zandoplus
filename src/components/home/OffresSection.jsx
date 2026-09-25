@@ -8,21 +8,12 @@ const WhatsAppIcon = ({ className }) => (
   </svg>
 );
 
-const toWhatsAppLink = (phone) => {
-  if (!phone) return null;
-  let digits = String(phone).replace(/\D/g, '');
-  if (!digits) return null;
-  if (!digits.startsWith('242')) {
-    digits = digits.replace(/^0/, '');
-    digits = `242${digits}`;
-  }
-  return `https://wa.me/${digits}`;
-};
 import { supabase } from '@/lib/customSupabaseClient';
 import { useListings } from '@/contexts/ListingsContext';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { toWhatsAppLink } from '@/lib/phone';
 
 /* ── Countdown jusqu'à minuit ── */
 const useCountdown = () => {
