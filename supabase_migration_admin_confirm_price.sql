@@ -28,3 +28,5 @@ $$;
 
 REVOKE ALL ON FUNCTION public.admin_confirm_price(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_confirm_price(uuid) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_confirm_price(uuid) FROM anon;

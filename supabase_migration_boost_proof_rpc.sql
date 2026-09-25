@@ -56,3 +56,6 @@ UPDATE public.ad_boosts b
   ) o
  WHERE b.id::text = o.boost_id_text
    AND b.preuve_paiement_url IS NULL;
+
+-- Supabase donne EXECUTE a anon par defaut : retire apres coup (appliqué le 25/09/2026)
+REVOKE EXECUTE ON FUNCTION public.submit_boost_proof(uuid, text) FROM anon;
