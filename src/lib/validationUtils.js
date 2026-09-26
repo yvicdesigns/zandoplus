@@ -5,11 +5,26 @@ export const validateEmail = (email) => {
   return re.test(String(email).toLowerCase());
 };
 
+// Valide un numéro sur le nombre de CHIFFRES, pas sur le nombre de caractères :
+// l'ancienne règle (9 à 15 caractères, espaces compris) refusait des écritures
+// normales au Congo comme "+242 06 462 37 78" (16 caractères) ou "66812632".
+//   - Congo (avec ou sans +242 / 00242) : 8 ou 9 chiffres (le 0 initial est facultatif)
+//   - Autre pays (diaspora), en écriture internationale (+ ou 00) : 8 à 15 chiffres
+// On accepte espaces, tirets, points et parenthèses comme séparateurs.
 export const validatePhone = (phone) => {
-  // Accepts formats like +242061234567, 061234567, etc.
-  // Minimal length 9, max 15, allows spaces, dashes, plus.
-  const re = /^\+?[\d\s-]{9,15}$/;
-  return re.test(String(phone));
+  const raw = String(phone ?? '').trim();
+  if (!raw || !/^\+?[\d\s().-]+$/.test(raw)) return false;
+
+  const international = raw.startsWith('+') || raw.startsWith('00');
+  let digits = raw.replace(/\D/g, '');
+  if (raw.startsWith('00')) digits = digits.slice(2);
+
+  if (digits.startsWith('242')) {
+    const national = digits.slice(3);
+    return national.length === 8 || national.length === 9;
+  }
+  if (international) return digits.length >= 8 && digits.length <= 15;
+  return digits.length === 8 || digits.length === 9;
 };
 
 export const validateUrl = (url) => {
