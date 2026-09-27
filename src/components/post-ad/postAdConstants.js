@@ -91,3 +91,29 @@ export const categories = {
       { number: 2, title: 'Détails', description: 'Prix et état' },
       { number: 3, title: 'Vérification', description: 'Vérification finale' }
     ];
+
+    // Plateformes de vente/checkout connues — un lien vers l'une d'elles dans le champ
+    // "Lien complet (privé)" d'un produit numérique signale probablement que la vraie
+    // transaction se ferait ailleurs (l'acheteur paie ici, puis re-paie là-bas). On
+    // avertit seulement, on ne bloque jamais : un cas légitime (ex. juste un accès à
+    // un contenu déjà hébergé là-bas) reste possible, la décision revient au vendeur.
+    // Un lien YouTube/Drive/Dropbox reste l'usage normal, pas concerné.
+    const EXTERNAL_SALES_PLATFORM_DOMAINS = [
+      'chariow.com', 'myshopify.com', 'shopify.com', 'selar.co', 'payhip.com',
+      'gumroad.com', 'sellfy.com', 'systeme.io', 'podia.com',
+    ];
+
+    export const getExternalSalesWarning = (url) => {
+      if (!url) return null;
+      let hostname;
+      try {
+        hostname = new URL(url.trim()).hostname.toLowerCase();
+      } catch {
+        return null; // URL invalide : la validation de format s'en charge ailleurs.
+      }
+      const isSalesPlatform = EXTERNAL_SALES_PLATFORM_DOMAINS.some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+      );
+      if (!isSalesPlatform) return null;
+      return "Ce lien pointe vers une plateforme de vente externe. Ce champ sert à livrer le contenu déjà payé sur Zando+, pas à rediriger vers un paiement ailleurs — la vente doit se faire ici.";
+    };

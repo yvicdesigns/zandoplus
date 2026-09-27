@@ -11,7 +11,8 @@ import { Camera as CameraIcon, ImagePlus, X } from 'lucide-react';
 import { getCategoryEmoji } from './categoryIcons';
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
-import { BLOCKED_DIGITAL_EXTENSIONS, MAX_DIGITAL_FILE_SIZE_MB } from './postAdConstants';
+import { BLOCKED_DIGITAL_EXTENSIONS, MAX_DIGITAL_FILE_SIZE_MB, getExternalSalesWarning } from './postAdConstants';
+import { AlertTriangle } from 'lucide-react';
 import { FileUp, FileCheck2, X as XIcon, Link2, Youtube } from 'lucide-react';
 
 const mediaResultToFile = async (result, index = 0) => {
@@ -360,6 +361,12 @@ const Step1BasicInfo = ({ formData, handleInputChange, handleSelectChange, formE
                 className={formErrors.digitalExternalUrl ? 'border-red-500' : ''}
               />
               <FormError message={formErrors.digitalExternalUrl} />
+              {getExternalSalesWarning(formData.digital_external_url) && (
+                <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  {getExternalSalesWarning(formData.digital_external_url)}
+                </p>
+              )}
             </div>
           )}
 
