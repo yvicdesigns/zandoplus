@@ -2,12 +2,13 @@ import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { usePosts } from '@/contexts/PostsContext';
 import PostComposer from '@/components/social/PostComposer';
-import { Heart, MessageCircle, Tag } from 'lucide-react';
+import PostCard from '@/components/social/PostCard';
 
 // Zando Social — page de test admin-only pour la Phase 1, sur le modèle exact
 // de /admin/hero-builder-beta (AdminHeroBuilderBetaPage.jsx) : un endroit
-// isolé pour vérifier que PostsContext + PostComposer marchent vraiment,
-// avant de construire le feed public autour. Jamais liée depuis la nav.
+// isolé pour vérifier que PostsContext + PostComposer + PostCard marchent
+// vraiment, avant de construire le feed public autour. Jamais liée depuis la
+// nav.
 
 const SocialTestPage = () => {
   const { posts, loading, fetchPosts, toggleLike } = usePosts();
@@ -15,6 +16,13 @@ const SocialTestPage = () => {
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
+
+  const handleLikeToggle = (post) => {
+    // Page de test : pas de suivi de "déjà liké par moi" pour l'instant,
+    // on aime toujours (le like est idempotent côté base — contrainte unique
+    // post_id+user_id — un second clic échouerait proprement, pas grave ici).
+    toggleLike(post.id, false).then(fetchPosts);
+  };
 
   return (
     <>
@@ -37,34 +45,7 @@ const SocialTestPage = () => {
               <p className="text-sm text-gray-400">Aucune publication active pour l'instant (les nouvelles passent par une vérification avant d'apparaître ici).</p>
             )}
             {posts.map((post) => (
-              <div key={post.id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-2">
-                <p className="text-sm text-gray-800">{post.caption}</p>
-                <div className="flex gap-2 flex-wrap">
-                  {post.media_urls?.map((url, i) => (
-                    <img key={i} src={url} alt="" className="w-16 h-16 rounded object-cover" />
-                  ))}
-                </div>
-                {post.post_products?.length > 0 && (
-                  <div className="flex items-center gap-1.5 text-xs text-custom-green-700">
-                    <Tag className="w-3.5 h-3.5" />
-                    {post.post_products.map((pp) => pp.listing?.title).join(', ')}
-                  </div>
-                )}
-                <div className="flex items-center gap-4 text-xs text-gray-500 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => toggleLike(post.id, false).then(fetchPosts)}
-                    className="flex items-center gap-1 hover:text-red-500"
-                  >
-                    <Heart className="w-3.5 h-3.5" /> {post.likes_count}
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageCircle className="w-3.5 h-3.5" /> {post.comments_count}
-                  </span>
-                  <span className="text-gray-300">·</span>
-                  <span>{post.status}</span>
-                </div>
-              </div>
+              <PostCard key={post.id} post={post} onLikeToggle={handleLikeToggle} />
             ))}
           </div>
         </div>
