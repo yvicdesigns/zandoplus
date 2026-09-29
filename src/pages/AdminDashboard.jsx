@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminListingsTab from "@/components/admin/AdminListingsTab";
+import AdminPostsTab from "@/components/admin/AdminPostsTab";
 import AdminDeliveriesTab from "@/components/admin/AdminDeliveriesTab";
 import AdminReportsTab from "@/components/admin/AdminReportsTab";
 import AdminBoostsTab from "@/components/admin/AdminBoostsTab";
@@ -74,6 +75,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'users',           icon: Users,        label: 'Utilisateurs',    badge: 'total_users' },
       { id: 'listings',        icon: ShoppingBag,  label: 'Annonces',        badge: 'total_listings' },
+      { id: 'posts',           icon: Tag,          label: 'Publications (Zando Social)' },
       { id: 'deliveries',      icon: Truck,        label: 'Livraisons' },
       { id: 'categories',      icon: LayoutGrid,   label: 'Catégories' },
       { id: 'reports',         icon: Flag,         label: 'Signalements',    badge: 'pending_reports', badgeAlert: true },
@@ -135,6 +137,7 @@ const renderTabContent = (t, userRole, isAdmin) => {
   switch (t) {
     case 'users':           return <AdminUsersTab />;
     case 'listings':        return <AdminListingsTab />;
+    case 'posts':            return <AdminPostsTab />;
     case 'deliveries':      return <AdminDeliveriesTab />;
     case 'delivery-config': return <AdminDeliveryConfigTab />;
     case 'reports':         return <AdminReportsTab />;
