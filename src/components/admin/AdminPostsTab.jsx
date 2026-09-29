@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MessageSquare, Trash2, Search, Heart, MessageCircle } from 'lucide-react';
+import { CheckCircle, MessageSquare, Trash2, Search, Heart, MessageCircle, Rss, ExternalLink, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -17,6 +17,74 @@ import { Skeleton } from '@/components/ui/skeleton';
 // disposition). Voir supabase_migration_social_commerce_admin.sql pour les
 // RPC utilisées ici (admin_approve_post / admin_request_post_changes /
 // admin_delete_post) — jamais d'UPDATE/DELETE direct sur la table.
+
+// Bascule du feature flag, sur le modèle exact de HeroV2ToggleCard dans
+// AdminHeroTab.jsx (requête isolée sur site_settings, échoue silencieusement
+// si la colonne n'existe pas encore plutôt que de casser tout l'onglet).
+const SocialCommerceToggleCard = () => {
+  const { toast } = useToast();
+  const [enabled, setEnabled] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [columnMissing, setColumnMissing] = useState(false);
+
+  useEffect(() => {
+    supabase.from('site_settings').select('social_commerce_enabled').eq('id', 1).single()
+      .then(({ data, error }) => {
+        if (error) { setColumnMissing(true); return; }
+        setEnabled(!!data?.social_commerce_enabled);
+      });
+  }, []);
+
+  const toggle = async () => {
+    setSaving(true);
+    const { data, error } = await supabase.from('site_settings').update({ social_commerce_enabled: !enabled }).eq('id', 1).select('social_commerce_enabled');
+    if (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: error.message });
+    } else if (!data || data.length === 0) {
+      toast({ variant: 'destructive', title: 'Non enregistré', description: "La base de données a refusé la modification (droits insuffisants sur ton compte). Aucun changement n'a été appliqué." });
+    } else {
+      setEnabled(!!data[0].social_commerce_enabled);
+    }
+    setSaving(false);
+  };
+
+  if (columnMissing) {
+    return (
+      <Card className="border-amber-200 bg-amber-50/40 mb-4">
+        <CardContent className="pt-5 text-[12px] text-amber-800">
+          ⚠️ La colonne <code>social_commerce_enabled</code> n'existe pas encore sur <code>site_settings</code>.
+          Lance <code>supabase_migration_social_commerce_phase1.sql</code> pour activer cette bascule.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-custom-green-200 bg-custom-green-50/40 mb-4">
+      <CardContent className="pt-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="flex items-start gap-3">
+          <Rss className="w-5 h-5 text-custom-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[13px] font-semibold text-gray-800">Fil Zando Social (/social)</p>
+            <p className="text-[12px] text-gray-500 mt-0.5">
+              {enabled
+                ? 'Actif — tout le monde voit le fil de publications.'
+                : "Désactivé — le fil n'est visible pour personne. Toi seul peux le prévisualiser via le lien ci-contre."}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <a href="/social?feedPreview=1" target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-custom-green-700 hover:underline flex items-center gap-1">
+            Aperçu en situation réelle <ExternalLink className="w-3 h-3" />
+          </a>
+          <Button size="sm" variant={enabled ? 'default' : 'outline'} onClick={toggle} disabled={saving}>
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (enabled ? 'Activé pour tous' : 'Activer pour tous')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const STATUS_LABELS = {
   pending_review: 'À vérifier', needs_changes: 'Modif. demandées', active: 'Active', rejected: 'Rejetée', archived: 'Archivée', draft: 'Brouillon',
@@ -98,12 +166,18 @@ const AdminPostsTab = memo(() => {
   }), [posts, searchQuery, statusFilter]);
 
   if (loading) {
-    return <div className="p-6 space-y-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}</div>;
+    return (
+      <div className="p-4 sm:p-6 space-y-4">
+        <SocialCommerceToggleCard />
+        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+      </div>
+    );
   }
 
   return (
     <>
       <div className="p-4 sm:p-6">
+        <SocialCommerceToggleCard />
         <div className="relative mb-4 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input placeholder="Légende ou auteur..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
