@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosts } from '@/contexts/PostsContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -33,6 +33,10 @@ const PostComposer = ({ onPosted }) => {
   const [selectedListingIds, setSelectedListingIds] = useState([]);
   const [showListingPicker, setShowListingPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Garde synchrone en plus du state : deux clics avant le premier re-rendu
+  // (donc avant que le bouton ne devienne visuellement disabled) créaient
+  // plusieurs publications identiques — même pattern que ShareMenu.jsx.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +71,8 @@ const PostComposer = ({ onPosted }) => {
       toast({ title: 'Ajoutez au moins une image', variant: 'destructive' });
       return;
     }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const mediaUrls = await uploadImagesWithWatermark(images, user.id, siteSettings?.watermark_logo_url);
@@ -83,6 +89,7 @@ const PostComposer = ({ onPosted }) => {
     } catch (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
