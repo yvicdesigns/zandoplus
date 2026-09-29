@@ -3,6 +3,7 @@ import { Heart, MessageCircle } from 'lucide-react';
 import PostProductCTA from './PostProductCTA';
 import PostProductsSheet from './PostProductsSheet';
 import CommentsSheet from './CommentsSheet';
+import FollowAuthorButton from './FollowAuthorButton';
 
 // Zando Social — une publication dans le feed (ou la page de test Phase 1).
 // Règle du bouton d'achat (voir SOCIAL_COMMERCE_PHASE0_PLAN.md) : 0 produit
@@ -19,7 +20,10 @@ const PostCard = ({ post, onLikeToggle }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
       {post.author?.full_name && (
-        <p className="text-xs font-semibold text-gray-500">{post.author.full_name}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-500">{post.author.full_name}</p>
+          <FollowAuthorButton authorId={post.author.id} />
+        </div>
       )}
       {post.caption && <p className="text-sm text-gray-800">{post.caption}</p>}
       <div className="flex gap-2 flex-wrap">
