@@ -79,6 +79,7 @@ const AdminDiagnosticsPage = lazy(() => import('@/pages/AdminDiagnosticsPage'));
 const AdminEmailDiagnosticsPage = lazy(() => import('@/pages/AdminEmailDiagnosticsPage'));
 const AdminHeroBuilderBetaPage = lazy(() => import('@/pages/AdminHeroBuilderBetaPage'));
 const SocialTestPage = lazy(() => import('@/pages/SocialTestPage'));
+const FeedPage = lazy(() => import('@/pages/FeedPage'));
 const AuditReportPage = lazy(() => import('@/pages/AuditReportPage'));
 const StorePage = lazy(() => import('@/pages/StorePage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
@@ -307,6 +308,7 @@ const AppContent = () => {
                     <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="/legal-notice" element={<LegalNoticePage />} />
                     <Route path="/help" element={<HelpCenterPage />} />
+                    <Route path="/social" element={<FeedPage />} />
                     <Route path="/help/:topic" element={<HelpCategoryPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/promotions" element={<PromotionsPage />} />
