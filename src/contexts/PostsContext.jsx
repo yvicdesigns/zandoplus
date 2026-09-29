@@ -140,6 +140,21 @@ export const PostsProvider = ({ children }) => {
     }
   }, [user]);
 
+  const fetchComments = useCallback(async (postId) => {
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .select('id, content, created_at, author:profiles(id, full_name, avatar_url)')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      logError(error, { context: 'PostsContext.fetchComments' });
+      return [];
+    }
+  }, []);
+
   const addComment = useCallback(async (postId, content) => {
     if (!user) throw new Error('Vous devez être connecté.');
     if (!content?.trim()) throw new Error('Le commentaire est vide.');
@@ -166,6 +181,7 @@ export const PostsProvider = ({ children }) => {
     loadMorePosts,
     createPost,
     toggleLike,
+    fetchComments,
     addComment,
   };
 

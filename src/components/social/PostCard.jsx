@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
 import PostProductCTA from './PostProductCTA';
 import PostProductsSheet from './PostProductsSheet';
+import CommentsSheet from './CommentsSheet';
 
 // Zando Social — une publication dans le feed (ou la page de test Phase 1).
 // Règle du bouton d'achat (voir SOCIAL_COMMERCE_PHASE0_PLAN.md) : 0 produit
@@ -38,9 +39,11 @@ const PostCard = ({ post, onLikeToggle }) => {
         >
           <Heart className="w-3.5 h-3.5" /> {post.likes_count}
         </button>
-        <span className="flex items-center gap-1">
-          <MessageCircle className="w-3.5 h-3.5" /> {post.comments_count}
-        </span>
+        <CommentsSheet postId={post.id} commentsCount={post.comments_count}>
+          <button type="button" className="flex items-center gap-1 hover:text-custom-green-600 transition-colors">
+            <MessageCircle className="w-3.5 h-3.5" /> {post.comments_count}
+          </button>
+        </CommentsSheet>
       </div>
     </div>
   );
