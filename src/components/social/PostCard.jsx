@@ -1,9 +1,10 @@
 import React from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import PostProductCTA from './PostProductCTA';
 import PostProductsSheet from './PostProductsSheet';
 import CommentsSheet from './CommentsSheet';
 import FollowAuthorButton from './FollowAuthorButton';
+import ShareMenu from '@/components/listing/ShareMenu';
 
 // Zando Social — une publication dans le feed (ou la page de test Phase 1).
 // Règle du bouton d'achat (voir SOCIAL_COMMERCE_PHASE0_PLAN.md) : 0 produit
@@ -48,6 +49,13 @@ const PostCard = ({ post, onLikeToggle }) => {
             <MessageCircle className="w-3.5 h-3.5" /> {post.comments_count}
           </button>
         </CommentsSheet>
+        <ShareMenu
+          shareTitle={post.author?.full_name ? `Publication de ${post.author.full_name} sur Zando+` : 'Publication sur Zando+'}
+          shareText={post.caption || ''}
+          shareUrl={`https://www.zandopluscg.com/posts/${post.id}`}
+          triggerClassName="flex items-center gap-1 hover:text-custom-green-600 transition-colors ml-auto"
+          triggerContent={<><Share2 className="w-3.5 h-3.5" /> Partager</>}
+        />
       </div>
     </div>
   );

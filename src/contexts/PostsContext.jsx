@@ -140,6 +140,25 @@ export const PostsProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Pour PostDetailPage.jsx (partage/deep link) : un seul post, quel que soit
+  // son statut ('active' pour tout le monde, autre statut visible uniquement
+  // si RLS l'autorise — auteur ou admin, cf. "author manages own posts").
+  const fetchPostById = useCallback(async (postId) => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(POST_SELECT)
+        .eq('id', postId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      logError(error, { context: 'PostsContext.fetchPostById' });
+      return null;
+    }
+  }, []);
+
   const fetchComments = useCallback(async (postId) => {
     try {
       const { data, error } = await supabase
@@ -181,6 +200,7 @@ export const PostsProvider = ({ children }) => {
     loadMorePosts,
     createPost,
     toggleLike,
+    fetchPostById,
     fetchComments,
     addComment,
   };
