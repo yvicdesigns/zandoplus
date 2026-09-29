@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, 
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ListingsProvider, useListings } from '@/contexts/ListingsContext';
+import { PostsProvider } from '@/contexts/PostsContext';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -77,6 +78,7 @@ const ChangelogPage = lazy(() => import('@/pages/ChangelogPage'));
 const AdminDiagnosticsPage = lazy(() => import('@/pages/AdminDiagnosticsPage'));
 const AdminEmailDiagnosticsPage = lazy(() => import('@/pages/AdminEmailDiagnosticsPage'));
 const AdminHeroBuilderBetaPage = lazy(() => import('@/pages/AdminHeroBuilderBetaPage'));
+const SocialTestPage = lazy(() => import('@/pages/SocialTestPage'));
 const AuditReportPage = lazy(() => import('@/pages/AuditReportPage'));
 const StorePage = lazy(() => import('@/pages/StorePage'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage'));
@@ -281,6 +283,7 @@ const AppContent = () => {
                         <Route path="/admin/diagnostics" element={<AdminDiagnosticsPage />} />
                         <Route path="/admin/email-diagnostics" element={<AdminEmailDiagnosticsPage />} />
                         <Route path="/admin/hero-builder-beta" element={<AdminHeroBuilderBetaPage />} />
+                        <Route path="/admin/social-test" element={<SocialTestPage />} />
                         <Route path="/make-admin" element={<MakeAdminPage />} />
                     </Route>
                     <Route path="/boost/:listingId" element={<BoostListingPage />} />
@@ -339,6 +342,7 @@ function App() {
         <AuthProvider>
           <SiteSettingsProvider>
             <ListingsProvider>
+              <PostsProvider>
               <NotificationsProvider>
                 <PaymentProvider>
                   <CartProvider>
@@ -351,6 +355,7 @@ function App() {
                   </CartProvider>
                 </PaymentProvider>
               </NotificationsProvider>
+              </PostsProvider>
             </ListingsProvider>
           </SiteSettingsProvider>
         </AuthProvider>
