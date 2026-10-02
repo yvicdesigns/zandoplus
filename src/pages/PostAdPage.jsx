@@ -262,6 +262,7 @@ const PostAdPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // évite les doubles soumissions (clics rapides avant le re-render du bouton)
     if (!user) {
       toast({ title: "Authentification requise", description: "Veuillez vous connecter.", variant: "destructive" });
       return;
@@ -272,23 +273,24 @@ const PostAdPage = () => {
       return;
     }
 
-    // Vérification du plafond d'annonces avant d'uploader quoi que ce soit
-    // (évite de faire attendre l'upload d'images pour rien) — le trigger
-    // Postgres check_listing_cap reste le filet de sécurité final côté serveur.
-    const tier = user.is_business ? 'Entreprise' : user.is_boutique ? 'Boutique' : 'Libre';
-    const cap = user.is_business ? 500 : user.is_boutique ? 100 : 15;
-    const { count, error: countError } = await supabase
-      .from('listings')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('status', 'active');
-    if (!countError && (count ?? 0) >= cap) {
-      setCapReached({ cap, tier });
-      return;
-    }
-
     setLoading(true);
     try {
+      // Vérification du plafond d'annonces avant d'uploader quoi que ce soit
+      // (évite de faire attendre l'upload d'images pour rien) — le trigger
+      // Postgres check_listing_cap reste le filet de sécurité final côté serveur.
+      const tier = user.is_business ? 'Entreprise' : user.is_boutique ? 'Boutique' : 'Libre';
+      const cap = user.is_business ? 500 : user.is_boutique ? 100 : 15;
+      const { count, error: countError } = await supabase
+        .from('listings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+      if (!countError && (count ?? 0) >= cap) {
+        setCapReached({ cap, tier });
+        setLoading(false);
+        return;
+      }
+
       const safePhone = sanitizeInput(formData.phone);
       if (user && safePhone && safePhone !== user.phone) {
         await updateProfile({ phone: safePhone });
