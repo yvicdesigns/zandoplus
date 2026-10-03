@@ -258,6 +258,105 @@ const HousingVerificationsSection = () => {
   );
 };
 
+// ── Section : bannières Entreprise (accueil Zando+) à valider ─────────────────
+const EntrepriseBannerReviewSection = () => {
+  const { toast } = useToast();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [rejecting, setRejecting] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, entreprise_banner_pending_url')
+      .eq('entreprise_banner_status', 'pending_review')
+      .not('entreprise_banner_pending_url', 'is', null);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
+    setRequests(data || []);
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  const handleReview = async (userId, status, reason = null) => {
+    setActionLoading(userId);
+    const { error } = await supabase.rpc('admin_review_entreprise_banner', {
+      p_user_id: userId, p_status: status, p_rejection_reason: reason,
+    });
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: status === 'approved' ? 'Bannière publiée ✅' : 'Bannière rejetée', className: status === 'approved' ? 'bg-green-100 text-green-800' : undefined });
+      setRequests(prev => prev.filter(r => r.id !== userId));
+    }
+    setActionLoading(null);
+    setRejecting(null);
+    setRejectionReason('');
+  };
+
+  if (loading) return <Skeleton className="h-24 w-full" />;
+  if (requests.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold text-amber-700 flex items-center gap-2 text-sm uppercase tracking-wide">
+        <Building2 className="w-4 h-4" /> Bannières Entreprise à valider ({requests.length})
+      </h3>
+      {requests.map(req => (
+        <Card key={req.id} className="border-amber-100">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-9 h-9">
+                <AvatarImage src={req.avatar_url} />
+                <AvatarFallback>{req.full_name?.charAt(0) || '?'}</AvatarFallback>
+              </Avatar>
+              <p className="text-sm font-semibold">{req.full_name || 'Sans nom'}</p>
+            </div>
+            <img
+              src={req.entreprise_banner_pending_url}
+              alt=""
+              className="w-full max-h-40 object-cover rounded-xl border border-gray-200 bg-gray-50"
+            />
+
+            {rejecting === req.id ? (
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Raison du rejet (visible par le vendeur)…"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={2}
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setRejecting(null); setRejectionReason(''); }}>Annuler</Button>
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700" disabled={actionLoading === req.id || !rejectionReason.trim()} onClick={() => handleReview(req.id, 'rejected', rejectionReason)}>
+                    {actionLoading === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmer le rejet'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={actionLoading === req.id} onClick={() => handleReview(req.id, 'approved')}>
+                  {actionLoading === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-1" /> Approuver</>}
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" disabled={actionLoading === req.id} onClick={() => setRejecting(req.id)}>
+                  <XCircle className="w-4 h-4 mr-1" /> Rejeter
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 // ── Composant principal ───────────────────────────────────────────────────────
 const AdminVerificationsTab = () => {
   const [requests, setRequests] = useState([]);
@@ -379,6 +478,9 @@ const AdminVerificationsTab = () => {
 
         {/* Vérifications gratuites "Maison à louer" */}
         <HousingVerificationsSection />
+
+        {/* Bannières Entreprise (accueil) à valider */}
+        <EntrepriseBannerReviewSection />
 
         {/* Demandes via documents */}
         {pending.length > 0 && (

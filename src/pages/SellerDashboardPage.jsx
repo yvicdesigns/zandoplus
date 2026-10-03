@@ -109,11 +109,20 @@ const EditableRow = ({ label, value, type = 'text', options, onSave, placeholder
 };
 
 /* ─── Bannière + boost inclus (palier Entreprise uniquement) ─── */
+const BANNER_STATUS_CFG = {
+  pending_review: { label: 'En attente de validation', cls: 'bg-amber-100 text-amber-800' },
+  approved:       { label: 'En ligne',                 cls: 'bg-green-100 text-green-800' },
+  rejected:       { label: 'Rejetée',                  cls: 'bg-red-100 text-red-800' },
+};
+
 const EntrepriseTierSection = ({ profile, user }) => {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [bannerUrl, setBannerUrl] = useState(profile?.entreprise_banner_url || null);
+  const [pendingBannerUrl, setPendingBannerUrl] = useState(profile?.entreprise_banner_pending_url || null);
+  const [bannerStatus, setBannerStatus] = useState(profile?.entreprise_banner_status || 'none');
+  const [bannerRejectionReason, setBannerRejectionReason] = useState(profile?.entreprise_banner_rejection_reason || null);
   const [myListings, setMyListings] = useState([]);
   const [loadingListings, setLoadingListings] = useState(true);
   const [selectedListingId, setSelectedListingId] = useState('');
@@ -151,9 +160,17 @@ const EntrepriseTierSection = ({ profile, user }) => {
       const { error: upErr } = await supabase.storage.from('profile_assets').upload(path, compressed, { contentType: 'image/webp' });
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from('profile_assets').getPublicUrl(path);
-      await supabase.from('profiles').update({ entreprise_banner_url: publicUrl }).eq('id', user.id);
-      setBannerUrl(publicUrl);
-      toast({ title: 'Bannière mise à jour ✅', description: "Elle apparaîtra sur l'accueil Zando+ sous quelques minutes.", className: 'bg-custom-green-500 text-white' });
+      // Part en attente de validation — ne remplace la bannière déjà en ligne
+      // qu'une fois approuvée par un admin (voir AdminVerificationsTab.jsx).
+      await supabase.from('profiles').update({
+        entreprise_banner_pending_url: publicUrl,
+        entreprise_banner_status: 'pending_review',
+        entreprise_banner_rejection_reason: null,
+      }).eq('id', user.id);
+      setPendingBannerUrl(publicUrl);
+      setBannerStatus('pending_review');
+      setBannerRejectionReason(null);
+      toast({ title: 'Bannière envoyée ✅', description: "Elle sera visible sur l'accueil Zando+ après validation par notre équipe.", className: 'bg-custom-green-500 text-white' });
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
     } finally {
@@ -192,19 +209,39 @@ const EntrepriseTierSection = ({ profile, user }) => {
 
       {/* Bannière */}
       <div className="mb-6">
-        <p className="text-[13px] font-semibold text-gray-700 mb-2">Bannière (accueil Zando+)</p>
-        <div
-          onClick={() => !uploadingBanner && fileInputRef.current?.click()}
-          className="relative h-28 rounded-xl border-2 border-dashed border-gray-200 hover:border-amber-400 bg-gray-50 flex items-center justify-center cursor-pointer overflow-hidden"
-        >
-          {bannerUrl && <img src={bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
-          <div className={`relative z-10 flex flex-col items-center gap-1 ${bannerUrl ? 'bg-black/40 w-full h-full justify-center text-white' : 'text-gray-400'}`}>
-            {uploadingBanner ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
-            <span className="text-[11px] font-semibold">{bannerUrl ? 'Changer la bannière' : 'Ajouter une bannière'}</span>
-          </div>
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-[13px] font-semibold text-gray-700">Bannière (accueil Zando+)</p>
+          {bannerStatus !== 'none' && (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${BANNER_STATUS_CFG[bannerStatus]?.cls}`}>
+              {BANNER_STATUS_CFG[bannerStatus]?.label}
+            </span>
+          )}
         </div>
+        {(() => {
+          const displayUrl = pendingBannerUrl || bannerUrl;
+          return (
+            <div
+              onClick={() => !uploadingBanner && fileInputRef.current?.click()}
+              className="relative h-28 rounded-xl border-2 border-dashed border-gray-200 hover:border-amber-400 bg-gray-50 flex items-center justify-center cursor-pointer overflow-hidden"
+            >
+              {displayUrl && <img src={displayUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+              <div className={`relative z-10 flex flex-col items-center gap-1 ${displayUrl ? 'bg-black/40 w-full h-full justify-center text-white' : 'text-gray-400'}`}>
+                {uploadingBanner ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
+                <span className="text-[11px] font-semibold">{displayUrl ? 'Changer la bannière' : 'Ajouter une bannière'}</span>
+              </div>
+            </div>
+          );
+        })()}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
-        <p className="text-[10px] text-gray-400 mt-1.5">Format recommandé : 1200 × 400 px.</p>
+        {bannerStatus === 'rejected' && bannerRejectionReason && (
+          <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5 mt-1.5">
+            Raison du rejet : {bannerRejectionReason}
+          </p>
+        )}
+        {bannerStatus === 'pending_review' && bannerUrl && (
+          <p className="text-[10px] text-gray-400 mt-1.5">La bannière actuellement en ligne reste visible jusqu'à validation de la nouvelle.</p>
+        )}
+        <p className="text-[10px] text-gray-400 mt-1.5">Format recommandé : 1200 × 400 px. Vérifiée par notre équipe avant publication.</p>
       </div>
 
       {/* Boost inclus */}
